@@ -3,20 +3,17 @@ using namespace std;
 
 class Tree {
 
-    private:
+    protected:
 
-        Tree(string name) {
+        Tree(string name) { // Complexity: O(1)
             this->name = name;
-            this->structure = "";
             this->size = 0;
-            this->m = 0;
         }
 
         string treeInfo() const {
             ostringstream os;
             os << "Tree name: '" << this->name << "'." << endl;
             os << "Tree size: " << this->size << " nodes." << endl;
-            os << "Tree structure: '" << this->structure << "'." << endl;
             return os.str();
         }
 
@@ -29,6 +26,59 @@ class Tree {
                     }
                 }
             }
+        }
+
+    public:
+
+        string name;
+        size_t size;
+        vector<Node> tree;
+
+        Tree(string name, string structure) { // Complexity: Θ(n)
+            this->name = name;
+            stack<int> s;
+            int id = 0;
+            for (int i = 0; i < structure.length(); i++) {
+                if (structure[i] == '(') {
+                    Node* n;
+                    if (s.empty()) {
+                        n = new Node(id);
+                    } else {
+                        n = new Node(id, s.top());
+                        this->tree[s.top()].addChild(id);
+                    }
+                    this->tree.push_back(*n);
+                    s.push(this->tree.size() - 1);
+                    id++;
+                } else if (structure[i] == ')') {
+                    s.pop();
+                }
+            }
+            this->consolidate();
+            this->size = this->tree[0].size;
+        }
+
+        ~Tree() {
+            this->tree.clear();
+        }
+
+        string print() const {
+            ostringstream os;
+            os << this->treeInfo();
+            for (auto &n : this->tree) {
+                os << n.print();
+            }
+            return os.str();
+        }
+
+};
+
+class T : public Tree {
+
+    private:
+
+        T(string name) : Tree(name) {
+            this->m = 0;
         }
 
         void group(Node* n) { // Complexity: O(x) [where x is the number of n's children] / O(1) if n is a leaf
@@ -69,40 +119,10 @@ class Tree {
 
     public:
 
-        string name;
-        size_t size;
         size_t m;
-        string structure;
-        vector<Node> tree;
 
-        Tree(string name, string structure) { // Complexity: Θ(n)
-            this->name = name;
-            this->structure = structure;
-            stack<int> s;
-            int id = 0;
-            for (int i = 0; i < structure.length(); i++) {
-                if (structure[i] == '(') {
-                    Node* n;
-                    if (s.empty()) {
-                        n = new Node(id);
-                    } else {
-                        n = new Node(id, s.top());
-                        this->tree[s.top()].addChild(id);
-                    }
-                    this->tree.push_back(*n);
-                    s.push(this->tree.size() - 1);
-                    id++;
-                } else if (structure[i] == ')') {
-                    s.pop();
-                }
-            }
-            this->consolidate();
-            this->size = this->tree[0].size;
+        T(string name, string structure) : Tree(name, structure) { // Complexity: Θ(n)
             this->m = floor(log2(this->size)); // m = log(n)
-        }
-
-        ~Tree() {
-            this->tree.clear();
         }
 
         void cover() { // Complexity: O(n)
@@ -159,15 +179,6 @@ class Tree {
                         }
                     }
                 }
-            }
-            return os.str();
-        }
-
-        string print() const {
-            ostringstream os;
-            os << this->treeInfo();
-            for (auto &n : this->tree) {
-                os << n.print();
             }
             return os.str();
         }

@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
     ifstream in(argv[1]);
     in >> tree;
     in.close();
-    Tree t = Tree("T", tree);
+    T t = T("T", tree);
     t.cover();
     // cout << t.printCoverElements();
     // Tree ti = Tree("Ti", t.generateTi());
