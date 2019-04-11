@@ -5,11 +5,6 @@ class Tree {
 
     protected:
 
-        Tree(string name) { // Complexity: O(1)
-            this->name = name;
-            this->size = 0;
-        }
-
         string treeInfo() const {
             ostringstream os;
             os << "Tree name: '" << this->name << "'." << endl;
@@ -76,10 +71,6 @@ class Tree {
 class T : public Tree {
 
     private:
-
-        T(string name) : Tree(name) {
-            this->m = 0;
-        }
 
         void group(Node* n) { // Complexity: O(x) [where x is the number of n's children] / O(1) if n is a leaf
             if (n->size == 1) { // If n is a leaf
@@ -181,6 +172,17 @@ class T : public Tree {
                 }
             }
             return os.str();
+        }
+
+};
+
+class Ti : public Tree {
+
+    public:
+
+        Ti(name) { // Complexity: O(1)
+            this->name = name;
+            this->size = 0;
         }
 
 };
