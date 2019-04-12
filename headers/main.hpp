@@ -5,6 +5,7 @@
 #include <vector>
 #include <stack>
 #include <queue>
+#include <unordered_map>
 #include <functional>
 #include <cmath>
 #include "../classes/tree.cpp"

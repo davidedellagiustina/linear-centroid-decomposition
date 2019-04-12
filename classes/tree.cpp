@@ -29,6 +29,11 @@ class Tree {
         size_t size;
         vector<Node> tree;
 
+        Tree() { // Complexity: O(1)
+            this->name = "";
+            this->size = 0;
+        }
+
         Tree(string name, string structure) { // Complexity: Θ(n)
             this->name = name;
             stack<int> s;
@@ -180,9 +185,15 @@ class Ti : public Tree {
 
     public:
 
-        Ti(name) { // Complexity: O(1)
+        unordered_map<int,int> beta;
+
+        Ti(string name) : Tree() { // Complexity: O(1)
             this->name = name;
-            this->size = 0;
+        }
+
+        void addNode(int idRef) {
+            int id = 0;
+            this->beta.insert({id, idRef});
         }
 
 };

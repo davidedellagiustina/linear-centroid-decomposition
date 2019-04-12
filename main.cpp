@@ -15,8 +15,6 @@ int main(int argc, char* argv[]) {
     T t = T("T", tree);
     t.cover();
     // cout << t.printCoverElements();
-    // Tree ti = Tree("Ti", t.generateTi());
-    // cout << ti;
 
     return 0;
 
