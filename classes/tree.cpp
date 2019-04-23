@@ -12,16 +12,18 @@ class Tree {
             return os.str();
         }
 
-        void consolidate() { // Complexity: Θ(n)
-            for (auto it = this->tree.rbegin(); it != this->tree.rend(); ++it) {
-                it->size = 1;
-                if (it->children.size() > 0) {
-                    for (auto c : it->children) {
-                        it->size += this->tree[c].size;
-                    }
+    void consolidate() { // Complexity: Θ(n)
+        function<void(int)> dfs = [this,&dfs](int n)->void {
+            this->tree[n].size = 1;
+            if (this->tree[n].children.size() > 0) {
+                for (auto child : this->tree[n].children) {
+                    dfs(child);
+                    this->tree[n].size += this->tree[child].size;
                 }
             }
-        }
+        };
+        dfs(0);
+    }
 
     public:
 
@@ -67,6 +69,56 @@ class Tree {
             os << this->treeInfo();
             for (auto &n : this->tree) {
                 os << n.print();
+            }
+            return os.str();
+        }
+
+};
+
+class Ti : public Tree {
+
+    public:
+
+        unordered_map<int,int> beta;
+
+        Ti(string name) : Tree() { // Complexity: O(1)
+            this->name = name;
+        }
+
+        void addNode(int idRef) {
+            int id = 0;
+            this->beta.insert({id, idRef});
+        }
+
+        string printCoverElements() const {
+            ostringstream os;
+            os << this->treeInfo();
+            if (!this->tree[0].covEl) {
+                os << "This tree has not been covered." << endl;
+            } else {
+                int i = 0;
+                for (auto &n : this->tree) {
+                    if (n.covEl) {
+                        for (auto cover : n.pcsChildren) {
+                            os << "Cover element #" << i << ": " << n.id;
+                            queue<int> c;
+                            for (auto n : cover) {
+                                c.push(n);
+                            }
+                            while (!c.empty()) {
+                                os << " " << c.front();
+                                if (this->tree[c.front()].pcsChildren.size() > 0) {
+                                    for (auto n : this->tree[c.front()].pcsChildren[0]) {
+                                        c.push(this->tree[n].id);
+                                    }
+                                }
+                                c.pop();
+                            }
+                            os << endl;
+                            i++;
+                        }
+                    }
+                }
             }
             return os.str();
         }
@@ -122,30 +174,23 @@ class T : public Tree {
         }
 
         void cover() { // Complexity: O(n)
-            for (auto it = this->tree.rbegin(); it != this->tree.rend(); ++it) {
-                this->group(&(*it));
-            }
-            this->tree[0].covEl = true;
-        }
-/*
-        string generateTi() const { // Complexity: O(n)
-            ostringstream os;
-            function<string(int)> dfs = [this,&dfs](int n)->string {
-                ostringstream os;
-                os << "(";
+            function<void(int)> dfs = [this,&dfs](int n)->void {
                 if (this->tree[n].children.size() > 0) {
                     for (auto child : this->tree[n].children) {
-                        if (this->tree[n].pcsChildren.size() > 1 && )
-                        os << dfs(child);
+                        dfs(child);
                     }
                 }
-                os << ")";
-                return os.str();
+                this->group(&(this->tree[n]));
             };
-            os << dfs(0);
-            return os.str();
+            dfs(0);
+            this->tree[0].covEl = true;
         }
-*/
+
+        Ti generateTi() const { // Complexity: ???
+            Ti ti = Ti(this->name + "i");
+            return ti;
+        }
+
         string printCoverElements() const {
             ostringstream os;
             os << this->treeInfo();
@@ -177,23 +222,6 @@ class T : public Tree {
                 }
             }
             return os.str();
-        }
-
-};
-
-class Ti : public Tree {
-
-    public:
-
-        unordered_map<int,int> beta;
-
-        Ti(string name) : Tree() { // Complexity: O(1)
-            this->name = name;
-        }
-
-        void addNode(int idRef) {
-            int id = 0;
-            this->beta.insert({id, idRef});
         }
 
 };

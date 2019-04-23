@@ -28,7 +28,7 @@ class Node {
         ~Node() {
         }
 
-        void addChild(int child) {
+        void addChild(int child) { // COmplexity: O(1)
             this->children.push_back(child);
         }
 
