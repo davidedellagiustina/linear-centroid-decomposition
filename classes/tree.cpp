@@ -85,6 +85,15 @@ class Tii : public Tree {
             this->name = name;
         }
 
+        int addNode(int idRef, int parent) { // Complexity: O(1)
+            int id = this->tree.size();
+            Node* n = new Node(id, parent);
+            this->tree.push_back(*n);
+            if (parent != -1) this->tree[parent].addChild(id);
+            this->alpha.insert({id, idRef});
+            return id;
+        }
+
 };
 
 class Ti : public Tree {
@@ -101,9 +110,31 @@ class Ti : public Tree {
             int id = this->tree.size();
             Node* n = new Node(id, parent, red);
             this->tree.push_back(*n);
-            this->tree[parent].addChild(id);
+            if (parent != -1) this->tree[parent].addChild(id);
             this->beta.insert({id, idRef});
             return id;
+        }
+
+        Tii generateTii() {
+            Tii tii = Tii(this->name + "i");
+            stack<int> s;
+            s.push(-1); // Root has parent -1
+            function<void(int)> dfs = [this,&dfs,&tii,&s](int n)->void {
+                int id = -1;
+                if (this->tree[n].covEl) {
+                    id = tii.addNode(n, s.top());
+                }
+                if (id != -1) s.push(id);
+                if (this->tree[n].children.size() > 0) {
+                    for (auto child : this->tree[n].children) {
+                        dfs(child);
+                    }
+                }
+                if (id != -1) s.pop();
+            };
+            dfs(0);
+            tii.consolidate();
+            return tii;
         }
 
         string printCoverElements() const {
@@ -243,7 +274,12 @@ class T : public Tree {
             // for (int i = 0; i < ti.beta.size(); i++) {
             //     cout << i << " " << ti.beta[i] << " " << endl;
             // }
-            cout << ti.printCoverElements();
+            // cout << ti.printCoverElements();
+            Tii tii = ti.generateTii();
+            cout << tii.print();
+            for (int i = 0; i < tii.alpha.size(); i++) {
+                cout << i << " " << tii.alpha[i] << endl;
+            }
         }
 
     public:
