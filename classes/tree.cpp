@@ -115,7 +115,7 @@ class Ti : public Tree {
             return id;
         }
 
-        Tii generateTii() {
+        Tii generateTii() { // Complexity: O(n)
             Tii tii = Tii(this->name + "i");
             stack<int> s;
             s.push(-1); // Root has parent -1
@@ -189,49 +189,49 @@ class T : public Tree {
                         dfs(child);
                     }
                 }
-                this->group(&(this->tree[n]));
+                this->group(n);
             };
             dfs(0);
             this->tree[0].covEl = true;
         }
 
-        void group(Node* n) { // Complexity: O(x) [where x is the number of n's children] / O(1) if n is a leaf
-            if (n->size == 1) { // If n is a leaf
-                n->pcsSize = 1;
-            } else if (n->size > 1) { // If n is not a leaf
+        void group(int n) { // Complexity: O(x) [where x is the number of n's children] / O(1) if n is a leaf
+            if (this->tree[n].size == 1) { // If n is a leaf
+                this->tree[n].pcsSize = 1;
+            } else if (this->tree[n].size > 1) { // If n is not a leaf
                 int y = 0;
                 int i = 0;
                 vector<int> c;
-                for (auto child : n->children) {
+                for (auto child : this->tree[n].children) {
                     if (this->tree[child].covEl) continue; // If this child is already a cover element
                     y += this->tree[child].pcsSize;
                     c.push_back(child);
                     if (y >= this->m - 1) {
-                        n->covEl = true;
-                        n->pcsChildren.push_back(c);
+                        this->tree[n].covEl = true;
+                        this->tree[n].pcsChildren.push_back(c);
                         c.clear();
                         y = 0;
                     }
                     i++;
                 }
-                if (n->covEl && y < this->m - 1) {
+                if (this->tree[n].covEl && y < this->m - 1) {
                     for (auto t : c) {
-                        n->pcsChildren.back().push_back(t);
+                        this->tree[n].pcsChildren.back().push_back(t);
                     }
                     c.clear();
                 }
-                if (!n->covEl) {
-                    n->pcsSize = y + 1;
-                    n->pcsChildren.push_back(c);
+                if (!this->tree[n].covEl) {
+                    this->tree[n].pcsSize = y + 1;
+                    this->tree[n].pcsChildren.push_back(c);
                     c.clear();
                 }
-                if (n->pcsChildren.size() == 0 && y == 0) {
-                    n->pcsSize = 1;
+                if (this->tree[n].pcsChildren.size() == 0 && y == 0) {
+                    this->tree[n].pcsSize = 1;
                 }
             }
         }
 
-        Ti generateTi() {
+        Ti generateTi() { // Complexity: O(n)
             Ti ti = Ti(this->name + "i");
             stack<int> s;
             s.push(-1); // Root has parent -1
@@ -265,7 +265,7 @@ class T : public Tree {
         }
 
         // In future should return some reference to the centroid node
-        void findCentroid() { // Complexity: ?? [should be O(n/log(n)]
+        void findCentroid() { // Complexity: ?? [should be O(n/log(n) -> check when algorithm is complete]
             this->cover();
             // cout << this->print();
             // cout << this->printCoverElements();
@@ -289,7 +289,7 @@ class T : public Tree {
         }
 
         // In future should return the centroid tree
-        void buildCentroidTree() { // Complexity: ?? [should be O(n)]
+        void buildCentroidTree() { // Complexity: ?? [should be O(n) -> check when algorithm is complete]
             this->findCentroid();
         }
 
