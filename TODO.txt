@@ -1,4 +1,3 @@
 TODO:
- 1. Change int to long long unsigned int
- 2. Find centroid of T
- 3. Build centroid tree
+ 1. Find centroid of T
+ 2. Build centroid tree

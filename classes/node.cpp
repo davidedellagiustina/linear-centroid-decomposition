@@ -5,26 +5,26 @@ class Node {
     public:
 
         // General
-        int id;
-        int parent;
-        vector<int> children;
+        uint64_t id;
+        uint64_t parent;
+        vector<uint64_t> children;
         size_t size = 0;
         // Used for tree covering
         int color = 0; // 0: black, 1: red
         bool covEl = false; // true when there's a cover element rooted at this node
         bool visited = false; // used during Ti generation
         size_t pcsSize = 0;
-        vector<vector<int>> pcsChildren;
-        int alpha = -1;
-        int beta = -1;
+        vector<vector<uint64_t>> pcsChildren;
+        uint64_t alpha = -1;
+        uint64_t beta = -1;
 
-        Node(int id, bool red = false) { // Complexity: O(1)
+        Node(uint64_t id, bool red = false) { // Complexity: O(1)
             this->id = id;
             if (red) { this->color = 1; }
             this->parent = -1;
         }
 
-        Node(int id, int parent, bool red = false) { // Complexity: O(1)
+        Node(uint64_t id, uint64_t parent, bool red = false) { // Complexity: O(1)
             this->id = id;
             if (red) { this->color = 1; }
             this->parent = parent;
@@ -32,7 +32,7 @@ class Node {
 
         ~Node() {}
 
-        void addChild(int child) { // Complexity: O(1)
+        void addChild(uint64_t child) { // Complexity: O(1)
             this->children.push_back(child);
         }
 

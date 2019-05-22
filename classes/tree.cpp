@@ -25,9 +25,9 @@ class Tree {
 
         Tree(string name, string structure) { // Complexity: Θ(n)
             this->name = name;
-            stack<int> s;
-            int id = 0;
-            for (int i = 0; i < structure.length(); i++) {
+            stack<uint64_t> s;
+            uint64_t id = 0;
+            for (uint64_t i = 0; i < structure.length(); i++) {
                 if (structure[i] == '(') {
                     Node* n;
                     if (s.empty()) {
@@ -51,7 +51,7 @@ class Tree {
         }
 
         void consolidate() { // Complexity: Θ(n)
-            function<void(int)> dfs = [this,&dfs](int n)->void {
+            function<void(uint64_t)> dfs = [this,&dfs](uint64_t n)->void {
                 this->tree[n].size = 1;
                 if (this->tree[n].children.size() > 0) {
                     for (auto child : this->tree[n].children) {
@@ -83,8 +83,8 @@ class Tii : public Tree {
             this->name = name;
         }
 
-        int addNode(int idRef, int parent) { // Complexity: O(1)
-            int id = this->tree.size();
+        uint64_t addNode(uint64_t idRef, uint64_t parent) { // Complexity: O(1)
+            uint64_t id = this->tree.size();
             Node* n = new Node(id, parent);
             n->alpha = idRef;
             this->tree.push_back(*n);
@@ -102,8 +102,8 @@ class Ti : public Tree {
             this->name = name;
         }
 
-        int addNode(int idRef, int parent, bool red = false) { // Complexity: O(1)
-            int id = this->tree.size();
+        uint64_t addNode(uint64_t idRef, uint64_t parent, bool red = false) { // Complexity: O(1)
+            uint64_t id = this->tree.size();
             Node* n = new Node(id, parent, red);
             n->beta = idRef;
             this->tree.push_back(*n);
@@ -113,10 +113,10 @@ class Ti : public Tree {
 
         Tii generateTii() { // Complexity: O(n)
             Tii tii = Tii(this->name + "i");
-            stack<int> s;
+            stack<uint64_t> s;
             s.push(-1); // Root has parent -1
-            function<void(int)> dfs = [this,&dfs,&tii,&s](int n)->void {
-                int id = -1;
+            function<void(uint64_t)> dfs = [this,&dfs,&tii,&s](uint64_t n)->void {
+                uint64_t id = -1;
                 if (this->tree[n].covEl) {
                     id = tii.addNode(n, s.top());
                 }
@@ -139,7 +139,7 @@ class Ti : public Tree {
             if (!this->tree[0].covEl) {
                 os << "This tree has not been covered." << endl;
             } else {
-                int i = 0;
+                uint64_t i = 0;
                 for (auto &n : this->tree) {
                     if (n.covEl) {
                         if (n.pcsChildren.size() == 0) {
@@ -148,7 +148,7 @@ class Ti : public Tree {
                         }
                         for (auto cover : n.pcsChildren) {
                             os << "Cover element #" << i << ": " << n.id;
-                            queue<int> c;
+                            queue<uint64_t> c;
                             for (auto n : cover) {
                                 c.push(n);
                             }
@@ -179,7 +179,7 @@ class T : public Tree {
         size_t m;
 
         void cover() { // Complexity: O(n)
-            function<void(int)> dfs = [this,&dfs](int n)->void {
+            function<void(uint64_t)> dfs = [this,&dfs](uint64_t n)->void {
                 if (this->tree[n].children.size() > 0) {
                     for (auto child : this->tree[n].children) {
                         dfs(child);
@@ -191,13 +191,13 @@ class T : public Tree {
             this->tree[0].covEl = true;
         }
 
-        void group(int n) { // Complexity: O(x) [where x is the number of n's children] / O(1) if n is a leaf
+        void group(uint64_t n) { // Complexity: O(x) [where x is the number of n's children] / O(1) if n is a leaf
             if (this->tree[n].size == 1) { // If n is a leaf
                 this->tree[n].pcsSize = 1;
             } else if (this->tree[n].size > 1) { // If n is not a leaf
-                int y = 0;
-                int i = 0;
-                vector<int> c;
+                uint64_t y = 0;
+                uint64_t i = 0;
+                vector<uint64_t> c;
                 for (auto child : this->tree[n].children) {
                     if (this->tree[child].covEl) continue; // If this child is already a cover element
                     y += this->tree[child].pcsSize;
@@ -229,10 +229,10 @@ class T : public Tree {
 
         Ti generateTi() { // Complexity: O(n)
             Ti ti = Ti(this->name + "i");
-            stack<int> s;
+            stack<uint64_t> s;
             s.push(-1); // Root has parent -1
-            function<int(int,bool,vector<int>)> dfs = [this,&dfs,&ti,&s](int n, bool red, vector<int> c)->int {
-                int id = -1;
+            function<uint64_t(uint64_t,bool,vector<uint64_t>)> dfs = [this,&dfs,&ti,&s](uint64_t n, bool red, vector<uint64_t> c)->uint64_t {
+                uint64_t id = -1;
                 if (!this->tree[n].visited || red) {
                     id = ti.addNode(this->tree[n].id, s.top(), red);
                     if (this->tree[n].covEl) ti.tree[id].covEl = true; // Copy root of PCSs
@@ -243,7 +243,7 @@ class T : public Tree {
                         }
                     }
                     if (c.size() > 0) {
-                        vector<int> t;
+                        vector<uint64_t> t;
                         for (auto child : c) {
                             int s = dfs(child, false, this->tree[child].children);
                             if (s != -1) t.push_back(s);
@@ -289,12 +289,12 @@ class T : public Tree {
             if (!this->tree[0].covEl) {
                 os << "This tree has not been covered." << endl;
             } else {
-                int i = 0;
+                uint64_t i = 0;
                 for (auto &n : this->tree) {
                     if (n.covEl) {
                         for (auto cover : n.pcsChildren) {
                             os << "Cover element #" << i << ": " << n.id;
-                            queue<int> c;
+                            queue<uint64_t> c;
                             for (auto n : cover) {
                                 c.push(n);
                             }
