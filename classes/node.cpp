@@ -15,6 +15,8 @@ class Node {
         bool visited = false; // used during Ti generation
         size_t pcsSize = 0;
         vector<vector<int>> pcsChildren;
+        int alpha = -1;
+        int beta = -1;
 
         Node(int id, bool red = false) { // Complexity: O(1)
             this->id = id;
@@ -39,6 +41,12 @@ class Node {
             os << "Node #" << this->id;
             if (this->color == 1) {
                 os << " (red)";
+            }
+            if (this->alpha != -1) {
+                os << " (alpha: " << this->alpha << ")";
+            }
+            if (this->beta != -1) {
+                os << " (beta: " << this->beta << ")";
             }
             if (this->parent != -1) {
                 os << " has parent #" << this->parent << ".";

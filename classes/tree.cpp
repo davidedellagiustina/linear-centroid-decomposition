@@ -64,7 +64,7 @@ class Tree {
             this->size = this->tree[0].size;
         }
 
-        string print() const {
+        string print() const { // Comprexity: O(n)
             ostringstream os;
             os << this->treeInfo();
             for (auto &n : this->tree) {
@@ -79,8 +79,6 @@ class Tii : public Tree {
 
     public:
 
-        unordered_map<int,int> alpha;
-
         Tii(string name) : Tree() { // Complexity: O(1)
             this->name = name;
         }
@@ -88,9 +86,9 @@ class Tii : public Tree {
         int addNode(int idRef, int parent) { // Complexity: O(1)
             int id = this->tree.size();
             Node* n = new Node(id, parent);
+            n->alpha = idRef;
             this->tree.push_back(*n);
             if (parent != -1) this->tree[parent].addChild(id);
-            this->alpha.insert({id, idRef});
             return id;
         }
 
@@ -100,8 +98,6 @@ class Ti : public Tree {
 
     public:
 
-        unordered_map<int,int> beta;
-
         Ti(string name) : Tree() { // Complexity: O(1)
             this->name = name;
         }
@@ -109,9 +105,9 @@ class Ti : public Tree {
         int addNode(int idRef, int parent, bool red = false) { // Complexity: O(1)
             int id = this->tree.size();
             Node* n = new Node(id, parent, red);
+            n->beta = idRef;
             this->tree.push_back(*n);
             if (parent != -1) this->tree[parent].addChild(id);
-            this->beta.insert({id, idRef});
             return id;
         }
 
@@ -267,19 +263,13 @@ class T : public Tree {
         // In future should return some reference to the centroid node
         void findCentroid() { // Complexity: ?? [should be O(n/log(n) -> check when algorithm is complete]
             this->cover();
-            // cout << this->print();
+            // cout << this->print() << endl;
             // cout << this->printCoverElements();
             Ti ti = this->generateTi();
-            // cout << ti.print();
-            // for (int i = 0; i < ti.beta.size(); i++) {
-            //     cout << i << " " << ti.beta[i] << " " << endl;
-            // }
+            // cout << ti.print() << endl;
             // cout << ti.printCoverElements();
             Tii tii = ti.generateTii();
-            cout << tii.print();
-            for (int i = 0; i < tii.alpha.size(); i++) {
-                cout << i << " " << tii.alpha[i] << endl;
-            }
+            cout << tii.print() << endl;
         }
 
     public:
