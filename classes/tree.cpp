@@ -1,319 +1,69 @@
-#include "node.cpp"
+#ifndef TREE_CPP
+#define TREE_CPP
+
+#include "../headers/tree.hpp"
 using namespace std;
 
-class Tree {
+string Tree::treeInfo() const {
+    ostringstream os;
+    os << "Tree name: '" << this->name << "'." << endl;
+    os << "Tree size: " << this->size << " nodes." << endl;
+    return os.str();
+}
 
-    protected:
+Tree::Tree() { // Complexity: O(1)
+    this->name = "";
+    this->size = 0;
+}
 
-        string treeInfo() const {
-            ostringstream os;
-            os << "Tree name: '" << this->name << "'." << endl;
-            os << "Tree size: " << this->size << " nodes." << endl;
-            return os.str();
-        }
-
-    public:
-
-        string name;
-        size_t size;
-        vector<Node> tree;
-
-        Tree() { // Complexity: O(1)
-            this->name = "";
-            this->size = 0;
-        }
-
-        Tree(string name, string structure) { // Complexity: Θ(n)
-            this->name = name;
-            stack<uint64_t> s;
-            uint64_t id = 0;
-            for (uint64_t i = 0; i < structure.length(); i++) {
-                if (structure[i] == '(') {
-                    Node* n;
-                    if (s.empty()) {
-                        n = new Node(id);
-                    } else {
-                        n = new Node(id, s.top());
-                        this->tree[s.top()].addChild(id);
-                    }
-                    this->tree.push_back(*n);
-                    s.push(this->tree.size() - 1);
-                    id++;
-                } else if (structure[i] == ')') {
-                    s.pop();
-                }
-            }
-            this->consolidate();
-        }
-
-        ~Tree() {
-            this->tree.clear();
-        }
-
-        void consolidate() { // Complexity: Θ(n)
-            function<void(uint64_t)> dfs = [this,&dfs](uint64_t n)->void {
-                this->tree[n].size = 1;
-                if (this->tree[n].children.size() > 0) {
-                    for (auto child : this->tree[n].children) {
-                        dfs(child);
-                        this->tree[n].size += this->tree[child].size;
-                    }
-                }
-            };
-            dfs(0);
-            this->size = this->tree[0].size;
-        }
-
-        string print() const { // Comprexity: O(n)
-            ostringstream os;
-            os << this->treeInfo();
-            for (auto &n : this->tree) {
-                os << n.print();
-            }
-            return os.str();
-        }
-
-};
-
-class Tii : public Tree {
-
-    public:
-
-        Tii(string name) : Tree() { // Complexity: O(1)
-            this->name = name;
-        }
-
-        uint64_t addNode(uint64_t idRef, uint64_t parent) { // Complexity: O(1)
-            uint64_t id = this->tree.size();
-            Node* n = new Node(id, parent);
-            n->alpha = idRef;
-            this->tree.push_back(*n);
-            if (parent != -1) this->tree[parent].addChild(id);
-            return id;
-        }
-
-};
-
-class Ti : public Tree {
-
-    public:
-
-        Ti(string name) : Tree() { // Complexity: O(1)
-            this->name = name;
-        }
-
-        uint64_t addNode(uint64_t idRef, uint64_t parent, bool red = false) { // Complexity: O(1)
-            uint64_t id = this->tree.size();
-            Node* n = new Node(id, parent, red);
-            n->beta = idRef;
-            this->tree.push_back(*n);
-            if (parent != -1) this->tree[parent].addChild(id);
-            return id;
-        }
-
-        Tii generateTii() { // Complexity: O(n)
-            Tii tii = Tii(this->name + "i");
-            stack<uint64_t> s;
-            s.push(-1); // Root has parent -1
-            function<void(uint64_t)> dfs = [this,&dfs,&tii,&s](uint64_t n)->void {
-                uint64_t id = -1;
-                if (this->tree[n].covEl) {
-                    id = tii.addNode(n, s.top());
-                }
-                if (id != -1) s.push(id);
-                if (this->tree[n].children.size() > 0) {
-                    for (auto child : this->tree[n].children) {
-                        dfs(child);
-                    }
-                }
-                if (id != -1) s.pop();
-            };
-            dfs(0);
-            tii.consolidate();
-            return tii;
-        }
-
-        string printCoverElements() const {
-            ostringstream os;
-            os << this->treeInfo();
-            if (!this->tree[0].covEl) {
-                os << "This tree has not been covered." << endl;
+Tree::Tree(string name, string structure) { // Complexity: Θ(n)
+    this->name = name;
+    stack<uint64_t> s;
+    uint64_t id = 0;
+    for (uint64_t i = 0; i < structure.length(); i++) {
+        if (structure[i] == '(') {
+            Node* n;
+            if (s.empty()) {
+                n = new Node(id);
             } else {
-                uint64_t i = 0;
-                for (auto &n : this->tree) {
-                    if (n.covEl) {
-                        if (n.pcsChildren.size() == 0) {
-                            os << "Cover element #" << i << ": " << n.id << endl;
-                            i++;
-                        }
-                        for (auto cover : n.pcsChildren) {
-                            os << "Cover element #" << i << ": " << n.id;
-                            queue<uint64_t> c;
-                            for (auto n : cover) {
-                                c.push(n);
-                            }
-                            while (!c.empty()) {
-                                os << " " << c.front();
-                                if (this->tree[c.front()].pcsChildren.size() > 0) {
-                                    for (auto n : this->tree[c.front()].pcsChildren[0]) {
-                                        c.push(this->tree[n].id);
-                                    }
-                                }
-                                c.pop();
-                            }
-                            os << endl;
-                            i++;
-                        }
-                    }
-                }
+                n = new Node(id, s.top());
+                this->tree[s.top()].addChild(id);
             }
-            return os.str();
+            this->tree.push_back(*n);
+            s.push(this->tree.size() - 1);
+            id++;
+        } else if (structure[i] == ')') {
+            s.pop();
         }
+    }
+    this->consolidate();
+}
 
-};
+Tree::~Tree() {
+    this->tree.clear();
+}
 
-class T : public Tree {
-
-    private:
-
-        size_t m;
-
-        void cover() { // Complexity: O(n)
-            function<void(uint64_t)> dfs = [this,&dfs](uint64_t n)->void {
-                if (this->tree[n].children.size() > 0) {
-                    for (auto child : this->tree[n].children) {
-                        dfs(child);
-                    }
-                }
-                this->group(n);
-            };
-            dfs(0);
-            this->tree[0].covEl = true;
-        }
-
-        void group(uint64_t n) { // Complexity: O(x) [where x is the number of n's children] / O(1) if n is a leaf
-            if (this->tree[n].size == 1) { // If n is a leaf
-                this->tree[n].pcsSize = 1;
-            } else if (this->tree[n].size > 1) { // If n is not a leaf
-                uint64_t y = 0;
-                uint64_t i = 0;
-                vector<uint64_t> c;
-                for (auto child : this->tree[n].children) {
-                    if (this->tree[child].covEl) continue; // If this child is already a cover element
-                    y += this->tree[child].pcsSize;
-                    c.push_back(child);
-                    if (y >= this->m - 1) {
-                        this->tree[n].covEl = true;
-                        this->tree[n].pcsChildren.push_back(c);
-                        c.clear();
-                        y = 0;
-                    }
-                    i++;
-                }
-                if (this->tree[n].covEl && y < this->m - 1) {
-                    for (auto t : c) {
-                        this->tree[n].pcsChildren.back().push_back(t);
-                    }
-                    c.clear();
-                }
-                if (!this->tree[n].covEl) {
-                    this->tree[n].pcsSize = y + 1;
-                    this->tree[n].pcsChildren.push_back(c);
-                    c.clear();
-                }
-                if (this->tree[n].pcsChildren.size() == 0 && y == 0) {
-                    this->tree[n].pcsSize = 1;
-                }
+void Tree::consolidate() { // Complexity: Θ(n)
+    function<void(uint64_t)> dfs = [this,&dfs](uint64_t n)->void {
+        this->tree[n].size = 1;
+        if (this->tree[n].children.size() > 0) {
+            for (auto child : this->tree[n].children) {
+                dfs(child);
+                this->tree[n].size += this->tree[child].size;
             }
         }
+    };
+    dfs(0);
+    this->size = this->tree[0].size;
+}
 
-        Ti generateTi() { // Complexity: O(n)
-            Ti ti = Ti(this->name + "i");
-            stack<uint64_t> s;
-            s.push(-1); // Root has parent -1
-            function<uint64_t(uint64_t,bool,vector<uint64_t>)> dfs = [this,&dfs,&ti,&s](uint64_t n, bool red, vector<uint64_t> c)->uint64_t {
-                uint64_t id = -1;
-                if (!this->tree[n].visited || red) {
-                    id = ti.addNode(this->tree[n].id, s.top(), red);
-                    if (this->tree[n].covEl) ti.tree[id].covEl = true; // Copy root of PCSs
-                    s.push(id);
-                    if (this->tree[n].pcsChildren.size() > 1 && !red) {
-                        for (auto pcs : this->tree[n].pcsChildren) {
-                            dfs(n, true, pcs);
-                        }
-                    }
-                    if (c.size() > 0) {
-                        vector<uint64_t> t;
-                        for (auto child : c) {
-                            int s = dfs(child, false, this->tree[child].children);
-                            if (s != -1) t.push_back(s);
-                        }
-                        if (t.size() > 0) ti.tree[id].pcsChildren.push_back(t); // Copy PCSs children
-                    }
-                    s.pop();
-                    this->tree[n].visited = true;
-                }
-                return (id == -1)? id : ((ti.tree[id].covEl)? -1 : id);
-            };
-            dfs(0, false, this->tree[0].children);
-            ti.consolidate();
-            return ti;
-        }
+string Tree::print() const { // Comprexity: O(n)
+    ostringstream os;
+    os << this->treeInfo();
+    for (auto &n : this->tree) {
+        os << n.print();
+    }
+    return os.str();
+}
 
-        // In future should return some reference to the centroid node
-        void findCentroid() { // Complexity: ?? [should be O(n/log(n) -> check when algorithm is complete]
-            this->cover();
-            // cout << this->print() << endl;
-            // cout << this->printCoverElements();
-            Ti ti = this->generateTi();
-            // cout << ti.print() << endl;
-            // cout << ti.printCoverElements();
-            Tii tii = ti.generateTii();
-            cout << tii.print() << endl;
-        }
-
-    public:
-
-        T(string name, string structure) : Tree(name, structure) { // Complexity: Θ(n)
-            this->m = floor(log2(this->size)); // m = log(n)
-        }
-
-        // In future should return the centroid tree
-        void buildCentroidTree() { // Complexity: ?? [should be O(n) -> check when algorithm is complete]
-            this->findCentroid();
-        }
-
-        string printCoverElements() const {
-            ostringstream os;
-            os << this->treeInfo();
-            if (!this->tree[0].covEl) {
-                os << "This tree has not been covered." << endl;
-            } else {
-                uint64_t i = 0;
-                for (auto &n : this->tree) {
-                    if (n.covEl) {
-                        for (auto cover : n.pcsChildren) {
-                            os << "Cover element #" << i << ": " << n.id;
-                            queue<uint64_t> c;
-                            for (auto n : cover) {
-                                c.push(n);
-                            }
-                            while (!c.empty()) {
-                                os << " " << c.front();
-                                if (this->tree[c.front()].pcsChildren.size() > 0) {
-                                    for (auto n : this->tree[c.front()].pcsChildren[0]) {
-                                        c.push(this->tree[n].id);
-                                    }
-                                }
-                                c.pop();
-                            }
-                            os << endl;
-                            i++;
-                        }
-                    }
-                }
-            }
-            return os.str();
-        }
-
-};
+#endif

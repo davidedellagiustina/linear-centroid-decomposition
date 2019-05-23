@@ -1,10 +1,14 @@
+#ifndef MAIN_CPP
+#define MAIN_CPP
+#endif
+
 #include "headers/main.hpp"
 using namespace std;
 
 string tree;
 
 int main(int argc, char* argv[]) {
-    if (argc <= 1) {
+    if (argc < 2) {
         cout << "No input file specified." << endl;
         return 0;
     }
