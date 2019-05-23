@@ -49,7 +49,7 @@ Tii Ti::generateTii() { // Complexity: O(n)
         if (id != -1) s.pop();
     };
     dfs(0);
-    // tii.consolidate(*this);
+    tii.consolidate(this->tree);
     return tii;
 }
 

@@ -39,9 +39,6 @@ string Node::print() const {
     } else {
         os << " is the root of the tree.";
     }
-    // Temp
-    os << " Size: " << this->size;
-    //
     os << endl;
     return os.str();
 }
