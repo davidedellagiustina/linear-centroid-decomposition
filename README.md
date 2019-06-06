@@ -1,3 +1,5 @@
-# Centroid Decomposition
+# A new linear-time algorithm for centroid decomposition
 
-New centroid decomposition algorithm that runs in O(n), instead of the classic one which runs in O(n*log(n)).
+The centroid of a tree is a node that, when removed, breaks the tree in connected components of size at most half of that of the original tree. By recursing this procedure on the components, one obtains the centroid decomposition of the tree, also known as centroid tree. The centroid tree has logarithmic height and its construction is a powerful pre-processing step in several tree-processing algorithms. The folklore recursive algorithm for computing the centroid tree runs in O(n*log(n)) time.
+
+In this repository the code of a new algorithm for computing the centroid decomposition of a tree is included. This new algorithm runs in O(n) time. The procedure first decomposes the original tree into disjoint logarithmic-sized subtrees, then is able to locate the centroid in O(n/log(n)) time. So, by recursing this procedure, it is able to compute the centroid tree in linear time.
