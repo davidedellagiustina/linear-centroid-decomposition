@@ -21,6 +21,7 @@ class Node {
         vector<vector<uint64_t>> pcsChildren;
         uint64_t alpha = -1;
         uint64_t beta = -1;
+        size_t weight = 0;
 
         Node(uint64_t id, bool red);
 

@@ -12,7 +12,7 @@ class Tii : public Tree {
 
         uint64_t addNode(uint64_t idRef, uint64_t parent);
 
-        void consolidate(vector<Node> ti);
+        void computeDeltas(vector<Node> ti);
 
 };
 
