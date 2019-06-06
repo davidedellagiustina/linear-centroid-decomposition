@@ -22,6 +22,8 @@ class Node {
         uint64_t alpha = -1;
         uint64_t beta = -1;
         size_t weight = 0;
+        int64_t p_delta;
+        vector<size_t> c_deltas;
 
         Node(uint64_t id, bool red);
 

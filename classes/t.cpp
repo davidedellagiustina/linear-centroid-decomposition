@@ -95,7 +95,20 @@ void T::findCentroid() { // Complexity: ?? [should be O(n/log(n) -> check when a
     // cout << ti.print() << endl;
     // cout << ti.printCoverElements();
     Tii tii = ti.generateTii();
-    cout << tii.print() << endl;
+    // cout << tii.print() << endl;
+    function<void(uint64_t)> dfs = [&dfs,&tii](uint64_t n)->void {
+        cout << "Node #" << tii.tree[n].id << ":" << endl;
+        cout << " - p_delta: " << tii.tree[n].p_delta << endl;
+        if (tii.tree[n].children.size() > 0) {
+            for (auto c_delta : tii.tree[n].c_deltas) {
+                cout << " - c_delta: " << c_delta << endl;
+            }
+            for (auto child : tii.tree[n].children) {
+                dfs(child);
+            }
+        }
+    };
+    dfs(0);
 }
 
 T::T(string name, string structure) : Tree(name, structure) { // Complexity: Θ(n)
