@@ -17,63 +17,50 @@ uint64_t Tii::addNode(uint64_t idRef, int64_t parent) { // Complexity: O(1)
     return id;
 }
 
-void Tii::computeDeltas(vector<Node> ti) { // Complexity: O(n/log(n))^2
-    // Compute weights
-    function<void(uint64_t)> dfs = [this,&dfs,&ti](uint64_t n)->void {
+void Tii::computeDeltas(vector<Node> ti) { // Complexity: O(n/log(n))
+    // Compute weights and c_deltas
+    function<void(uint64_t)> weightsAndCDeltas = [this,&weightsAndCDeltas,&ti](uint64_t n)->void { // Complexity: O(n/log(n))
         this->tree[n].weight = ti[this->tree[n].alpha].size;
         if (this->tree[n].children.size() > 0) {
             for (auto child : this->tree[n].children) {
-                dfs(child);
+                weightsAndCDeltas(child);
                 this->tree[n].weight -= ti[this->tree[child].alpha].size;
+                uint64_t c = this->tree[child].weight;
+                if (this->tree[child].c_deltas.size() > 0) {
+                    for (auto c_delta : this->tree[child].c_deltas) {
+                        c += c_delta;
+                    }
+                }
+                this->tree[n].c_deltas.push_back(c);
             }
         }
+
     };
-    dfs(0);
-    // Compute deltas (requires weights to be already computed)
-    function<void(uint64_t)> deltas = [this,&deltas](uint64_t n)->void {
-        // Compute p_delta
+    weightsAndCDeltas(0);
+    // Compute p_deltas (requires weights and c_deltas to be already computed)
+    function<void(uint64_t)> pDeltas = [this,&pDeltas](uint64_t n)->void { // Complexity: O(n/log(n))
         if (this->tree[n].parent == -1) {
             this->tree[n].p_delta = -1;
         } else {
             this->tree[n].p_delta = 0;
-            if (this->tree[this->tree[n].parent].parent != -1) this->tree[n].p_delta += this->tree[this->tree[n].parent].p_delta;
             this->tree[n].p_delta += this->tree[this->tree[n].parent].weight;
+            if (this->tree[this->tree[n].parent].parent != -1) this->tree[n].p_delta += this->tree[this->tree[n].parent].p_delta;
+            uint64_t i = 0;
             for (auto child : this->tree[this->tree[n].parent].children) {
                 if (this->tree[child].id != this->tree[n].id) {
-                    function<int(uint64_t)> sum = [this,&sum](uint64_t n)->int {
-                        int count = this->tree[n].weight;
-                        if (this->tree[n].children.size() > 0) {
-                            for (auto child : this->tree[n].children) {
-                                count += sum(child);
-                            }
-                        }
-                        return count;
-                    };
-                    this->tree[n].p_delta += sum(child);
+                    this->tree[n].p_delta += this->tree[this->tree[n].parent].c_deltas[i];
                 }
+                i++;
             }
         }
-        // Compute c_deltas
+        // Recursion
         if (this->tree[n].children.size() > 0) {
             for (auto child : this->tree[n].children) {
-                function<int(uint64_t)> sum = [this,&sum](uint64_t n)->int {
-                    int count = this->tree[n].weight;
-                    if (this->tree[n].children.size() > 0) {
-                        for (auto child : this->tree[n].children) {
-                            count += sum(child);
-                        }
-                    }
-                    return count;
-                };
-                this->tree[n].c_deltas.push_back(sum(child));
-            }
-            // Recursion
-            for (auto child : this->tree[n].children) {
-                deltas(child);
+                pDeltas(child);
             }
         }
     };
-    deltas(0);
+    pDeltas(0);
 }
 
 #endif
