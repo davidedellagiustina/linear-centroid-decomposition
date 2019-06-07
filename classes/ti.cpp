@@ -8,7 +8,7 @@ Ti::Ti(string name) : Tree() { // Complexity: O(1)
     this->name = name;
 }
 
-uint64_t Ti::addNode(uint64_t idRef, uint64_t parent, bool red = false) { // Complexity: O(1)
+uint64_t Ti::addNode(uint64_t idRef, int64_t parent, bool red = false) { // Complexity: O(1)
     uint64_t id = this->tree.size();
     Node* n = new Node(id, parent, red);
     n->beta = idRef;

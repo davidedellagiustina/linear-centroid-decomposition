@@ -10,7 +10,7 @@ class Node {
     
         // General
         uint64_t id;
-        uint64_t parent;
+        int64_t parent;
         vector<uint64_t> children;
         size_t size = 0;
         // Used for tree covering
@@ -19,15 +19,15 @@ class Node {
         bool visited = false; // used during Ti generation
         size_t pcsSize = 0;
         vector<vector<uint64_t>> pcsChildren;
-        uint64_t alpha = -1;
-        uint64_t beta = -1;
+        int64_t alpha = -1;
+        int64_t beta = -1;
         size_t weight = 0;
         int64_t p_delta;
         vector<size_t> c_deltas;
 
         Node(uint64_t id, bool red);
 
-        Node(uint64_t id, uint64_t parent, bool red);
+        Node(uint64_t id, int64_t parent, bool red);
 
         ~Node();
 

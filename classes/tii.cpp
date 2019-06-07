@@ -8,7 +8,7 @@ Tii::Tii(string name) : Tree() { // Complexity: O(1)
     this->name = name;
 }
 
-uint64_t Tii::addNode(uint64_t idRef, uint64_t parent) { // Complexity: O(1)
+uint64_t Tii::addNode(uint64_t idRef, int64_t parent) { // Complexity: O(1)
     uint64_t id = this->tree.size();
     Node* n = new Node(id, parent);
     n->alpha = idRef;
@@ -17,7 +17,7 @@ uint64_t Tii::addNode(uint64_t idRef, uint64_t parent) { // Complexity: O(1)
     return id;
 }
 
-void Tii::computeDeltas(vector<Node> ti) { // Complexity: O(n/log(n))
+void Tii::computeDeltas(vector<Node> ti) { // Complexity: O(n/log(n))^2
     // Compute weights
     function<void(uint64_t)> dfs = [this,&dfs,&ti](uint64_t n)->void {
         this->tree[n].weight = ti[this->tree[n].alpha].size;

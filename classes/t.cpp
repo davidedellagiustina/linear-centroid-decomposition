@@ -87,7 +87,7 @@ Ti T::generateTi() { // Complexity: O(n)
 }
 
 // In future should return some reference to the centroid node
-void T::findCentroid() { // Complexity: ?? [should be O(n/log(n) -> check when algorithm is complete]
+void T::findCentroid() { // Complexity: O(n) [to generate structure] + ?? [should be O(n/log(n) -> check when algorithm is complete]
     this->cover();
     // cout << this->print() << endl;
     // cout << this->printCoverElements();
@@ -96,7 +96,7 @@ void T::findCentroid() { // Complexity: ?? [should be O(n/log(n) -> check when a
     // cout << ti.printCoverElements();
     Tii tii = ti.generateTii();
     // cout << tii.print() << endl;
-    function<void(uint64_t)> dfs = [&dfs,&tii](uint64_t n)->void {
+    /*function<void(uint64_t)> dfs = [&dfs,&tii](uint64_t n)->void {
         cout << "Node #" << tii.tree[n].id << ":" << endl;
         cout << " - p_delta: " << tii.tree[n].p_delta << endl;
         if (tii.tree[n].children.size() > 0) {
@@ -107,8 +107,56 @@ void T::findCentroid() { // Complexity: ?? [should be O(n/log(n) -> check when a
                 dfs(child);
             }
         }
+    };*/
+    // dfs(0);
+    // TODO: go in the direction of the centroid
+    function<bool(uint64_t)> containsCentroid = [this,&tii](uint64_t n)->bool {
+        if (tii.tree[n].p_delta > this->size / 2.0) return false;
+        if (tii.tree[n].c_deltas.size() > 0) {
+            for (auto c_delta : tii.tree[n].c_deltas) {
+                if (c_delta > this->size / 2.0) return false;
+            }
+        }
+        return true;
     };
-    dfs(0);
+    function<int64_t(uint64_t)> tiiDfs = [&tii,&tiiDfs,&containsCentroid](uint64_t n)->int64_t {
+        int64_t centroidSubtree;
+        if (containsCentroid(n)) {
+            centroidSubtree = n;
+        } else if (tii.tree[n].children.size() > 0) {
+            for (auto child : tii.tree[n].children) {
+                int64_t h = tiiDfs(child);
+                if (h != -1) centroidSubtree = h;
+            }
+        } else {
+            centroidSubtree = -1;
+        }
+        return centroidSubtree;
+    };
+    function<bool(uint64_t)> isCentroid = [this,&ti](uint64_t n)->bool {
+        if (this->size - this->tree[ti.tree[n].beta].size > this->size / 2.0) return false;
+        if (this->tree[ti.tree[n].beta].children.size() > 0) {
+            for (auto child : this->tree[ti.tree[n].beta].children) {
+                if (this->tree[child].size > this->size / 2.0) return false;
+            }
+        }
+        return true;
+    };
+    function<int64_t(uint64_t)> tiDfs = [this,&ti,&tiDfs,&isCentroid](uint64_t n)->int64_t {
+        int64_t centroid;
+        if (isCentroid(n)) {
+            centroid = n;
+        } else if (ti.tree[n].pcsChildren.size() > 0) {
+            for (auto child : ti.tree[n].pcsChildren[0]) {
+                int64_t h = tiDfs(child);
+                if (h != -1) centroid = h;
+            }
+        } else {
+            centroid = -1;
+        }
+        return centroid;
+    };
+    cout << ti.tree[tiDfs(tii.tree[tiiDfs(0)].alpha)].beta << endl;
 }
 
 T::T(string name, string structure) : Tree(name, structure) { // Complexity: Θ(n)

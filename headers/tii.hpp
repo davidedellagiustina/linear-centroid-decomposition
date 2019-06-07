@@ -10,7 +10,7 @@ class Tii : public Tree {
 
         Tii(string name);
 
-        uint64_t addNode(uint64_t idRef, uint64_t parent);
+        uint64_t addNode(uint64_t idRef, int64_t parent);
 
         void computeDeltas(vector<Node> ti);
 

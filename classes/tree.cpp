@@ -18,7 +18,7 @@ Tree::Tree() { // Complexity: O(1)
 
 Tree::Tree(string name, string structure) { // Complexity: Θ(n)
     this->name = name;
-    stack<uint64_t> s;
+    stack<int64_t> s;
     uint64_t id = 0;
     for (uint64_t i = 0; i < structure.length(); i++) {
         if (structure[i] == '(') {
