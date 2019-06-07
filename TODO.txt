@@ -1,3 +1,0 @@
-TODO:
- 1. Find centroid of T
- 2. Build centroid tree
