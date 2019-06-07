@@ -33,10 +33,10 @@ void Ti::consolidate() { // Complexity: Θ(n)
 
 Tii Ti::generateTii() { // Complexity: O(n)
     Tii tii = Tii(this->name + "i");
-    stack<uint64_t> s;
+    stack<int64_t> s;
     s.push(-1); // Root has parent -1
     function<void(uint64_t)> dfs = [this,&dfs,&tii,&s](uint64_t n)->void {
-        uint64_t id = -1;
+        int64_t id = -1;
         if (this->tree[n].covEl) {
             id = tii.addNode(n, s.top());
         }
@@ -68,20 +68,18 @@ string Ti::printCoverElements() const {
                     i++;
                 }
                 for (auto cover : n.pcsChildren) {
-                    os << "Cover element #" << i << ": " << n.id;
-                    queue<uint64_t> c;
-                    for (auto n : cover) {
-                        c.push(n);
-                    }
-                    while (!c.empty()) {
-                        os << " " << c.front();
-                        if (this->tree[c.front()].pcsChildren.size() > 0) {
-                            for (auto n : this->tree[c.front()].pcsChildren[0]) {
-                                c.push(this->tree[n].id);
+                    os << "Cover element #" << i << ":";
+                    function<void(uint64_t,vector<uint64_t>)> dfs = [this,&dfs,&os](uint64_t n, vector<uint64_t> c)->void  {
+                        os << " " << this->tree[n].id;
+                        if (c.size() > 0) {
+                            for (auto child : c) {
+                                vector<uint64_t> h;
+                                if (this->tree[child].pcsChildren.size() > 0) h = this->tree[child].pcsChildren[0];
+                                dfs(child, h);
                             }
                         }
-                        c.pop();
-                    }
+                    };
+                    dfs(n.id, cover);
                     os << endl;
                     i++;
                 }

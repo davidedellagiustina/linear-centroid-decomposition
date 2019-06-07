@@ -6,13 +6,13 @@ using namespace std;
 
 Node::Node(uint64_t id, bool red = false) { // Complexity: O(1)
     this->id = id;
-    if (red) { this->color = 1; }
+    if (red) this->color = 1;
     this->parent = -1;
 }
 
 Node::Node(uint64_t id, int64_t parent, bool red = false) { // Complexity: O(1)
     this->id = id;
-    if (red) { this->color = 1; }
+    if (red) this->color = 1;
     this->parent = parent;
 }
 

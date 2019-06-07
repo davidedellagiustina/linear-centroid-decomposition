@@ -19,11 +19,11 @@ class Node {
         bool visited = false; // used during Ti generation
         size_t pcsSize = 0;
         vector<vector<uint64_t>> pcsChildren;
-        int64_t alpha = -1;
-        int64_t beta = -1;
+        int64_t alpha = -1; // associates T" nodes to T' nodes
+        int64_t beta = -1; // associates T' nodes to T nodes
         size_t weight = 0;
         int64_t p_delta;
-        vector<size_t> c_deltas;
+        vector<uint64_t> c_deltas;
 
         Node(uint64_t id, bool red);
 

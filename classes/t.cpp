@@ -55,10 +55,10 @@ void T::group(uint64_t n) { // Complexity: O(x) [where x is the number of n's ch
 
 Ti T::generateTi() { // Complexity: O(n)
     Ti ti = Ti(this->name + "i");
-    stack<uint64_t> s;
+    stack<int64_t> s;
     s.push(-1); // Root has parent -1
-    function<uint64_t(uint64_t,bool,vector<uint64_t>)> dfs = [this,&dfs,&ti,&s](uint64_t n, bool red, vector<uint64_t> c)->uint64_t {
-        uint64_t id = -1;
+    function<int64_t(uint64_t,bool,vector<uint64_t>)> dfs = [this,&dfs,&ti,&s](uint64_t n, bool red, vector<uint64_t> c)->int64_t {
+        int64_t id = -1;
         if (!this->tree[n].visited || red) {
             id = ti.addNode(this->tree[n].id, s.top(), red);
             if (this->tree[n].covEl) ti.tree[id].covEl = true; // Copy root of PCSs
@@ -86,8 +86,7 @@ Ti T::generateTi() { // Complexity: O(n)
     return ti;
 }
 
-// In future should return some reference to the centroid node
-void T::findCentroid() { // Complexity: O(n) [to generate structure] + ?? [should be O(n/log(n) -> check when algorithm is complete]
+uint64_t T::findCentroid() { // Complexity: O(n) [to generate structure] + ?? [should be O(n/log(n) -> check when algorithm is complete]
     this->cover();
     // cout << this->print() << endl;
     // cout << this->printCoverElements();
@@ -156,7 +155,7 @@ void T::findCentroid() { // Complexity: O(n) [to generate structure] + ?? [shoul
         }
         return centroid;
     };
-    cout << ti.tree[tiDfs(tii.tree[tiiDfs(0)].alpha)].beta << endl;
+    return ti.tree[tiDfs(tii.tree[tiiDfs(0)].alpha)].beta;
 }
 
 T::T(string name, string structure) : Tree(name, structure) { // Complexity: Θ(n)
@@ -165,7 +164,7 @@ T::T(string name, string structure) : Tree(name, structure) { // Complexity: Θ(
 
 // In future should return the centroid tree
 void T::buildCentroidTree() { // Complexity: ?? [should be O(n) -> check when algorithm is complete]
-    this->findCentroid();
+    cout << this->findCentroid() << endl;
 }
 
 string T::printCoverElements() const {
@@ -177,21 +176,23 @@ string T::printCoverElements() const {
         uint64_t i = 0;
         for (auto &n : this->tree) {
             if (n.covEl) {
+                if (n.pcsChildren.size() == 0) {
+                    os << "Cover element #" << i << ": " << n.id << endl;
+                    i++;
+                }
                 for (auto cover : n.pcsChildren) {
-                    os << "Cover element #" << i << ": " << n.id;
-                    queue<uint64_t> c;
-                    for (auto n : cover) {
-                        c.push(n);
-                    }
-                    while (!c.empty()) {
-                        os << " " << c.front();
-                        if (this->tree[c.front()].pcsChildren.size() > 0) {
-                            for (auto n : this->tree[c.front()].pcsChildren[0]) {
-                                c.push(this->tree[n].id);
+                    os << "Cover element #" << i << ":";
+                    function<void(uint64_t,vector<uint64_t>)> dfs = [this,&dfs,&os](uint64_t n, vector<uint64_t> c)->void  {
+                        os << " " << this->tree[n].id;
+                        if (c.size() > 0) {
+                            for (auto child : c) {
+                                vector<uint64_t> h;
+                                if (this->tree[child].pcsChildren.size() > 0) h = this->tree[child].pcsChildren[0];
+                                dfs(child, h);
                             }
                         }
-                        c.pop();
-                    }
+                    };
+                    dfs(n.id, cover);
                     os << endl;
                     i++;
                 }

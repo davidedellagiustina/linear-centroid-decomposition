@@ -16,8 +16,7 @@ class T : public Tree {
 
         Ti generateTi();
 
-        // In future should return some reference to the centroid node
-        void findCentroid();
+        uint64_t findCentroid();
 
     public:
 
