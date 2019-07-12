@@ -24,6 +24,8 @@ class Node {
         size_t weight = 0;
         int64_t p_delta;
         vector<uint64_t> c_deltas;
+        // Used for centroid computation
+        bool deleted = false;
 
         Node(uint64_t id, bool red);
 
@@ -32,6 +34,8 @@ class Node {
         ~Node();
 
         void addChild(uint64_t child);
+
+        void removeChild(uint64_t child);
 
         string print() const;
 

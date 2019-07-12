@@ -61,7 +61,7 @@ string Tree::print() const { // Comprexity: O(n)
     ostringstream os;
     os << this->treeInfo();
     for (auto &n : this->tree) {
-        os << n.print();
+        if (!n.deleted) os << n.print();
     }
     return os.str();
 }

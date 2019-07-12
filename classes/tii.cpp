@@ -4,8 +4,11 @@
 #include "../headers/tii.hpp"
 using namespace std;
 
+Tii::Tii() : Tree() {}
+
 Tii::Tii(string name) : Tree() { // Complexity: O(1)
     this->name = name;
+    this->roots.push_back(0);
 }
 
 uint64_t Tii::addNode(uint64_t idRef, int64_t parent) { // Complexity: O(1)

@@ -9,6 +9,8 @@ class T : public Tree {
     private:
 
         size_t m;
+        Ti ti;
+        Tii tii;
 
         void cover();
 

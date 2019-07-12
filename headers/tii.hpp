@@ -8,6 +8,10 @@ class Tii : public Tree {
 
     public:
 
+        vector<uint64_t> roots;
+
+        Tii();
+
         Tii(string name);
 
         uint64_t addNode(uint64_t idRef, int64_t parent);
