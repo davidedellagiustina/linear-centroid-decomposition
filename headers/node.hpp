@@ -20,6 +20,7 @@ class Node {
         size_t pcsSize = 0;
         vector<vector<uint64_t>> pcsChildren;
         int64_t alpha = -1; // associates T" nodes to T' nodes
+        int64_t inv_alpha = -1; // inverse of alpha function
         int64_t beta = -1; // associates T' nodes to T nodes
         size_t weight = 0;
         int64_t p_delta;

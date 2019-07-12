@@ -16,6 +16,10 @@ class Tii : public Tree {
 
         uint64_t addNode(uint64_t idRef, int64_t parent);
 
+        void removeNode(uint64_t id);
+
+        void removeRoot(uint64_t id);
+
         void computeDeltas(vector<Node> ti);
 
 };

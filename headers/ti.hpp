@@ -8,7 +8,9 @@ class Ti : public Tree {
 
     private:
 
-        void splitPcs(uint64_t id);
+        void splitPcs(uint64_t id, Tii& tii);
+
+        void removeRoot(uint64_t id);
 
     public:
 
@@ -18,9 +20,9 @@ class Ti : public Tree {
 
         Ti(string name);
 
-        uint64_t addNode(uint64_t idRef, int64_t parent, bool red);
+        uint64_t addNode(uint64_t idRef, int64_t parent, bool red = false);
 
-        void removeNode(uint64_t id, bool look_up);
+        void removeNode(uint64_t id, Tii& tii);
 
         void consolidate();
 

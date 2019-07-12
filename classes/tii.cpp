@@ -20,6 +20,27 @@ uint64_t Tii::addNode(uint64_t idRef, int64_t parent) { // Complexity: O(1)
     return id;
 }
 
+void Tii::removeNode(uint64_t id) { // Complexity: O(x) where x is the number of children
+    // Remove children references
+    if (this->tree[id].children.size() > 0) {
+        for (auto child : this->tree[id].children) {
+            this->tree[child].parent = -1;
+        }
+    }
+    // Delete node
+    this->tree[id].deleted = true;
+    // Remove parent reference
+    if (this->tree[id].parent != -1) {
+        this->tree[this->tree[id].parent].removeChild(id);
+    }
+}
+
+void Tii::removeRoot(uint64_t id) { // Complexity: O(roots)
+    for (auto it = this->roots.begin(); it != this->roots.end(); it++) {
+        if (*it == id) this->roots.erase(it);
+    }
+}
+
 void Tii::computeDeltas(vector<Node> ti) { // Complexity: O(n/log(n))
     // Compute weights and c_deltas
     function<void(uint64_t)> weightsAndCDeltas = [this,&weightsAndCDeltas,&ti](uint64_t n)->void { // Complexity: O(n/log(n))

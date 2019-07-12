@@ -18,7 +18,7 @@ class T : public Tree {
 
         Ti generateTi();
 
-        uint64_t findCentroid();
+        uint64_t findCentroid(uint64_t root);
 
     public:
 
