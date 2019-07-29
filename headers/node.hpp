@@ -27,6 +27,8 @@ class Node {
         vector<uint64_t> c_deltas;
         // Used for centroid computation
         bool deleted = false;
+        // Used for centroid decomposition
+        uint64_t idRef;
 
         Node(uint64_t id, bool red);
 

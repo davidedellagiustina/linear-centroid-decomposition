@@ -1,6 +1,7 @@
 #ifndef T_HPP
 #define T_HPP
 
+#include "ct.hpp"
 #include "ti.hpp"
 using std::string;
 
@@ -24,8 +25,9 @@ class T : public Tree {
 
         T(string name, string structure);
 
-        // In future should return the centroid tree
-        void buildCentroidTree();
+        void removeNode(uint64_t id);
+
+        CentroidTree buildCentroidTree();
 
         string printCoverElements() const;
 

@@ -3,6 +3,7 @@
 
 #include "tii.hpp"
 using std::string;
+using std::vector;
 
 class Ti : public Tree {
 
@@ -10,11 +11,7 @@ class Ti : public Tree {
 
         void splitPcs(uint64_t id, Tii& tii);
 
-        void removeRoot(uint64_t id);
-
     public:
-
-        vector<uint64_t> roots;
 
         Ti();
 
@@ -22,7 +19,7 @@ class Ti : public Tree {
 
         uint64_t addNode(uint64_t idRef, int64_t parent, bool red = false);
 
-        void removeNode(uint64_t id, Tii& tii);
+        vector<uint64_t> removeNode(uint64_t id, Tii& tii);
 
         void consolidate();
 

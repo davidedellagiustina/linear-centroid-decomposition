@@ -10,7 +10,7 @@ void Ti::splitPcs(uint64_t id, Tii& tii) { // Complexity: O(x) where x is the nu
     while (!this->tree[root].covEl) {
         root = this->tree[root].parent;
     }
-    // Delete node on T''
+    // Delete node on T"
     tii.removeNode(this->tree[root].inv_alpha);
     tii.removeRoot(this->tree[root].inv_alpha);
     // Split PCS into singleton trees
@@ -22,10 +22,9 @@ void Ti::splitPcs(uint64_t id, Tii& tii) { // Complexity: O(x) where x is the nu
         this->tree[id].pcsChildren.clear();
         this->tree[id].covEl = true;
         if (!this->tree[id].deleted) {
-            if (s.top() == -1) this->roots.push_back(id); // Ad to roots' list
-            // Create new node on T''
+            // Create new node on T"
             uint64_t n = tii.addNode(id, s.top());
-            if (s.top() == -1) tii.roots.push_back(n); // Add to roots' list
+            if (s.top() == -1) tii.roots.push_back(n);
             this->tree[id].inv_alpha = n;
             s.push(n);
         }
@@ -35,7 +34,11 @@ void Ti::splitPcs(uint64_t id, Tii& tii) { // Complexity: O(x) where x is the nu
             }
             if (c.size() > pc[0].size()) {
                 for (auto child : c) {
-                    tii.tree[this->tree[child].inv_alpha].parent = this->tree[id].inv_alpha; // Fix disconnected but already existing nodes in T''
+                    if (find(pc[0].begin(), pc[0].end(), child) == pc[0].end()) {
+                        tii.tree[this->tree[child].inv_alpha].parent = this->tree[id].inv_alpha; // Fix disconnected but already existing nodes in T"
+                        tii.tree[this->tree[id].inv_alpha].addChild(this->tree[child].inv_alpha);
+                        tii.removeRoot(this->tree[child].inv_alpha);
+                    }
                 }
             }
         }
@@ -44,17 +47,10 @@ void Ti::splitPcs(uint64_t id, Tii& tii) { // Complexity: O(x) where x is the nu
     dfs(root);
 }
 
-void Ti::removeRoot(uint64_t id) { // Complexity: O(roots)
-    for (auto it = this->roots.begin(); it != this->roots.end(); it++) {
-        if (*it == id) this->roots.erase(it);
-    }
-}
-
 Ti::Ti() : Tree() {}
 
 Ti::Ti(string name) : Tree() { // Complexity: O(1)
     this->name = name;
-    this->roots.push_back(0);
 }
 
 uint64_t Ti::addNode(uint64_t idRef, int64_t parent, bool red) { // Complexity: O(1)
@@ -62,12 +58,13 @@ uint64_t Ti::addNode(uint64_t idRef, int64_t parent, bool red) { // Complexity: 
     Node* n = new Node(id, parent, red);
     n->beta = idRef;
     this->tree.push_back(*n);
+    this->size++;
     if (parent != -1) this->tree[parent].addChild(id);
     return id;
 }
 
-void Ti::removeNode(uint64_t id, Tii& tii) { // Complexity: O(x) where x is the number of children of parent
-    uint64_t beta = this->tree[id].beta;
+vector<uint64_t> Ti::removeNode(uint64_t id, Tii& tii) { // Complexity: O(x) where x is the number of children of parent
+    vector<uint64_t> roots;
     if (this->tree[id].color == 0) { // If node is black
         if (this->tree[id].children.size() > 0) {
             for (auto child : this->tree[id].children) {
@@ -75,24 +72,43 @@ void Ti::removeNode(uint64_t id, Tii& tii) { // Complexity: O(x) where x is the 
                     if (this->tree[child].children.size() > 0) {
                         for (auto c : this->tree[child].children) {
                             this->tree[c].parent = -1;
+                            if (!this->tree[c].deleted) roots.push_back(c);
                         }
                     }
                     this->tree[child].deleted = true;
-                    if (this->tree[child].covEl) this->removeRoot(child);
+                    this->size--;
                     this->splitPcs(child, tii);
                 } else {
-                    this->roots.push_back(child);
-                    tii.roots.push_back(this->tree[child].inv_alpha);
+                    this->tree[child].parent = -1;
+                    if (!this->tree[child].deleted) roots.push_back(child);
                 }
             }
         }
         this->tree[id].deleted = true;
-        if (this->tree[id].covEl) this->removeRoot(id);
+        this->size--;
+        if (this->tree[id].parent != -1) {
+            this->tree[this->tree[id].parent].removeChild(id);
+            // Update parent size (and up)
+            int64_t parent = this->tree[id].parent;
+            while(parent != -1) {
+                this->tree[parent].size -= this->tree[id].size;
+                parent = this->tree[parent].parent;
+            }
+        }
         this->splitPcs(id, tii);
         tii.computeDeltas(this->tree);
+        // Eventually add "general" root
+        int64_t parent = this->tree[id].parent;
+        uint64_t old = id;
+        while(parent != -1) {
+            old = parent;
+            parent = this->tree[parent].parent;
+        }
+        if (old != id && !this->tree[old].deleted) roots.push_back(old);
     } else { // If node is red
-        this->removeNode(this->tree[id].parent, tii);
+        roots = this->removeNode(this->tree[id].parent, tii);
     }
+    return roots;
 }
 
 void Ti::consolidate() { // Complexity: Θ(n)

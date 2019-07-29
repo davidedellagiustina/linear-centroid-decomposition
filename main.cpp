@@ -16,7 +16,9 @@ int main(int argc, char* argv[]) {
     in >> tree;
     in.close();
     T t = T("T", tree);
-    t.buildCentroidTree();
+    CentroidTree ct = t.buildCentroidTree();
+    cout << ct.print();
+    // cout << ct.getRepresentation();
     return 0;
 
 }

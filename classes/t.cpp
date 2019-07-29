@@ -87,9 +87,9 @@ Ti T::generateTi() { // Complexity: O(n)
 }
 
 uint64_t T::findCentroid(uint64_t root) { // Complexity: O(n/log(n))
-    // Find subtree on T" containing the centroid of T
-    double s = this->size / 2.0;
-    uint64_t centroidSubtree = root, bak = centroidSubtree;
+    double s = this->tree[this->ti.tree[root].beta].size / 2.0;
+    root = this->ti.tree[root].inv_alpha;
+    uint64_t centroidSubtree = root, bak;
     bool found = false;
     while(!found) {
         bak = centroidSubtree;
@@ -105,11 +105,11 @@ uint64_t T::findCentroid(uint64_t root) { // Complexity: O(n/log(n))
     }
     // Find the centroid of T
     uint64_t centroid = this->tii.tree[centroidSubtree].alpha;
-    bak = centroid;
+    size_t size = this->tree[this->ti.tree[centroid].beta].size;
     found = false;
     while(!found) {
         bak = centroid;
-        if (this->size - this->tree[this->ti.tree[centroid].beta].size > s) centroid = this->ti.tree[centroid].parent;
+        if (size - this->tree[this->ti.tree[centroid].beta].size > s) centroid = this->ti.tree[centroid].parent;
         else if (this->ti.tree[centroid].pcsChildren.size() > 0) {
             for (auto child : this->ti.tree[centroid].pcsChildren[0]) {
                 if (this->tree[this->ti.tree[child].beta].size > s) centroid = child;
@@ -127,13 +127,60 @@ T::T(string name, string structure) : Tree(name, structure) { // Complexity: Θ(
     this->tii = this->ti.generateTii();
 }
 
-// In future should return the centroid tree
-void T::buildCentroidTree() { // Complexity: ?? [should be O(n) -> check when algorithm is complete]
-    uint64_t centroid = this->findCentroid(0);
-    this->ti.removeNode(centroid, this->tii);
-    for (auto i : this->tii.roots) {
-        cout << i << endl;
+void T::removeNode(uint64_t id) { // Complexity: O(1)
+    if (this->tree[id].parent != -1) {
+        this->tree[this->tree[id].parent].removeChild(id);
+        // Update parent size (and up)
+        int64_t parent = this->tree[id].parent;
+        while(parent != -1) {
+            this->tree[parent].size -= this->tree[id].size;
+            parent = this->tree[parent].parent;
+        }
     }
+    this->tree[id].deleted = true;
+    this->size--;
+    if (this->tree[id].children.size() > 0) {
+        for (auto child : this->tree[id].children) {
+            this->tree[child].parent = -1;
+        }
+    }
+}
+
+CentroidTree T::buildCentroidTree() { // Complexity: ?? [should be O(n) -> check when algorithm is complete]
+    CentroidTree ct = CentroidTree("Centroid Tree");
+    stack<int64_t> s = stack<int64_t>();
+    s.push(-1);
+    function<void(uint64_t)> find = [this,&find,&ct,&s](uint64_t root)->void {
+        uint64_t centroid = this->findCentroid(root);
+        cout << "centroid: " << centroid << endl;
+        uint64_t id = ct.addNode(this->ti.tree[centroid].beta, s.top());
+        vector<uint64_t> roots = this->ti.removeNode(centroid, this->tii);
+        this->removeNode(this->ti.tree[centroid].beta);
+        cout << "Removed node " << this->ti.tree[centroid].beta << endl;
+        cout << this->print() << endl;
+        cout << this->ti.print() << endl;
+        // cout << "Tii roots:";
+        // for (auto root : this->tii.roots) {
+        //     cout << " " << root;
+        // }
+        // cout << endl;
+        cout << this->tii.print() << endl;
+        cout << "roots: ";
+        for (uint64_t root : roots) {
+            cout << root << " ";
+        }
+        cout << endl;
+        s.push(id);
+        int i = 0;
+        for (uint64_t root : roots) {
+            cout << "root " << i << ": " << root << endl;
+            find(root);
+            i++;
+        }
+        s.pop();
+    };
+    find(0);
+    return ct;
 }
 
 string T::printCoverElements() const {

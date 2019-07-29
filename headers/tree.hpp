@@ -18,6 +18,8 @@ class Tree {
 
         Tree();
 
+        Tree(string name);
+
         Tree(string name, string structure);
 
         ~Tree();

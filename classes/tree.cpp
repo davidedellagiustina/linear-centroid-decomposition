@@ -16,6 +16,11 @@ Tree::Tree() { // Complexity: O(1)
     this->size = 0;
 }
 
+Tree::Tree(string name) { // Complexity: O(1)
+    this->name = name;
+    this->size = 0;
+}
+
 Tree::Tree(string name, string structure) { // Complexity: Θ(n)
     this->name = name;
     stack<int64_t> s;

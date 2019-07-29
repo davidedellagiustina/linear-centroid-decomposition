@@ -16,6 +16,7 @@ uint64_t Tii::addNode(uint64_t idRef, int64_t parent) { // Complexity: O(1)
     Node* n = new Node(id, parent);
     n->alpha = idRef;
     this->tree.push_back(*n);
+    this->size++;
     if (parent != -1) this->tree[parent].addChild(id);
     return id;
 }
@@ -25,10 +26,12 @@ void Tii::removeNode(uint64_t id) { // Complexity: O(x) where x is the number of
     if (this->tree[id].children.size() > 0) {
         for (auto child : this->tree[id].children) {
             this->tree[child].parent = -1;
+            this->roots.push_back(child);
         }
     }
     // Delete node
     this->tree[id].deleted = true;
+    this->size--;
     // Remove parent reference
     if (this->tree[id].parent != -1) {
         this->tree[this->tree[id].parent].removeChild(id);
@@ -36,15 +39,15 @@ void Tii::removeNode(uint64_t id) { // Complexity: O(x) where x is the number of
 }
 
 void Tii::removeRoot(uint64_t id) { // Complexity: O(roots)
-    for (auto it = this->roots.begin(); it != this->roots.end(); it++) {
-        if (*it == id) this->roots.erase(it);
-    }
+    auto it = find(this->roots.begin(), this->roots.end(), id);
+    if (it != this->roots.end()) this->roots.erase(it);
 }
 
 void Tii::computeDeltas(vector<Node> ti) { // Complexity: O(n/log(n))
     // Compute weights and c_deltas
     function<void(uint64_t)> weightsAndCDeltas = [this,&weightsAndCDeltas,&ti](uint64_t n)->void { // Complexity: O(n/log(n))
         this->tree[n].weight = ti[this->tree[n].alpha].size;
+        this->tree[n].c_deltas.clear();
         if (this->tree[n].children.size() > 0) {
             for (auto child : this->tree[n].children) {
                 weightsAndCDeltas(child);
@@ -58,9 +61,10 @@ void Tii::computeDeltas(vector<Node> ti) { // Complexity: O(n/log(n))
                 this->tree[n].c_deltas.push_back(c);
             }
         }
-
     };
-    weightsAndCDeltas(0);
+    for (auto root : this->roots) {
+        weightsAndCDeltas(root);
+    }
     // Compute p_deltas (requires weights and c_deltas to be already computed)
     function<void(uint64_t)> pDeltas = [this,&pDeltas](uint64_t n)->void { // Complexity: O(n/log(n))
         if (this->tree[n].parent == -1) {
@@ -84,7 +88,9 @@ void Tii::computeDeltas(vector<Node> ti) { // Complexity: O(n/log(n))
             }
         }
     };
-    pDeltas(0);
+    for (auto root : this->roots) {
+        pDeltas(root);
+    }
 }
 
 #endif

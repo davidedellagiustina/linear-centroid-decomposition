@@ -23,10 +23,8 @@ void Node::addChild(uint64_t child) { // Complexity: O(1)
 }
 
 void Node::removeChild(uint64_t child) { // Complexity: O(x) where x is th number of children
-    for (auto it = this->children.begin(); it != this->children.end(); it++) {
-        if (*it == child) this->children.erase(it);
-        break;
-    }
+    auto it = find(this->children.begin(), this->children.end(), child);
+    if (it != this->children.end()) this->children.erase(it);
 }
 
 string Node::print() const {
