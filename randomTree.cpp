@@ -3,11 +3,12 @@
 #include <time.h>
 using namespace std;
 
-int main() {
+int main(int argc, char* argv[]) {
+    istringstream is(argv[1]);
     uint64_t n, c = 0;
+    is >> n;
     ostringstream os;
     srand((unsigned int)time(0));
-    cin >> n;
     while (n > 0) {
         int p = rand() % 2;
         if (p == 0 && c > 1) {

@@ -148,22 +148,50 @@ void T::removeNode(uint64_t id) { // Complexity: O(1)
 
 CentroidTree T::buildCentroidTree() { // Complexity: O(n)
     CentroidTree ct = CentroidTree("Centroid Tree");
+    /*
     stack<int64_t> s = stack<int64_t>();
     s.push(-1);
     function<void(uint64_t)> find = [this,&find,&ct,&s](uint64_t root)->void {
         uint64_t centroid = this->findCentroid(root);
+        // cout << "centroid: " << centroid << endl;
         uint64_t id = ct.addNode(this->ti.tree[centroid].beta, s.top());
         vector<uint64_t> roots = this->ti.removeNode(centroid, this->tii);
         this->removeNode(this->ti.tree[centroid].beta);
+        // cout << "removed node: " << this->ti.tree[centroid].beta << endl;
+        // cout << this->print();
+        // cout << this->ti.print();
+        // cout << this->tii.print();
         s.push(id);
-        int i = 0;
+        // cout << "roots:";
+        // for (auto root : roots) {
+        //     cout << " " << root;
+        // }
+        // cout << endl;
         for (uint64_t root : roots) {
+            // cout << "root: " << root << endl;
             find(root);
-            i++;
         }
         s.pop();
     };
-    find(0);
+    find(0);*/
+    queue<pair<int64_t,int64_t>> q = queue<pair<int64_t,int64_t>>();
+    q.push(make_pair(0, -1));
+    q.push(make_pair(-1, -1));
+    while(!q.empty()) {
+        pair<int64_t,int64_t> root = q.front(); q.pop();
+        if (root.first == -1) {
+            this->tii.computeDeltas(this->ti.tree);
+            if (!q.empty()) q.push(make_pair(-1, -1));
+        } else {
+            uint64_t centroid = this->findCentroid(root.first);
+            uint64_t id = ct.addNode(this->ti.tree[centroid].beta, root.second);
+            vector<uint64_t> roots = this->ti.removeNode(centroid, this->tii);
+            this->removeNode(this->ti.tree[centroid].beta);
+            for (uint64_t r : roots) {
+                q.push(make_pair(r, id));
+            }
+        }
+    }
     return ct;
 }
 
