@@ -146,34 +146,18 @@ void T::removeNode(uint64_t id) { // Complexity: O(1)
     }
 }
 
-CentroidTree T::buildCentroidTree() { // Complexity: ?? [should be O(n) -> check when algorithm is complete]
+CentroidTree T::buildCentroidTree() { // Complexity: O(n)
     CentroidTree ct = CentroidTree("Centroid Tree");
     stack<int64_t> s = stack<int64_t>();
     s.push(-1);
     function<void(uint64_t)> find = [this,&find,&ct,&s](uint64_t root)->void {
         uint64_t centroid = this->findCentroid(root);
-        cout << "centroid: " << centroid << endl;
         uint64_t id = ct.addNode(this->ti.tree[centroid].beta, s.top());
         vector<uint64_t> roots = this->ti.removeNode(centroid, this->tii);
         this->removeNode(this->ti.tree[centroid].beta);
-        cout << "Removed node " << this->ti.tree[centroid].beta << endl;
-        cout << this->print() << endl;
-        cout << this->ti.print() << endl;
-        // cout << "Tii roots:";
-        // for (auto root : this->tii.roots) {
-        //     cout << " " << root;
-        // }
-        // cout << endl;
-        cout << this->tii.print() << endl;
-        cout << "roots: ";
-        for (uint64_t root : roots) {
-            cout << root << " ";
-        }
-        cout << endl;
         s.push(id);
         int i = 0;
         for (uint64_t root : roots) {
-            cout << "root " << i << ": " << root << endl;
             find(root);
             i++;
         }

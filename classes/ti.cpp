@@ -32,7 +32,7 @@ void Ti::splitPcs(uint64_t id, Tii& tii) { // Complexity: O(x) where x is the nu
             for (auto child : pc[0]) {
                 dfs(child);
             }
-            if (c.size() > pc[0].size()) {
+            if (c.size() > pc[0].size() && !this->tree[id].deleted) {
                 for (auto child : c) {
                     if (find(pc[0].begin(), pc[0].end(), child) == pc[0].end()) {
                         tii.tree[this->tree[child].inv_alpha].parent = this->tree[id].inv_alpha; // Fix disconnected but already existing nodes in T"
