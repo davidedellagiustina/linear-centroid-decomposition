@@ -25,8 +25,8 @@ int main(int argc, char* argv[]) {
     int s = ms / 1000; ms %= 1000;
     int m = s/60; s %= 60;
     int h = m/60; m %= 60;
-    // cout << "Execution time: " << h << "h " << m << "m " << s << "s " << ms << "ms " << us << "us";
-    cout << duration;
+    cout << "Execution time: " << h << "h " << m << "m " << s << "s " << ms << "ms " << us << "us";
+    // cout << duration;
     cout << endl;
     // cout << ct.print();
     // cout << endl;

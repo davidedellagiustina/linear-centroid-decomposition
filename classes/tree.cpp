@@ -52,7 +52,7 @@ void Tree::consolidate() { // Complexity: Θ(n)
     function<void(uint64_t)> dfs = [this,&dfs](uint64_t n)->void {
         this->tree[n].size = 1;
         if (this->tree[n].children.size() > 0) {
-            for (auto child : this->tree[n].children) {
+            for (uint64_t child : this->tree[n].children) {
                 dfs(child);
                 this->tree[n].size += this->tree[child].size;
             }

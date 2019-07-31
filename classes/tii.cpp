@@ -24,7 +24,7 @@ uint64_t Tii::addNode(uint64_t idRef, int64_t parent) { // Complexity: O(1)
 void Tii::removeNode(uint64_t id) { // Complexity: O(x) where x is the number of children
     // Remove children references
     if (this->tree[id].children.size() > 0) {
-        for (auto child : this->tree[id].children) {
+        for (uint64_t child : this->tree[id].children) {
             this->tree[child].parent = -1;
             this->roots.push_back(child);
         }
@@ -32,6 +32,7 @@ void Tii::removeNode(uint64_t id) { // Complexity: O(x) where x is the number of
     // Delete node
     this->tree[id].deleted = true;
     this->size--;
+    this->removeRoot(id);
     // Remove parent reference
     if (this->tree[id].parent != -1) {
         this->tree[this->tree[id].parent].removeChild(id);
@@ -49,12 +50,12 @@ void Tii::computeDeltas(vector<Node> ti) { // Complexity: O(n/log(n))
         this->tree[n].weight = ti[this->tree[n].alpha].size;
         this->tree[n].c_deltas.clear();
         if (this->tree[n].children.size() > 0) {
-            for (auto child : this->tree[n].children) {
+            for (uint64_t child : this->tree[n].children) {
                 weightsAndCDeltas(child);
                 this->tree[n].weight -= ti[this->tree[child].alpha].size;
                 uint64_t c = this->tree[child].weight;
                 if (this->tree[child].c_deltas.size() > 0) {
-                    for (auto c_delta : this->tree[child].c_deltas) {
+                    for (uint64_t c_delta : this->tree[child].c_deltas) {
                         c += c_delta;
                     }
                 }
@@ -62,7 +63,7 @@ void Tii::computeDeltas(vector<Node> ti) { // Complexity: O(n/log(n))
             }
         }
     };
-    for (auto root : this->roots) {
+    for (uint64_t root : this->roots) {
         weightsAndCDeltas(root);
     }
     // Compute p_deltas (requires weights and c_deltas to be already computed)
@@ -74,8 +75,9 @@ void Tii::computeDeltas(vector<Node> ti) { // Complexity: O(n/log(n))
             this->tree[n].p_delta += this->tree[this->tree[n].parent].weight;
             if (this->tree[this->tree[n].parent].parent != -1) this->tree[n].p_delta += this->tree[this->tree[n].parent].p_delta;
             uint64_t i = 0;
-            for (auto child : this->tree[this->tree[n].parent].children) {
-                if (this->tree[child].id != this->tree[n].id) {
+            // for (auto child : this->tree[this->tree[n].parent].children) {
+            for (uint64_t child : this->tree[this->tree[n].parent].children) {
+                if (child != n) {
                     this->tree[n].p_delta += this->tree[this->tree[n].parent].c_deltas[i];
                 }
                 i++;
@@ -83,12 +85,13 @@ void Tii::computeDeltas(vector<Node> ti) { // Complexity: O(n/log(n))
         }
         // Recursion
         if (this->tree[n].children.size() > 0) {
-            for (auto child : this->tree[n].children) {
+            for (uint64_t child : this->tree[n].children) {
                 pDeltas(child);
             }
         }
     };
-    for (auto root : this->roots) {
+    for (uint64_t root : this->roots) {
+        // weightsAndCDeltas(root);
         pDeltas(root);
     }
 }

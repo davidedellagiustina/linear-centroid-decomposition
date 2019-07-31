@@ -19,7 +19,6 @@ void Ti::splitPcs(uint64_t id, Tii& tii) { // Complexity: O(x) where x is the nu
     }
     // Delete node on T"
     tii.removeNode(this->tree[root].inv_alpha);
-    tii.removeRoot(this->tree[root].inv_alpha);
     // Split PCS into singleton trees
     stack<int64_t> s;
     s.push(-1); // Root has parent -1
@@ -45,22 +44,11 @@ void Ti::splitPcs(uint64_t id, Tii& tii) { // Complexity: O(x) where x is the nu
             s.push(-1);
         }
         if (pc.size() > 0) {
-            for (auto child : pc[0]) {
-                dfs(child);
-            }
-            // if (c.size() > pc[0].size() && !this->tree[id].deleted) {
-            //     for (auto child : c) {
-            //         if (find(pc[0].begin(), pc[0].end(), child) == pc[0].end()) {
-            //             tii.tree[this->tree[child].inv_alpha].parent = this->tree[id].inv_alpha; // Fix disconnected but already existing nodes in T"
-            //             tii.tree[this->tree[id].inv_alpha].addChild(this->tree[child].inv_alpha);
-            //             tii.removeRoot(this->tree[child].inv_alpha);
-            //         }
-            //     }
-            // }
+            for (uint64_t child : pc[0]) dfs(child);
         }
         if (!this->tree[id].deleted) {
             if (pc.size() > 0 && c.size() > pc[0].size()) {
-                for (auto child : c) {
+                for (uint64_t child : c) {
                     if (find(pc[0].begin(), pc[0].end(), child) == pc[0].end()) {
                         tii.tree[this->tree[child].inv_alpha].parent = this->tree[id].inv_alpha; // Fix disconnected but already existing nodes in T"
                         tii.tree[this->tree[id].inv_alpha].addChild(this->tree[child].inv_alpha);
@@ -68,7 +56,7 @@ void Ti::splitPcs(uint64_t id, Tii& tii) { // Complexity: O(x) where x is the nu
                     }
                 }
             } else if (pc.empty() && c.size() > 0) {
-                for (auto child : c) {
+                for (uint64_t child : c) {
                     tii.tree[this->tree[child].inv_alpha].parent = this->tree[id].inv_alpha; // Fix disconnected but already existing nodes in T"
                     tii.tree[this->tree[id].inv_alpha].addChild(this->tree[child].inv_alpha);
                     tii.removeRoot(this->tree[child].inv_alpha);
@@ -100,10 +88,10 @@ vector<uint64_t> Ti::removeNode(uint64_t id, Tii& tii) { // Complexity: O(x) whe
     vector<uint64_t> roots;
     if (this->tree[id].color == 0) { // If node is black
         if (this->tree[id].children.size() > 0) {
-            for (auto child : this->tree[id].children) {
+            for (uint64_t child : this->tree[id].children) {
                 if (this->tree[child].color == 1) {
                     if (this->tree[child].children.size() > 0) {
-                        for (auto c : this->tree[child].children) {
+                        for (uint64_t c : this->tree[child].children) {
                             this->tree[c].parent = -1;
                             if (!this->tree[c].deleted) roots.push_back(c);
                         }
@@ -129,7 +117,6 @@ vector<uint64_t> Ti::removeNode(uint64_t id, Tii& tii) { // Complexity: O(x) whe
             }
         }
         this->splitPcs(id, tii);
-        // tii.computeDeltas(this->tree);
         // Eventually add "general" root
         int64_t parent = this->tree[id].parent;
         uint64_t old = id;
@@ -148,7 +135,7 @@ void Ti::consolidate() { // Complexity: Θ(n)
     function<void(uint64_t)> dfs = [this,&dfs](uint64_t n)->void {
         this->tree[n].size = ((this->tree[n].color == 0)? 1 : 0);
         if (this->tree[n].children.size() > 0) {
-            for (auto child : this->tree[n].children) {
+            for (uint64_t child : this->tree[n].children) {
                 dfs(child);
                 this->tree[n].size += this->tree[child].size;
             }
@@ -170,7 +157,7 @@ Tii Ti::generateTii() { // Complexity: O(n)
         }
         if (id != -1) s.push(id);
         if (this->tree[n].children.size() > 0) {
-            for (auto child : this->tree[n].children) {
+            for (uint64_t child : this->tree[n].children) {
                 dfs(child);
             }
         }
@@ -195,12 +182,12 @@ string Ti::printCoverElements() const {
                     os << "Cover element #" << i << ": " << n.id << endl;
                     i++;
                 }
-                for (auto cover : n.pcsChildren) {
+                for (vector<uint64_t> cover : n.pcsChildren) {
                     os << "Cover element #" << i << ":";
                     function<void(uint64_t,vector<uint64_t>)> dfs = [this,&dfs,&os](uint64_t n, vector<uint64_t> c)->void  {
                         os << " " << this->tree[n].id;
                         if (c.size() > 0) {
-                            for (auto child : c) {
+                            for (uint64_t child : c) {
                                 vector<uint64_t> h;
                                 if (this->tree[child].pcsChildren.size() > 0) h = this->tree[child].pcsChildren[0];
                                 dfs(child, h);

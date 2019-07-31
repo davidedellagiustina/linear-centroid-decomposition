@@ -41,7 +41,7 @@ string CentroidTree::getRepresentation() const { // Complexity: O(n)
     function<void(uint64_t)> dfs = [this,&dfs,&os](uint64_t id)->void {
         os << "(" << this->tree[id].idRef;
         if (this->tree[id].children.size() > 0) {
-            for (auto child : this->tree[id].children) {
+            for (uint64_t child : this->tree[id].children) {
                 dfs(child);
             }
         }

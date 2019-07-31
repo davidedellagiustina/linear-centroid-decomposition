@@ -7,7 +7,7 @@ using namespace std;
 void T::cover() { // Complexity: O(n)
     function<void(uint64_t)> dfs = [this,&dfs](uint64_t n)->void {
         if (this->tree[n].children.size() > 0) {
-            for (auto child : this->tree[n].children) {
+            for (uint64_t child : this->tree[n].children) {
                 dfs(child);
             }
         }
@@ -24,7 +24,7 @@ void T::group(uint64_t n) { // Complexity: O(x) [where x is the number of n's ch
         uint64_t y = 0;
         uint64_t i = 0;
         vector<uint64_t> c;
-        for (auto child : this->tree[n].children) {
+        for (uint64_t child : this->tree[n].children) {
             if (this->tree[child].covEl) continue; // If this child is already a cover element
             y += this->tree[child].pcsSize;
             c.push_back(child);
@@ -37,7 +37,7 @@ void T::group(uint64_t n) { // Complexity: O(x) [where x is the number of n's ch
             i++;
         }
         if (this->tree[n].covEl && y < this->m - 1) {
-            for (auto t : c) {
+            for (uint64_t t : c) {
                 this->tree[n].pcsChildren.back().push_back(t);
             }
             c.clear();
@@ -64,13 +64,13 @@ Ti T::generateTi() { // Complexity: O(n)
             if (this->tree[n].covEl) ti.tree[id].covEl = true; // Copy root of PCSs
             s.push(id);
             if (this->tree[n].pcsChildren.size() > 1 && !red) {
-                for (auto pcs : this->tree[n].pcsChildren) {
+                for (vector<uint64_t> pcs : this->tree[n].pcsChildren) {
                     dfs(n, true, pcs);
                 }
             }
             if (c.size() > 0) {
                 vector<uint64_t> t;
-                for (auto child : c) {
+                for (uint64_t child : c) {
                     int s = dfs(child, false, this->tree[child].children);
                     if (s != -1) t.push_back(s);
                 }
@@ -96,7 +96,7 @@ uint64_t T::findCentroid(uint64_t root) { // Complexity: O(n/log(n))
         if (this->tii.tree[centroidSubtree].p_delta > s) centroidSubtree = this->tii.tree[centroidSubtree].parent;
         else if (this->tii.tree[centroidSubtree].c_deltas.size() > 0) {
             uint64_t i = 0;
-            for (auto c_delta : this->tii.tree[centroidSubtree].c_deltas) {
+            for (uint64_t c_delta : this->tii.tree[centroidSubtree].c_deltas) {
                 if (c_delta > s) centroidSubtree = this->tii.tree[centroidSubtree].children[i];
                 i++;
             }
@@ -111,7 +111,7 @@ uint64_t T::findCentroid(uint64_t root) { // Complexity: O(n/log(n))
         bak = centroid;
         if (size - this->tree[this->ti.tree[centroid].beta].size > s) centroid = this->ti.tree[centroid].parent;
         else if (this->ti.tree[centroid].pcsChildren.size() > 0) {
-            for (auto child : this->ti.tree[centroid].pcsChildren[0]) {
+            for (uint64_t child : this->ti.tree[centroid].pcsChildren[0]) {
                 if (this->tree[this->ti.tree[child].beta].size > s) centroid = child;
             }
         }
@@ -140,7 +140,7 @@ void T::removeNode(uint64_t id) { // Complexity: O(1)
     this->tree[id].deleted = true;
     this->size--;
     if (this->tree[id].children.size() > 0) {
-        for (auto child : this->tree[id].children) {
+        for (uint64_t child : this->tree[id].children) {
             this->tree[child].parent = -1;
         }
     }
@@ -148,41 +148,15 @@ void T::removeNode(uint64_t id) { // Complexity: O(1)
 
 CentroidTree T::buildCentroidTree() { // Complexity: O(n)
     CentroidTree ct = CentroidTree("Centroid Tree");
-    /*
-    stack<int64_t> s = stack<int64_t>();
-    s.push(-1);
-    function<void(uint64_t)> find = [this,&find,&ct,&s](uint64_t root)->void {
-        uint64_t centroid = this->findCentroid(root);
-        // cout << "centroid: " << centroid << endl;
-        uint64_t id = ct.addNode(this->ti.tree[centroid].beta, s.top());
-        vector<uint64_t> roots = this->ti.removeNode(centroid, this->tii);
-        this->removeNode(this->ti.tree[centroid].beta);
-        // cout << "removed node: " << this->ti.tree[centroid].beta << endl;
-        // cout << this->print();
-        // cout << this->ti.print();
-        // cout << this->tii.print();
-        s.push(id);
-        // cout << "roots:";
-        // for (auto root : roots) {
-        //     cout << " " << root;
-        // }
-        // cout << endl;
-        for (uint64_t root : roots) {
-            // cout << "root: " << root << endl;
-            find(root);
-        }
-        s.pop();
-    };
-    find(0);*/
     queue<pair<int64_t,int64_t>> q = queue<pair<int64_t,int64_t>>();
     q.push(make_pair(0, -1));
     q.push(make_pair(-1, -1));
     while(!q.empty()) {
         pair<int64_t,int64_t> root = q.front(); q.pop();
-        if (root.first == -1) {
+        if (root.first == -1 && !q.empty()) {
             this->tii.computeDeltas(this->ti.tree);
-            if (!q.empty()) q.push(make_pair(-1, -1));
-        } else {
+            q.push(make_pair(-1, -1));
+        } else if (root.first != -1) {
             uint64_t centroid = this->findCentroid(root.first);
             uint64_t id = ct.addNode(this->ti.tree[centroid].beta, root.second);
             vector<uint64_t> roots = this->ti.removeNode(centroid, this->tii);
@@ -208,12 +182,12 @@ string T::printCoverElements() const {
                     os << "Cover element #" << i << ": " << n.id << endl;
                     i++;
                 }
-                for (auto cover : n.pcsChildren) {
+                for (vector<uint64_t> cover : n.pcsChildren) {
                     os << "Cover element #" << i << ":";
                     function<void(uint64_t,vector<uint64_t>)> dfs = [this,&dfs,&os](uint64_t n, vector<uint64_t> c)->void  {
                         os << " " << this->tree[n].id;
                         if (c.size() > 0) {
-                            for (auto child : c) {
+                            for (uint64_t child : c) {
                                 vector<uint64_t> h;
                                 if (this->tree[child].pcsChildren.size() > 0) h = this->tree[child].pcsChildren[0];
                                 dfs(child, h);
