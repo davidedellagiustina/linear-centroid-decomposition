@@ -1,0 +1,24 @@
+T is a vector<uint32_t>:
+    - each node is T[i, ..., j] where i is the ID of the node -> non contiguous IDs
+    - T[i] = number of children + packed flags (from MSB: cov_el)
+    - T[i+1] = parent ID
+    - T[i+2, ..., j] = children IDs + info: 
+        * each node is T[h, h+1]
+        * T[h] = children ID
+        * T[h+1] = size of subtree with root h
+    - after tree covering, reorder nodes in T to improve cache data locality
+    - delete node:
+        * clear parent ID of its children
+        * among parent's children, swap deleted one with the last existing one
+        * decrement parent's number of children
+
+T" is a vector<uint32_t>:
+    - each node is T"[i, ..., j] where i is the ID of the node -> non contiguous IDs
+    - T2"[i] = number of children
+    - T"[i+1] = parent ID
+    - T"[i+2, ..., j] = children IDs + info:
+        * each node is T"[h, ..., h+4]
+        * T"[h] = children ID
+        * T"[h+1], T"[h+2] = two deltas on the edge
+        * T"[h+3] = size of treelet
+        * T"[h+4] = treelet root ID reference on T

@@ -1,10 +1,6 @@
-.vscode
 main.exe
 main.out
 main
-randomTree.exe
-randomTree.out
-randomTree
-benchmark.exe
-benchmark.out
-benchmark
+treeGen.exe
+treeGen.out
+treeGen

@@ -1,35 +1,32 @@
-#ifndef MAIN_CPP
-#define MAIN_CPP
-#endif
-
-#include "headers/main.hpp"
+#include "src/main.hpp"
 using namespace std;
 
-string tree;
-
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) { // 'Argv[1]' must be the name of the file containing the tree structure (in BP representation)
     if (argc < 2) {
         cout << "No input file specified." << endl;
         return 0;
     }
-    ifstream in(argv[1]);
-    in >> tree;
-    in.close();
-    T t = T("T", tree);
-    chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
-    CentroidTree ct = t.buildCentroidTree();
-    chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
-    auto duration = chrono::duration_cast<chrono::microseconds>(t2-t1).count();
-    int us = duration;
-    int ms = us/1000; us %= 1000;
-    int s = ms / 1000; ms %= 1000;
-    int m = s/60; s %= 60;
-    int h = m/60; m %= 60;
-    cout << "Execution time: " << h << "h " << m << "m " << s << "s " << ms << "ms " << us << "us";
-    // cout << duration;
-    cout << endl;
-    // cout << ct.print();
-    // cout << endl;
-    // cout << ct.getRepresentation();
+    // Build T
+    string tree;
+    ifstream in(argv[1]); in >> tree; in.close(); // Copy input into string
+    vector<uint32_t> t;
+    vector<bool> id_ref;
+    chrono::high_resolution_clock::time_point t1 = getTime(); // Get initial time
+    try {
+        t = buildTree(tree); // Try building tree (if not too big)
+    } catch (const char* err) {
+        cout << err << endl; // Or otherwise print exception
+        return 0;
+    }
+    id_ref = buildIdRef(t); // Build the bitvector for nodes ID reference
+    computeSizes(t, id_ref); // Compute the initial sizes on 't'
+    cout << printTime("Structure building", t1, getTime()) << endl; // Print time to build structure
+    // Cover T
+    vector<uint32_t> tii = cover(t, id_ref);
+
+    // TEMP - standard centroid decomposition in n*log(n)
+    // t1 = getTime(); // Get new time
+    // stdCentroidDecomposition(t); // Perform centroid decomposition
+    // cout << printTime("Centroid decomposition in n*log(n)", t1, getTime()) << endl; // Print time to compute centroid decomposition
     return 0;
 }
