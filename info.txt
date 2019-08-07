@@ -16,9 +16,9 @@ T" is a vector<uint32_t>:
     - each node is T"[i, ..., j] where i is the ID of the node -> non contiguous IDs
     - T2"[i] = number of children
     - T"[i+1] = parent ID
-    - T"[i+2, ..., j] = children IDs + info:
-        * each node is T"[h, ..., h+4]
+    - T"[i+2] = size of treelet
+    - T"[i+3] = treelet root ID reference on T
+    - T"[i+4, ..., j] = children IDs + info:
+        * each node is T"[h, ..., h+2]
         * T"[h] = children ID
         * T"[h+1], T"[h+2] = two deltas on the edge
-        * T"[h+3] = size of treelet
-        * T"[h+4] = treelet root ID reference on T

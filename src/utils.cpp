@@ -4,6 +4,10 @@
 #include "main.hpp"
 using namespace std;
 
+/*
+ * STRUCTURE BUILDING FUNCTIONS
+ */
+
 // Build tree structure from balanced parenthesis representation
 vector<uint32_t> buildTree(const string &tree) { // Complexity: O(n)
     stack<uint32_t> s, cs;
@@ -71,33 +75,40 @@ void computeSizes(vector<uint32_t> &t, const vector<bool> &id_ref) { // Complexi
     }
 }
 
-// Cover T and build T"
-vector<uint32_t> cover(vector<uint32_t> &t, vector<bool> &id_ref) { // Complexity: ??
-    vector<uint32_t> tii; // Initialize T"
-    stack<uint32_t> s;
+// Cover 't' and build '_t'
+vector<uint32_t> cover(vector<uint32_t> &t, const vector<bool> &id_ref) { // Complexity: O(n)
+    vector<uint32_t> _t; // Initialize '_t'
+    // Cover 't': O(n)
+    stack<uint32_t> s, noc; noc.push(0); // 'noc' represents the number of children of each cover element
     uint32_t m = floor(log2((t.size()+2)/4)); // m = log(n)
     uint32_t i = t.size() - 1; // Initialize vector pointer
     for (auto it = id_ref.rbegin(); it != id_ref.rend(); it++) { // Visit each element of 'id_ref' in reverse order
         if (*it) { // If the current element on 'id_ref' equals 1 (i.e. there is a node with this ID on 't')
             uint32_t size = 1; // Initialize size
             for (uint32_t j = 0; j < (t[i]&num_c); j++) { // For each children
-                uint32_t child = t[i+2*j+2]; // ID of the child
-                if (!(t[child]&cov_el)) { // If child is not a cover element
+                if (!(t[t[i+2*j+2]]&cov_el)) { // If child is not a cover element
                     size += s.top(); // Compute its size
                     s.pop();
-                }
+                } else noc.top()++;
             }
-            if (i != 0 && size < m) {
+            if (i != 0 && size < m) { // If PCS is not big enough and it's not the root of the tree
                 s.push(size); // Push 'size' to 's'
-            } else {
+            } else { // If the PCS is big enough or it's the root of the tree
                 t[i] |= cov_el; // Mark node as cover element
-                cout << "Node " << i << ": size " << size << nl;
+                cout << "Node " << i << ": size " << size << ". NOC: " << noc.top() << nl;
+                noc.push(0);
             }
         }
         i--; // Decrement pointer
     }
-    return tii;
+    // Build '_t': O(n)
+    // TODO
+    return _t;
 }
+
+/*
+ * STANDARD O(n*log(n)) CENTROID DECOMPOSITION IMPLEMENTATION
+ */
 
 // Remove a node 'n' from T
 inline void rmNode(vector<uint32_t> &t, uint32_t n) { // Complexity: O(k) where k is n's parent number of children
@@ -132,12 +143,12 @@ inline void rmNode(vector<uint32_t> &t, uint32_t n) { // Complexity: O(k) where 
 
 // Standard centroid search algorithm
 inline uint32_t stdFindCentroid(const vector<uint32_t> &t, const uint32_t root) { // Complexity: O(n)
-    uint32_t size = 1; // Initialize size
-    for (uint32_t i = 0; i < (t[root]&num_c); i++) size += t[root+2*i+3]; // Compute size
-    size /= 2; // Half the size of the tree (but integer!)
     uint32_t centroid = root; // Start search from root
-    bool found = false;
-    if ((t[centroid]&num_c) != 0) {
+    if ((t[centroid]&num_c) != 0) { // If the root of the subtree has any children
+        uint32_t size = 1; // Initialize size
+        for (uint32_t i = 0; i < (t[root]&num_c); i++) size += t[root+2*i+3]; // Compute size
+        size /= 2; // Half the size of the tree (but integer!)
+        bool found = false;
         while (!found) { // Loop until the centroid is found
             for (uint32_t i = 0 ; i < (t[centroid]&num_c); i++) { // For each children
                 if (t[centroid+2*i+3] > size) { // If the subtree rooted at this child is bigger than 'size'
@@ -152,7 +163,7 @@ inline uint32_t stdFindCentroid(const vector<uint32_t> &t, const uint32_t root) 
 }
 
 // Standard centroid decomposition algorithm
-inline void stdCentroidDecomposition(vector<uint32_t> t) { // Complexity: O(n*log(n))
+inline void stdCentroidDecomposition(vector<uint32_t> &t) { // Complexity: O(n*log(n))
     stack<uint32_t> s; s.push(0); // Stack with roots of subtrees yet to process
     stack<pair<uint32_t,uint32_t>> ps; // TEMP - just used to print nodes
     while (!s.empty()) { // While there are still subtrees to process
@@ -184,6 +195,25 @@ inline void stdCentroidDecomposition(vector<uint32_t> t) { // Complexity: O(n*lo
         */
     }
 }
+
+/*
+ * NEW O(n) CENTROID DECOMPOSITION IMPLEMENTATION
+ */
+
+// New cntroid search algorithm
+inline uint32_t fincCentroid(const vector<uint32_t> &t, const vector<uint32_t> &_t, const uint32_t root) { // Complexity: ?? -> should be O(n/log(n))
+    // TODO
+    return 0;
+}
+
+// New centroid decomposition algorithm
+void centroidDecomposition(vector<uint32_t> &t, vector<uint32_t> &_t) { // Complexity: ?? -> should be O(n)
+    // TODO
+}
+
+/*
+ * UTILS
+ */
 
 // Get time
 inline chrono::high_resolution_clock::time_point getTime() { // Complexity: O(1)
