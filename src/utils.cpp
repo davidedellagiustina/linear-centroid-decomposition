@@ -59,6 +59,17 @@ vector<bool> buildIdRef(const vector<uint32_t> &t) { // Complexity: O(n)
     return id_ref;
 }
 
+// Build a reference bitvector to identify the positions of the nodes in 't'
+vector<bool> build_IdRef(const vector<uint32_t> &_t) { // Complexity: O(n)
+    vector<bool> _id_ref = vector<bool>(_t.size(), 0); // Initialize an empty bitvector
+    uint32_t i = 0; // Initialize vector pointer
+    while (i < _t.size()) { // While pointer is valid
+        _id_ref[i] = 1; // Set 'i'th bit to 1
+        i += 3*_t[i] + 4; // And increment pointer
+    }
+    return _id_ref;
+}
+
 // Compute the initial sizes of the tree
 void computeSizes(vector<uint32_t> &t, const vector<bool> &id_ref) { // Complexity: O(n)
     uint32_t i = t.size() - 1; // Initialize vector pointer
@@ -76,12 +87,12 @@ void computeSizes(vector<uint32_t> &t, const vector<bool> &id_ref) { // Complexi
 }
 
 // Cover 't' and build '_t'
-vector<uint32_t> cover(vector<uint32_t> &t, const vector<bool> &id_ref) { // Complexity: O(n)
+pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, const vector<bool> &id_ref) { // Complexity: O(n)
     vector<uint32_t> _t; // Initialize '_t'
-    // Cover 't': O(n)
-    stack<uint32_t> s, noc; noc.push(0); // 'noc' represents the number of children of each cover element
+    stack<uint32_t> s, noc, cs; noc.push(0); // 'noc' represents the number of children of each cover element
     uint32_t m = floor(log2((t.size()+2)/4)); // m = log(n)
     uint32_t i = t.size() - 1; // Initialize vector pointer
+    uint32_t root; // Initialize root of '_t'
     for (auto it = id_ref.rbegin(); it != id_ref.rend(); it++) { // Visit each element of 'id_ref' in reverse order
         if (*it) { // If the current element on 'id_ref' equals 1 (i.e. there is a node with this ID on 't')
             uint32_t size = 1; // Initialize size
@@ -95,15 +106,31 @@ vector<uint32_t> cover(vector<uint32_t> &t, const vector<bool> &id_ref) { // Com
                 s.push(size); // Push 'size' to 's'
             } else { // If the PCS is big enough or it's the root of the tree
                 t[i] |= cov_el; // Mark node as cover element
-                cout << "Node " << i << ": size " << size << ". NOC: " << noc.top() << nl;
+                // cout << "Node " << i << ": size " << size << ". NOC: " << noc.top() << nl;
+                uint32_t id = _t.size(); // ID of the new node
+                _t.pb(noc.top()); // Number of children
+                _t.pb(id); // Parent ID
+                _t.pb(size); // Size of treelet
+                _t.pb(i); // treelet root ID reference on 't'
+                for (uint32_t j = 0; j < noc.top(); j++) { // For each child
+                    _t.pb(cs.top()); // Insert child ID
+                    _t.pb(0); _t.pb(0); // And deltas on the edge
+                    _t[cs.top()+1] = id; // Then set reference to parent on child
+                    cs.pop();
+                }
+                root = id; // Set latest node as root of '_t'
+                cs.push(id); // Push ID of the new node
                 noc.push(0);
             }
         }
         i--; // Decrement pointer
     }
-    // Build '_t': O(n)
+    return make_pair(root, _t);
+}
+
+// Compute the deltas on '_t' edges
+void computeDeltas(uint32_t _t_root, vector<uint32_t> &_t, vector<bool> _id_ref) { // Complexity: ??
     // TODO
-    return _t;
 }
 
 /*
@@ -111,7 +138,7 @@ vector<uint32_t> cover(vector<uint32_t> &t, const vector<bool> &id_ref) { // Com
  */
 
 // Remove a node 'n' from T
-inline void rmNode(vector<uint32_t> &t, uint32_t n) { // Complexity: O(k) where k is n's parent number of children
+inline void rmNodeOnT(vector<uint32_t> &t, uint32_t n) { // Complexity: O(k) where k is n's parent number of children
     uint32_t parent = t[n+1]; // Parent of the node ID
     uint32_t size; // Initialize size of the node
     for (uint32_t i = 0; i < (t[parent]&num_c); i++) if (t[parent+2*i+2] == n) size = t[parent+2*i+3]; // Compute size of the node
@@ -139,6 +166,10 @@ inline void rmNode(vector<uint32_t> &t, uint32_t n) { // Complexity: O(k) where 
             m = parent; parent = t[m+1]; // Then step up
         }
     }
+}
+
+inline void rmNodeOn_T(vector<uint32_t> &_t, uint32_t n) { // Complexity: ??
+    // TODO
 }
 
 // Standard centroid search algorithm
@@ -169,7 +200,7 @@ inline void stdCentroidDecomposition(vector<uint32_t> &t) { // Complexity: O(n*l
     while (!s.empty()) { // While there are still subtrees to process
         uint32_t root = s.top(); s.pop(); // Get root of subtree
         uint32_t centroid = stdFindCentroid(t, root); // Find centroid of subtree
-        rmNode(t, centroid); // Remove the centroid from T
+        rmNodeOnT(t, centroid); // Remove the centroid from T
         uint32_t c = 0; // Subtree counter
         if ((t[centroid]&num_c) > 0) { // If the centroid has some children
             for(int64_t i = (t[centroid]&num_c); i > 0; i--) { // Navigate them in reverse order
@@ -201,13 +232,13 @@ inline void stdCentroidDecomposition(vector<uint32_t> &t) { // Complexity: O(n*l
  */
 
 // New cntroid search algorithm
-inline uint32_t fincCentroid(const vector<uint32_t> &t, const vector<uint32_t> &_t, const uint32_t root) { // Complexity: ?? -> should be O(n/log(n))
+inline uint32_t findCentroid(const vector<uint32_t> &t, const vector<uint32_t> &_t, const uint32_t root) { // Complexity: ?? -> should be O(n/log(n))
     // TODO
     return 0;
 }
 
 // New centroid decomposition algorithm
-void centroidDecomposition(vector<uint32_t> &t, vector<uint32_t> &_t) { // Complexity: ?? -> should be O(n)
+void centroidDecomposition(vector<uint32_t> &t, const uint32_t _t_root, vector<uint32_t> &_t) { // Complexity: ?? -> should be O(n)
     // TODO
 }
 
