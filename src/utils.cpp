@@ -93,6 +93,7 @@ pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, const vector<bool> &i
     uint32_t m = floor(log2((t.size()+2)/4)); // m = log(n)
     uint32_t i = t.size() - 1; // Initialize vector pointer
     uint32_t root; // Initialize root of '_t'
+    uint32_t tot_size = (t.size() + 2) / 4; // Number of nodes in 't'
     for (auto it = id_ref.rbegin(); it != id_ref.rend(); it++) { // Visit each element of 'id_ref' in reverse order
         if (*it) { // If the current element on 'id_ref' equals 1 (i.e. there is a node with this ID on 't')
             uint32_t size = 1; // Initialize size
@@ -106,7 +107,7 @@ pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, const vector<bool> &i
                 s.push(size); // Push 'size' to 's'
             } else { // If the PCS is big enough or it's the root of the tree
                 t[i] |= cov_el; // Mark node as cover element
-                // cout << "Node " << i << ": size " << size << ". NOC: " << noc.top() << nl;
+                // Build '_t'
                 uint32_t id = _t.size(); // ID of the new node
                 _t.pb(noc.top()); // Number of children
                 _t.pb(id); // Parent ID
@@ -114,7 +115,11 @@ pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, const vector<bool> &i
                 _t.pb(i); // treelet root ID reference on 't'
                 for (uint32_t j = 0; j < noc.top(); j++) { // For each child
                     _t.pb(cs.top()); // Insert child ID
-                    _t.pb(0); _t.pb(0); // And deltas on the edge
+                    _t.pb(_t[cs.top()+2]); // Initialize delta_1
+                    for (uint32_t k = 0; k < _t[cs.top()]; k++) { // For each grandchild
+                        _t.back() += _t[cs.top()+3*k+5]; // Compute delta_1
+                    }
+                    _t.pb(tot_size-_t.back()); // Compute delta_2
                     _t[cs.top()+1] = id; // Then set reference to parent on child
                     cs.pop();
                 }
@@ -126,11 +131,6 @@ pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, const vector<bool> &i
         i--; // Decrement pointer
     }
     return make_pair(root, _t);
-}
-
-// Compute the deltas on '_t' edges
-void inline computeDeltas(uint32_t _t_root, vector<uint32_t> &_t, vector<bool> _id_ref) { // Complexity: ??
-    // TODO
 }
 
 /*
