@@ -138,7 +138,7 @@ pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, const vector<bool> &i
  */
 
 // Remove a node 'n' from 't'
-inline void rmNodeOnT(vector<uint32_t> &t, vector<bool> &id_ref, const uint32_t n) { // Complexity: O(k) where k is n's parent number of children
+inline void rmNodeOnT(vector<uint32_t> &t, vector<bool> &id_ref, const uint32_t n) { // Complexity: O(k) where k = t[t[n+1]]
     // Remove reference on 'id_ref'
     id_ref[n] = 0;
     // Remove node from 't'
@@ -185,10 +185,8 @@ inline void addNodeOn_T(vector<uint32_t> &_t, vector<bool> _id_ref, const uint32
 }
 
 // Remove a node 'n' from '_t'
-inline void rmNodeOn_T(vector<uint32_t> &_t, const uint32_t n) { // Complexity: ??
-    // TODO
+inline vector<uint32_t> rmNodeOn_T(vector<uint32_t> &_t, const uint32_t n) { // Complexity: O(k) where k = _t[_t[n+1]]
     uint32_t parent = _t[n+1]; // Parent of the node ID
-    // SIZE ?
     // Delete references inside n's parent
     if (parent != n) { // If 'n' has a parent
         for (uint32_t i = 0; i < _t[parent]; i++) { // The search among its parent's children
@@ -200,12 +198,14 @@ inline void rmNodeOn_T(vector<uint32_t> &_t, const uint32_t n) { // Complexity: 
             }
         }
         _t[parent]--; // Decrement parent's number of children
-        // UPDATE SUBTREE SIZES ?
     }
     // Delete references inside n's children
+    vector<uint32_t> children; // Initialize children vector
     for (uint32_t i = 0; i < _t[n]; i++) { // Navigate the children
         _t[_t[n+3*i+4]+1] = _t[n+3*i+4]; // And make them new roots of subtrees
+        children.pb(_t[n+3*i+4]); // Then add their ID to 'children'
     }
+    return children;
 }
 
 // Standard centroid search algorithm
