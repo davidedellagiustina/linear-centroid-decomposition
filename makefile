@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := install
 
 CC = g++
-CFLAGS = -g
+CFLAGS = -g -ofast
 
 install:
 	$(CC) $(CFLAGS) main.cpp -o main
