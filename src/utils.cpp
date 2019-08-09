@@ -129,7 +129,7 @@ pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, const vector<bool> &i
 }
 
 // Compute the deltas on '_t' edges
-void computeDeltas(uint32_t _t_root, vector<uint32_t> &_t, vector<bool> _id_ref) { // Complexity: ??
+void inline computeDeltas(uint32_t _t_root, vector<uint32_t> &_t, vector<bool> _id_ref) { // Complexity: ??
     // TODO
 }
 
@@ -154,10 +154,8 @@ inline void rmNodeOnT(vector<uint32_t> &t, uint32_t n) { // Complexity: O(k) whe
         }
         t[parent]--; // Decrement parent's number of children
         // Delete references inside n's children
-        if ((t[n]&num_c) > 0) { // If the node has any children
-            for (uint32_t i = 0; i < (t[n]&num_c); i++) { // Then navigate them
-                t[t[n+2*i+2]+1] = t[n+2*i+2]; // And make them new roots of subtrees
-            }
+        for (uint32_t i = 0; i < (t[n]&num_c); i++) { // Then navigate the children
+            t[t[n+2*i+2]+1] = t[n+2*i+2]; // And make them new roots of subtrees
         }
         // Update subtree sizes
         uint32_t m = parent; parent = t[m+1]; // Starting from n's parent
@@ -202,11 +200,9 @@ inline void stdCentroidDecomposition(vector<uint32_t> &t) { // Complexity: O(n*l
         uint32_t centroid = stdFindCentroid(t, root); // Find centroid of subtree
         rmNodeOnT(t, centroid); // Remove the centroid from T
         uint32_t c = 0; // Subtree counter
-        if ((t[centroid]&num_c) > 0) { // If the centroid has some children
-            for(int64_t i = (t[centroid]&num_c); i > 0; i--) { // Navigate them in reverse order
-                s.push(t[centroid+2*i]); // Then push them to 's'
-                c++; // And increment counter
-            }
+        for(int64_t i = (t[centroid]&num_c); i > 0; i--) { // Navigate the children in reverse order
+            s.push(t[centroid+2*i]); // Then push them to 's'
+            c++; // And increment counter
         }
         if (centroid != root) { // If the root of the subtree is not its centroid
             s.push(root); // Then it is the root of a new subtree
