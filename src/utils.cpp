@@ -227,7 +227,12 @@ inline void stdCentroidDecomposition(vector<uint32_t> &t) { // Complexity: O(n*l
  * NEW O(n) CENTROID DECOMPOSITION IMPLEMENTATION
  */
 
-// New cntroid search algorithm
+// Recompute the deltas on a treelet (i.e. a connected component of '_t')
+inline computeDeltas(const uint32_t _t_root, vector<uint32_t> &_t, const uint32_t root) { // Complexity: ??
+    // TODO
+}
+
+// New centroid search algorithm
 inline uint32_t findCentroid(const vector<uint32_t> &t, const vector<uint32_t> &_t, const uint32_t root) { // Complexity: ?? -> should be O(n/log(n))
     // TODO
     return 0;
