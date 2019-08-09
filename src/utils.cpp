@@ -39,7 +39,7 @@ vector<uint32_t> buildTree(const string &tree) { // Complexity: O(n)
             } else { // If this node has no parent
                 t[i] = id; // Write the same ID on parent ID cell (meaning no parent)
             }
-            i += 2*cs.top() + 1; cs.pop(); // Increment pointer by 1 + the number of children of this node
+            i += 2*cs.top() + 1; cs.pop(); // Increment pointer by 1 + 2 * the number of children of this node
             s.push(id); // Push this node's ID to 's'
         } else { // If this node has no more children
             s.pop(); // Pop its ID from 's'
@@ -137,8 +137,8 @@ pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, const vector<bool> &i
  * STANDARD O(n*log(n)) CENTROID DECOMPOSITION IMPLEMENTATION
  */
 
-// Remove a node 'n' from T
-inline void rmNodeOnT(vector<uint32_t> &t, uint32_t n) { // Complexity: O(k) where k is n's parent number of children
+// Remove a node 'n' from 't'
+inline void rmNodeOnT(vector<uint32_t> &t, const uint32_t n) { // Complexity: O(k) where k is n's parent number of children
     uint32_t parent = t[n+1]; // Parent of the node ID
     uint32_t size; // Initialize size of the node
     for (uint32_t i = 0; i < (t[parent]&num_c); i++) if (t[parent+2*i+2] == n) size = t[parent+2*i+3]; // Compute size of the node
@@ -146,17 +146,13 @@ inline void rmNodeOnT(vector<uint32_t> &t, uint32_t n) { // Complexity: O(k) whe
     if (parent != n) { // If 'n' has a parent
         for (uint32_t i = 0; i < (t[parent]&num_c); i++) { // Then search among its parent's children
             if (t[parent+2*i+2] == n) {
-                uint32_t aux_id = t[parent+2*i+2]; uint32_t aux_size = t[parent+2*i+3]; // And delete the reference to 'n'
+                uint32_t aux_id = t[parent+2*i+2], aux_size = t[parent+2*i+3]; // And delete the reference to 'n'
                 t[parent+2*i+2] = t[parent+2*(t[parent]&num_c)]; t[parent+2*i+3] = t[parent+2*(t[parent]&num_c)+1]; // (i.e. swap its ID and size with the last valid child's ID and size)
                 t[parent+2*(t[parent]&num_c)] = aux_id; t[parent+2*(t[parent]&num_c)+1] = aux_size;
                 break; // Stop searching
             }
         }
         t[parent]--; // Decrement parent's number of children
-        // Delete references inside n's children
-        for (uint32_t i = 0; i < (t[n]&num_c); i++) { // Then navigate the children
-            t[t[n+2*i+2]+1] = t[n+2*i+2]; // And make them new roots of subtrees
-        }
         // Update subtree sizes
         uint32_t m = parent; parent = t[m+1]; // Starting from n's parent
         while (m != parent) { // Navigate up the tree
@@ -164,10 +160,39 @@ inline void rmNodeOnT(vector<uint32_t> &t, uint32_t n) { // Complexity: O(k) whe
             m = parent; parent = t[m+1]; // Then step up
         }
     }
+    // Delete references inside n's children
+    for (uint32_t i = 0; i < (t[n]&num_c); i++) { // Navigate the children
+        t[t[n+2*i+2]+1] = t[n+2*i+2]; // And make them new roots of subtrees
+    }
 }
 
-inline void rmNodeOn_T(vector<uint32_t> &_t, uint32_t n) { // Complexity: ??
+// Add a node on '_t?
+inline void addNodeOn_T(vector<uint32_t> &_t, const uint32_t parent) { // Complexity: ??
     // TODO
+}
+
+// Remove a node 'n' from '_t'
+inline void rmNodeOn_T(vector<uint32_t> &_t, const uint32_t n) { // Complexity: ??
+    // TODO
+    uint32_t parent = _t[n+1]; // Parent of the node ID
+    // SIZE ?
+    // Delete references inside n's parent
+    if (parent != n) { // If 'n' has a parent
+        for (uint32_t i = 0; i < _t[parent]; i++) { // The search among its parent's children
+            if (_t[parent+3*i+4] == n) {
+                uint32_t aux_id = _t[parent+3*i+4], aux_delta_1 = _t[parent+3*i+5], aux_delta_2 = _t[parent+3*i+6]; // And delete the reference to 'n'
+                _t[parent+3*i+4] = _t[parent+3*_t[parent]+1]; _t[parent+3*i+5] = _t[parent+3*_t[parent]+2]; _t[parent+3*i+6] = _t[parent+3*_t[parent]+3]; // (i.e. swap its ID and deltas with the last valid child's ID and deltas)
+                _t[parent+3*_t[parent]+1] = aux_id; _t[parent+3*_t[parent]+2] = aux_delta_1; _t[parent+3*_t[parent]+3] = aux_delta_2;
+                break; // Stop searching
+            }
+        }
+        _t[parent]--; // Decrement parent's number of children
+        // UPDATE SUBTREE SIZES ?
+    }
+    // Delete references inside n's children
+    for (uint32_t i = 0; i < _t[n]; i++) { // Navigate the children
+        _t[_t[n+3*i+4]+1] = _t[n+3*i+4]; // And make them new roots of subtrees
+    }
 }
 
 // Standard centroid search algorithm
@@ -194,7 +219,7 @@ inline uint32_t stdFindCentroid(const vector<uint32_t> &t, const uint32_t root) 
 // Standard centroid decomposition algorithm
 inline void stdCentroidDecomposition(vector<uint32_t> &t) { // Complexity: O(n*log(n))
     stack<uint32_t> s; s.push(0); // Stack with roots of subtrees yet to process
-    stack<pair<uint32_t,uint32_t>> ps; // TEMP - just used to print nodes
+    // stack<pair<uint32_t,uint32_t>> ps; // TEMP - just used to print nodes
     while (!s.empty()) { // While there are still subtrees to process
         uint32_t root = s.top(); s.pop(); // Get root of subtree
         uint32_t centroid = stdFindCentroid(t, root); // Find centroid of subtree
@@ -228,7 +253,7 @@ inline void stdCentroidDecomposition(vector<uint32_t> &t) { // Complexity: O(n*l
  */
 
 // Recompute the deltas on a treelet (i.e. a connected component of '_t')
-inline computeDeltas(const uint32_t _t_root, vector<uint32_t> &_t, const uint32_t root) { // Complexity: ??
+inline void computeDeltas(const uint32_t _t_root, vector<uint32_t> &_t, const uint32_t root) { // Complexity: ??
     // TODO
 }
 
