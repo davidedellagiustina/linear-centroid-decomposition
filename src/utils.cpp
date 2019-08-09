@@ -172,7 +172,8 @@ inline void rmNodeOnT(vector<uint32_t> &t, vector<bool> &id_ref, const uint32_t 
 
 // Add a node on '_t'
 // Note: when this function is called, the newly added node is ALWAYS the root of a connected component. Therefore, we assume this condition to be true.
-inline void addNodeOn_T(vector<uint32_t> &_t, vector<bool> _id_ref, const uint32_t id_ref, const uint32_t size, const vector<uint32_t> children) { // Complexity: O(k) where k = children.size()
+inline void addNodeOn_T(vector<uint32_t> &_t, vector<bool> &_id_ref, const uint32_t id_ref, const uint32_t size, const vector<uint32_t> children) { // Complexity: O(k) where k = children.size()
+    // Add node on '_t'
     uint32_t id = _t.size(); // ID of the new node
     _t.pb(children.size()); // Number of children
     _t.pb(id); // Parent ID (i.e. itself, see assumption above)
@@ -182,10 +183,18 @@ inline void addNodeOn_T(vector<uint32_t> &_t, vector<bool> _id_ref, const uint32
         _t.pb(child); // Insert child ID
         _t.pb(0); _t.pb(0); // Empty deltas (will be computed by the proper function)
     }
+    // Update '_id_ref' consequently
+    _id_ref.pb(1);
+    for (uint32_t i = 0; i < children.size()+3; i++) {
+        _id_ref.pb(0);
+    }
 }
 
 // Remove a node 'n' from '_t'
-inline vector<uint32_t> rmNodeOn_T(vector<uint32_t> &_t, const uint32_t n) { // Complexity: O(k) where k = _t[_t[n+1]]
+inline vector<uint32_t> rmNodeOn_T(vector<uint32_t> &_t, vector<bool> &_id_ref, const uint32_t n) { // Complexity: O(k) where k = _t[_t[n+1]]
+    // Remove reference on '_id_ref'
+    _id_ref[n] = 0;
+    // Remove node from '_t'
     uint32_t parent = _t[n+1]; // Parent of the node ID
     // Delete references inside n's parent
     if (parent != n) { // If 'n' has a parent
@@ -228,7 +237,7 @@ inline uint32_t stdFindCentroid(const vector<uint32_t> &t, const uint32_t root) 
     }
     return centroid;
 }
-
+/*
 // Standard centroid decomposition algorithm
 inline void stdCentroidDecomposition(vector<uint32_t> &t) { // Complexity: O(n*log(n))
     stack<uint32_t> s; s.push(0); // Stack with roots of subtrees yet to process
@@ -258,16 +267,45 @@ inline void stdCentroidDecomposition(vector<uint32_t> &t) { // Complexity: O(n*l
         }
         if (c != 0) ps.push(make_pair(c, centroid)); // If this node will have some children (i.e. when removed it generates subtrees on T), then push it to 'ps'
         */
-    }
-}
+//     }
+// }
 
 /*
  * NEW O(n) CENTROID DECOMPOSITION IMPLEMENTATION
  */
 
 // Recompute the deltas on a treelet (i.e. a connected component of '_t')
-inline void computeDeltas(const uint32_t _t_root, vector<uint32_t> &_t, const uint32_t root) { // Complexity: ??
-    // TODO
+inline void computeDeltas(const vector<uint32_t> &t, vector<uint32_t> &_t, const uint32_t n) { // Complexity: O(log(n))
+    // Identify root of treelet
+    uint32_t root = n;
+    uint32_t parent = _t[root+1];
+    while (parent != root) { // Navigate up the treelet until the root is found
+        root = parent; parent = _t[root+1]; // Step up
+    }
+    // Compute total size of treelet
+    uint32_t size = 1; // Initialize size of connected component rooted at 'root'
+    for (uint32_t i = 0; i < (t[_t[root+3]]&num_c); i++) {
+        size += t[_t[root+3]+2*i+3]; // Compute size
+    }
+    // Build stack for DFS
+    stack<uint32_t> s; s.push(root); // Initialize stack for DFS
+    stack<uint32_t> dfs;
+    while (!s.empty()) { // While stack is not empty
+        uint32_t node = s.top(); s.pop(); // ID of the node being visited
+        dfs.push(node); // Push node to DFS stack
+        for (uint32_t i = _t[node]; i > 0; i--) { // For each child
+            s.push(_t[node+3*i+1]); // Push its ID into the stack
+        }
+    }
+    // DFS on '_t' and compute deltas
+    while (!dfs.empty()) { // While DFS stack is not empty
+        uint32_t node = dfs.top(); dfs.pop(); // ID of the node being visited
+        for (uint32_t i = 0; i < _t[node]; i++) { // For each of its children
+            _t[node+3*i+5] = _t[_t[node+3*i+4]+2]; // Initialize delta_1
+            for (uint32_t j = 0; j < _t[_t[node+3*i+4]]; j++) _t[node+3*i+5] += _t[_t[node+3*i+4]+3*j+5]; // Compute delta_1
+            _t[node+3*i+6] = size - _t[node+3*i+5]; // Compute delta_2
+        }
+    }
 }
 
 // New centroid search algorithm
