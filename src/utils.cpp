@@ -45,7 +45,7 @@ vector<uint32_t> buildTree(const string &tree) { // Complexity: O(n)
             s.pop(); // Pop its ID from 's'
         }
     }
-    return t;
+    return t; // Return 't'
 }
 
 // Build a reference bitvector to identify the positions of the nodes in 't'
@@ -56,10 +56,10 @@ vector<bool> buildIdRef(const vector<uint32_t> &t) { // Complexity: O(n)
         id_ref[i] = 1; // Set 'i'th bit to 1
         i += 2*t[i] + 2; // And increment pointer
     }
-    return id_ref;
+    return id_ref; // Return 'id_ref'
 }
 
-// Build a reference bitvector to identify the positions of the nodes in 't'
+// Build a reference bitvector to identify the positions of the nodes in '_t'
 vector<bool> build_IdRef(const vector<uint32_t> &_t) { // Complexity: O(n)
     vector<bool> _id_ref = vector<bool>(_t.size(), 0); // Initialize an empty bitvector
     uint32_t i = 0; // Initialize vector pointer
@@ -67,7 +67,7 @@ vector<bool> build_IdRef(const vector<uint32_t> &_t) { // Complexity: O(n)
         _id_ref[i] = 1; // Set 'i'th bit to 1
         i += 3*_t[i] + 4; // And increment pointer
     }
-    return _id_ref;
+    return _id_ref; // Return '_id_ref'
 }
 
 // Compute the initial sizes of the tree
@@ -112,7 +112,7 @@ pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, const vector<bool> &i
                 _t.pb(noc.top()); // Number of children
                 _t.pb(id); // Parent ID
                 _t.pb(size); // Size of treelet
-                _t.pb(i); // treelet root ID reference on 't'
+                _t.pb(i); // Treelet root ID reference on 't'
                 for (uint32_t j = 0; j < noc.top(); j++) { // For each child
                     _t.pb(cs.top()); // Insert child ID
                     _t.pb(_t[cs.top()+2]); // Initialize delta_1
@@ -130,7 +130,7 @@ pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, const vector<bool> &i
         }
         i--; // Decrement pointer
     }
-    return make_pair(root, _t);
+    return make_pair(root, _t); // Return bot 'root' and '_t'
 }
 
 /*
@@ -138,7 +138,10 @@ pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, const vector<bool> &i
  */
 
 // Remove a node 'n' from 't'
-inline void rmNodeOnT(vector<uint32_t> &t, const uint32_t n) { // Complexity: O(k) where k is n's parent number of children
+inline void rmNodeOnT(vector<uint32_t> &t, vector<bool> &id_ref, const uint32_t n) { // Complexity: O(k) where k is n's parent number of children
+    // Remove reference on 'id_ref'
+    id_ref[n] = 0;
+    // Remove node from 't'
     uint32_t parent = t[n+1]; // Parent of the node ID
     uint32_t size; // Initialize size of the node
     for (uint32_t i = 0; i < (t[parent]&num_c); i++) if (t[parent+2*i+2] == n) size = t[parent+2*i+3]; // Compute size of the node
@@ -163,12 +166,22 @@ inline void rmNodeOnT(vector<uint32_t> &t, const uint32_t n) { // Complexity: O(
     // Delete references inside n's children
     for (uint32_t i = 0; i < (t[n]&num_c); i++) { // Navigate the children
         t[t[n+2*i+2]+1] = t[n+2*i+2]; // And make them new roots of subtrees
+        t[t[n+2*i+2]] |= cov_el; // Then mark them as cover elements
     }
 }
 
-// Add a node on '_t?
-inline void addNodeOn_T(vector<uint32_t> &_t, const uint32_t parent) { // Complexity: ??
-    // TODO
+// Add a node on '_t'
+// Note: when this function is called, the newly added node is ALWAYS the root of a connected component. Therefore, we assume this condition to be true.
+inline void addNodeOn_T(vector<uint32_t> &_t, vector<bool> _id_ref, const uint32_t id_ref, const uint32_t size, const vector<uint32_t> children) { // Complexity: O(k) where k = children.size()
+    uint32_t id = _t.size(); // ID of the new node
+    _t.pb(children.size()); // Number of children
+    _t.pb(id); // Parent ID (i.e. itself, see assumption above)
+    _t.pb(size); // Size of treelet
+    _t.pb(id_ref); // Treelet root ID reference on 't'
+    for (uint32_t child : children) { // For each of its children
+        _t.pb(child); // Insert child ID
+        _t.pb(0); _t.pb(0); // Empty deltas (will be computed by the proper function)
+    }
 }
 
 // Remove a node 'n' from '_t'
