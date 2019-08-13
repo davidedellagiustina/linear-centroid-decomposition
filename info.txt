@@ -17,7 +17,7 @@ T" is a vector<uint32_t>:
     - T2"[i] = number of children
     - T"[i+1] = parent ID
     - T"[i+2] = size of treelet
-    - T"[i+3] = treelet root ID reference on T
+    - T"[i+3] = treelet root ID reference on T (i.e. alpha function)
     - T"[i+4, ..., j] = children IDs + info:
         * each node is T"[h, ..., h+2]
         * T"[h] = children ID
