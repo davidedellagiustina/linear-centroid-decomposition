@@ -27,10 +27,6 @@ int main(int argc, char* argv[]) { // 'Argv[1]' must be the name of the file con
     _t_root = tmp.first; _t = tmp.second;
     _id_ref = build_IdRef(_t); // Build the bitvector for nodes ID reference on '_t'
     cout << printTime("Structure building", t1, getTime()) << endl; // Print time to build structure
-    // TEMP
-    // cout << _t_root << nl;
-    // cout << print(_t) << nl;
-    // END TEMP
     // Perform centroid decomposition on 't': O(n)
     // TODO
     // t1 = getTime(); // Get initial time

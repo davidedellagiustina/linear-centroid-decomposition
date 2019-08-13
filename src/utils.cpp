@@ -214,7 +214,7 @@ inline vector<uint32_t> rmNodeOn_T(vector<uint32_t> &_t, vector<bool> &_id_ref, 
         _t[_t[n+3*i+4]+1] = _t[n+3*i+4]; // And make them new roots of subtrees
         children.pb(_t[n+3*i+4]); // Then add their ID to 'children'
     }
-    return children;
+    return children; // Return 'children'
 }
 
 // Standard centroid search algorithm
@@ -309,9 +309,40 @@ inline void computeDeltas(const vector<uint32_t> &t, vector<uint32_t> &_t, const
 }
 
 // New centroid search algorithm
-inline uint32_t findCentroid(const vector<uint32_t> &t, const vector<uint32_t> &_t, const uint32_t root) { // Complexity: ?? -> should be O(n/log(n))
-    // TODO
-    return 0;
+inline uint32_t findCentroid(const vector<uint32_t> &t, const vector<uint32_t> &_t, const uint32_t root) { // Complexity: O(n/log(n))
+    // Compute size of subtree (i.e. connected component): O(k) where k = _t[root]
+    uint32_t size = _t[root+2]; // Initialize size
+    for (uint32_t i = 0; i < _t[root]; i++) size += _t[root+3*i+5]; // Compute size
+    size /= 2; // Compute size
+    // Serach centroid treelet on '_t': O(n/log(n))
+    uint32_t centroid_treelet = root; // Start searching from root
+    bool found = false; // Initialize 'found'
+    while (!found) { // While the centroid treelet is not found
+        for (uint32_t i = 0; i < _t[centroid_treelet]; i++) { // Navigate the children of the current node
+            if (_t[centroid_treelet+3*i+5] > size) { // If it is the heavy child
+                centroid_treelet =_t[centroid_treelet+3*i+4]; // Move towards it
+                found = false; // And set 'found' to false
+                break; // Then stop navigating children
+            } else { // Else
+                found = true; // Set 'found' to true
+            }
+        }
+    }
+    // Search centroid node on 't': O(log(n))
+    uint32_t centroid_node = _t[centroid_treelet+3]; // Start searching from centroid_treelet's root
+    found = false; // Reset 'found'
+    while (!found) { // While the centroid node is not found
+        for (uint32_t i = 0; i < (t[centroid_node]&num_c); i++) { // Navigate the children of the current node
+            if (t[centroid_node+2*i+3] > size) { // If it is the heavy child
+                centroid_node = t[centroid_node+2*i+2]; // Move towards it
+                found = false; // And set 'found' to false
+                break; // Then stop navigating children
+            } else { // Else
+                found = true; // Set 'found' to true
+            }
+        }
+    }
+    return centroid_node; // return the ID of the centroid node
 }
 
 // New centroid decomposition algorithm
