@@ -241,38 +241,35 @@ inline uint32_t stdFindCentroid(const vector<uint32_t> &t, const uint32_t root) 
     }
     return centroid; // Return the ID of the centroid
 }
-/*
+
 // Standard centroid decomposition algorithm
-inline void stdCentroidDecomposition(vector<uint32_t> &t) { // Complexity: O(n*log(n))
-    stack<uint32_t> s; s.push(0); // Stack with roots of subtrees yet to process
-    // stack<pair<uint32_t,uint32_t>> ps; // TEMP - just used to print nodes
+inline string stdCentroidDecomposition(vector<uint32_t> &t, vector<bool> &id_ref, const uint32_t root) { // Complexity: O(n*log(n))
+    oss os; // Initialize output stream
+    stack<uint32_t> s, noc; s.push(root); // Stack with roots of subtrees yet to process
     while (!s.empty()) { // While there are still subtrees to process
-        uint32_t root = s.top(); s.pop(); // Get root of subtree
-        uint32_t centroid = stdFindCentroid(t, root); // Find centroid of subtree
-        rmNodeOnT(t, centroid); // Remove the centroid from T
+        uint32_t r = s.top(); s.pop(); // Get root of subtree
+        uint32_t centroid = stdFindCentroid(t, r); // Find centroid of subtree
+        rmNodeOnT(t, id_ref, centroid); // Remove the centroid from T
         uint32_t c = 0; // Subtree counter
-        for(int64_t i = (t[centroid]&num_c); i > 0; i--) { // Navigate the children in reverse order
+        for(uint32_t i = (t[centroid]&num_c); i > 0; i--) { // Navigate the children in reverse order
             s.push(t[centroid+2*i]); // Then push them to 's'
             c++; // And increment counter
         }
-        if (centroid != root) { // If the root of the subtree is not its centroid
-            s.push(root); // Then it is the root of a new subtree
+        if (centroid != r) { // If the root of the subtree is not its centroid
+            s.push(r); // Then it is the root of a new subtree
             c++; // Increment counter
         }
-        // TEMP - prints all the nodes
-        /* UNCOMMENT TO PRINT CENTROID TREE
-        cout << "Node " << centroid << " "; // Print node ID
-        if (!ps.empty()) { // If node has parent
-            cout << "has parent " << ps.top().second << "." << nl; // Print parent ID
-            ps.top().first--; // Decrement parent's number of children
-            if (ps.top().first == 0) ps.pop(); // If parent has no more children, remove if from 'ps'
-        } else { // If node has no parent
-            cout << "is the root of the tree." << nl; // Preint that is is the root of the centroid tree
+        // Print the current node to the output stream
+        os << "(" << centroid; // Print current node ID
+        if (!noc.empty()) noc.top()--; // Decrement its parent's number of children
+        noc.push(c); // Push its number of chidren to 'noc'
+        while (!noc.empty() && noc.top() == 0) { // While there are nodes with no more children
+            noc.pop(); // Delete them from 'noc'
+            os << ")"; // And print the closed bracket
         }
-        if (c != 0) ps.push(make_pair(c, centroid)); // If this node will have some children (i.e. when removed it generates subtrees on T), then push it to 'ps'
-        */
-//     }
-// }
+    }
+    return os.str(); // Return the BP representation of the centroid tree
+}
 
 /*
  * NEW O(n) CENTROID DECOMPOSITION IMPLEMENTATION
