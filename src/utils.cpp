@@ -166,13 +166,12 @@ inline void rmNodeOnT(vector<uint32_t> &t, vector<bool> &id_ref, const uint32_t 
     // Delete references inside n's children
     for (uint32_t i = 0; i < (t[n]&num_c); i++) { // Navigate the children
         t[t[n+2*i+2]+1] = t[n+2*i+2]; // And make them new roots of subtrees
-        t[t[n+2*i+2]] |= cov_el; // Then mark them as cover elements
     }
 }
 
 // Add a node on '_t'
 // Note: when this function is called, the newly added node is ALWAYS the root of a connected component. Therefore, we assume this condition to be true.
-inline void addNodeOn_T(vector<uint32_t> &_t, vector<bool> &_id_ref, const uint32_t id_ref, const uint32_t size, const vector<uint32_t> children) { // Complexity: O(k) where k = children.size()
+inline uint32_t addNodeOn_T(vector<uint32_t> &_t, vector<bool> &_id_ref, const uint32_t id_ref, const uint32_t size, const vector<uint32_t> children) { // Complexity: O(k) where k = children.size()
     // Add node on '_t'
     uint32_t id = _t.size(); // ID of the new node
     _t.pb(children.size()); // Number of children
@@ -182,12 +181,14 @@ inline void addNodeOn_T(vector<uint32_t> &_t, vector<bool> &_id_ref, const uint3
     for (uint32_t child : children) { // For each of its children
         _t.pb(child); // Insert child ID
         _t.pb(0); _t.pb(0); // Empty deltas (will be computed by the proper function)
+        _t[child+1] = id; // Update child's parent ID
     }
     // Update '_id_ref' consequently
     _id_ref.pb(1);
     for (uint32_t i = 0; i < children.size()+3; i++) {
         _id_ref.pb(0);
     }
+    return id; // Return the ID of the newly addd node
 }
 
 // Remove a node 'n' from '_t'
@@ -310,16 +311,15 @@ inline void computeDeltas(const vector<uint32_t> &t, vector<uint32_t> &_t, const
 }
 
 // New centroid search algorithm
-inline uint32_t findCentroid(const vector<uint32_t> &t, const vector<uint32_t> &_t, const uint32_t root) { // Complexity: O(n/log(n))
-    // Compute size of subtree (i.e. connected component): O(k) where k = _t[root]
-    uint32_t size = _t[root+2]; // Initialize size
-    for (uint32_t i = 0; i < _t[root]; i++) size += _t[root+3*i+5]; // Compute size
+inline pair<uint32_t,uint32_t> findCentroid(const vector<uint32_t> &t, const vector<uint32_t> &_t, const uint32_t root) { // Complexity: O(n/log(n))
+    // Compute size of subtree (i.e. connected component): O(1)
+    uint32_t size = ((_t[root] == 0)? _t[root+2] : _t[root+5]+_t[root+6]); // Compute size
     size /= 2; // Compute size
     // Serach centroid treelet on '_t': O(n/log(n))
     uint32_t centroid_treelet = root; // Start searching from root
     bool found = false; // Initialize 'found'
-    if (_t[centroid_treelet] > 0) { // If 'centroid_treelet' has any children
-        while (!found) { // While the centroid treelet is not found
+    while (!found) { // While the centroid treelet is not found
+        if (_t[centroid_treelet] > 0) { // If 'centroid_treelet' has any children
             for (uint32_t i = 0; i < _t[centroid_treelet]; i++) { // Navigate the children of the current node
                 if (_t[centroid_treelet+3*i+5] > size) { // If it is the heavy child
                     centroid_treelet =_t[centroid_treelet+3*i+4]; // Move towards it
@@ -329,7 +329,7 @@ inline uint32_t findCentroid(const vector<uint32_t> &t, const vector<uint32_t> &
                     found = true; // Set 'found' to true
                 }
             }
-        }
+        } else found = true;
     }
     // Search centroid node on 't': O(log(n))
     uint32_t centroid_node = _t[centroid_treelet+3]; // Start searching from centroid_treelet's root
@@ -347,12 +347,71 @@ inline uint32_t findCentroid(const vector<uint32_t> &t, const vector<uint32_t> &
             }
         }
     }
-    return centroid_node; // return the ID of the centroid node
+    return make_pair(centroid_treelet, centroid_node); // Return the ID of the centroid node both on 't' and '_t'
+}
+
+inline string print(const vector<uint32_t> &t) { // Complexity: O(n)
+    oss os; // New output stream
+    os << "(";
+    bool first = true; // Used for the first element
+    for (const uint32_t i : t) { // Print each node to 'os'
+        if (first) {
+            os << i;
+            first = false;
+        } else os << " " << i;
+    }
+    os << ")";
+    return os.str(); // Return stream content as a string
 }
 
 // New centroid decomposition algorithm
-void centroidDecomposition(vector<uint32_t> &t, const uint32_t _t_root, vector<uint32_t> &_t) { // Complexity: ?? -> should be O(n)
-    // TODO
+string centroidDecomposition(vector<uint32_t> &t, vector<bool> &id_ref, const uint32_t _t_root, vector<uint32_t> &_t, vector<bool> &_id_ref) { // Complexity: ?? -> should be O(n)
+    oss os; // Initialize output stream
+    stack<uint32_t> s; s.push(_t_root);
+    while (!s.empty()) {
+        uint32_t r = s.top(); s.pop();
+        pair<uint32_t,uint32_t> centroid = findCentroid(t, _t, r);
+        uint32_t _tc = centroid.first, tc = centroid.second;
+        rmNodeOnT(t, id_ref, tc);
+        vector<uint32_t> children = rmNodeOn_T(_t, _id_ref, _tc);
+        // Build children reference
+        vector<pair<uint32_t,uint32_t>> ref;
+        for (uint32_t child : children) {
+            uint32_t n = _t[child+3], p = t[n+1];
+            while (p != n) {
+                n = p; p = t[n+1];
+            }
+            ref.pb(make_pair(n, child));
+        }
+        // End
+        for (uint32_t i = (t[tc]&num_c); i > 0; i--) {
+            if (!(t[t[tc+2*i]]&cov_el)) {
+                t[t[tc+2*i]] |= cov_el;
+                uint32_t size = t[tc+2*i+1];
+                vector<uint32_t> c;
+                for (pair<uint32_t,uint32_t> child : ref) {
+                    if (t[tc+2*i] == child.first) {
+                        c.pb(child.second);
+                        size -= _t[child.second+2];
+                    }
+                }
+                uint32_t new_node = addNodeOn_T(_t, _id_ref, t[tc+2*i], size, c);
+                computeDeltas(t, _t, new_node);
+                s.push(new_node);
+            }
+        }
+        for (pair<uint32_t,uint32_t> c : ref) {
+            if (c.first == _t[c.second+3]) {
+                computeDeltas(t, _t, c.second);
+                s.push(c.second);
+            }
+        }
+        if (_t[r+3] != tc) {
+            computeDeltas(t, _t, r);
+            s.push(r);
+        }
+    }
+    return os.str(); // Return the BP representation of the centroid tree
 }
 
 /*
@@ -378,18 +437,6 @@ inline string printTime(const string t, const chrono::high_resolution_clock::tim
 }
 
 // Print a vector<uint32_t>
-inline string print(const vector<uint32_t> &t) { // Complexity: O(n)
-    oss os; // New output stream
-    os << "(";
-    bool first = true; // Used for the first element
-    for (const uint32_t i : t) { // Print each node to 'os'
-        if (first) {
-            os << i;
-            first = false;
-        } else os << " " << i;
-    }
-    os << ")";
-    return os.str(); // Return stream content as a string
-}
+
 
 #endif
