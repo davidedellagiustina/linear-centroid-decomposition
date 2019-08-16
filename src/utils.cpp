@@ -89,7 +89,7 @@ void computeSizes(vector<uint32_t> &t, const vector<bool> &id_ref) { // Complexi
 // Cover 't' and build '_t'
 pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, const vector<bool> &id_ref) { // Complexity: O(n)
     vector<uint32_t> _t; // Initialize '_t'
-    stack<uint32_t> s, noc, cs; noc.push(0); // 'noc' represents the number of children of each cover element
+    stack<uint32_t> s, noc, cs; // 'noc' represents the number of children of each cover element
     uint32_t m = floor(log2((t.size()+2)/4)); // m = log(n)
     uint32_t i = t.size() - 1; // Initialize vector pointer
     uint32_t root; // Initialize root of '_t'
@@ -97,23 +97,27 @@ pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, const vector<bool> &i
     for (auto it = id_ref.rbegin(); it != id_ref.rend(); it++) { // Visit each element of 'id_ref' in reverse order
         if (*it) { // If the current element on 'id_ref' equals 1 (i.e. there is a node with this ID on 't')
             uint32_t size = 1; // Initialize size
+            uint32_t pcs = 0; // Initialize number of PCS children
             for (uint32_t j = 0; j < (t[i]&num_c); j++) { // For each children
                 if (!(t[t[i+2*j+2]]&cov_el)) { // If child is not a cover element
                     size += s.top(); // Compute its size
                     s.pop();
-                } else noc.top()++;
+                    pcs += noc.top(); // Compute number of PCS children
+                    noc.pop();
+                } else pcs++;
             }
             if (i != 0 && size < m) { // If PCS is not big enough and it's not the root of the tree
                 s.push(size); // Push 'size' to 's'
+                noc.push(pcs); // Push 'pcs' to 'noc'
             } else { // If the PCS is big enough or it's the root of the tree
                 t[i] |= cov_el; // Mark node as cover element
                 // Build '_t'
                 uint32_t id = _t.size(); // ID of the new node
-                _t.pb(noc.top()); // Number of children
+                _t.pb(pcs); // Number of children
                 _t.pb(id); // Parent ID
                 _t.pb(size); // Size of treelet
                 _t.pb(i); // Treelet root ID reference on 't'
-                for (uint32_t j = 0; j < noc.top(); j++) { // For each child
+                for (uint32_t j = 0; j < pcs; j++) { // For each child
                     _t.pb(cs.top()); // Insert child ID
                     _t.pb(_t[cs.top()+2]); // Initialize delta_1
                     for (uint32_t k = 0; k < _t[cs.top()]; k++) { // For each grandchild
@@ -125,7 +129,7 @@ pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, const vector<bool> &i
                 }
                 root = id; // Set latest node as root of '_t'
                 cs.push(id); // Push ID of the new node
-                noc.push(0);
+                // noc.push(0);
             }
         }
         i--; // Decrement pointer
@@ -350,24 +354,10 @@ inline pair<uint32_t,uint32_t> findCentroid(const vector<uint32_t> &t, const vec
     return make_pair(centroid_treelet, centroid_node); // Return the ID of the centroid node both on 't' and '_t'
 }
 
-inline string print(const vector<uint32_t> &t) { // Complexity: O(n)
-    oss os; // New output stream
-    os << "(";
-    bool first = true; // Used for the first element
-    for (const uint32_t i : t) { // Print each node to 'os'
-        if (first) {
-            os << i;
-            first = false;
-        } else os << " " << i;
-    }
-    os << ")";
-    return os.str(); // Return stream content as a string
-}
-
 // New centroid decomposition algorithm
 string centroidDecomposition(vector<uint32_t> &t, vector<bool> &id_ref, const uint32_t _t_root, vector<uint32_t> &_t, vector<bool> &_id_ref) { // Complexity: ?? -> should be O(n)
     oss os; // Initialize output stream
-    stack<uint32_t> s; s.push(_t_root);
+    stack<uint32_t> s, noc; s.push(_t_root);
     while (!s.empty()) {
         uint32_t r = s.top(); s.pop();
         pair<uint32_t,uint32_t> centroid = findCentroid(t, _t, r);
@@ -384,6 +374,7 @@ string centroidDecomposition(vector<uint32_t> &t, vector<bool> &id_ref, const ui
             ref.pb(make_pair(n, child));
         }
         // End
+        uint32_t c = (t[tc]&num_c);
         for (uint32_t i = (t[tc]&num_c); i > 0; i--) {
             if (!(t[t[tc+2*i]]&cov_el)) {
                 t[t[tc+2*i]] |= cov_el;
@@ -409,7 +400,17 @@ string centroidDecomposition(vector<uint32_t> &t, vector<bool> &id_ref, const ui
         if (_t[r+3] != tc) {
             computeDeltas(t, _t, r);
             s.push(r);
+            c++;
         }
+        // Print
+        os << "(" << tc;
+        if (!noc.empty()) noc.top()--;
+        noc.push(c);
+        while (!noc.empty() && noc.top() == 0) {
+            noc.pop();
+            os << ")";
+        }
+        //
     }
     return os.str(); // Return the BP representation of the centroid tree
 }
@@ -437,6 +438,18 @@ inline string printTime(const string t, const chrono::high_resolution_clock::tim
 }
 
 // Print a vector<uint32_t>
-
+inline string print(const vector<uint32_t> &t) { // Complexity: O(n)
+    oss os; // New output stream
+    os << "(";
+    bool first = true; // Used for the first element
+    for (const uint32_t i : t) { // Print each node to 'os'
+        if (first) {
+            os << i;
+            first = false;
+        } else os << " " << i;
+    }
+    os << ")";
+    return os.str(); // Return stream content as a string
+}
 
 #endif
