@@ -374,7 +374,7 @@ string centroidDecomposition(vector<uint32_t> &t, vector<bool> &id_ref, const ui
             ref.pb(make_pair(n, child));
         }
         // End
-        uint32_t c = (t[tc]&num_c);
+        uint32_t nc = (t[tc]&num_c);
         for (uint32_t i = (t[tc]&num_c); i > 0; i--) {
             if (!(t[t[tc+2*i]]&cov_el)) {
                 t[t[tc+2*i]] |= cov_el;
@@ -397,15 +397,36 @@ string centroidDecomposition(vector<uint32_t> &t, vector<bool> &id_ref, const ui
                 s.push(c.second);
             }
         }
+        //
         if (_t[r+3] != tc) {
-            computeDeltas(t, _t, r);
-            s.push(r);
-            c++;
+            uint32_t node;
+            if (r == _tc) {
+                t[_t[r+3]] |= cov_el; // Really needed?
+                uint32_t size = 1;
+                for (uint32_t i = 0; i < (t[_t[r+3]]&num_c); i++) size += t[_t[r+3]+2*i+3];
+                vector<uint32_t> c;
+                for (pair<uint32_t,uint32_t> child : ref) {
+                    if (_t[r+3] == child.first) {
+                        c.pb(child.second);
+                        size -= _t[child.second+2];
+                    }
+                }
+                node = addNodeOn_T(_t, _id_ref, _t[r+3], size, c);
+            } else node = r;
+            computeDeltas(t, _t, node);
+            s.push(node);
+            nc++;
         }
+        //
+        // if (_t[r+3] != tc) {
+        //     computeDeltas(t, _t, r);
+        //     // s.push(r);
+        //     nc++;
+        // }
         // Print
         os << "(" << tc;
         if (!noc.empty()) noc.top()--;
-        noc.push(c);
+        noc.push(nc);
         while (!noc.empty() && noc.top() == 0) {
             noc.pop();
             os << ")";
@@ -413,6 +434,16 @@ string centroidDecomposition(vector<uint32_t> &t, vector<bool> &id_ref, const ui
         //
     }
     return os.str(); // Return the BP representation of the centroid tree
+}
+
+/*
+ * CORRECTNESS CHECK
+ */
+
+// Check correctness of a centroid decomposition
+bool checkCorrectness(vector<uint32_t> &t, string &ctree) { // Complexity: ??
+    // TODO
+    return true;
 }
 
 /*

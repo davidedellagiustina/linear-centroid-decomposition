@@ -8,7 +8,7 @@ using namespace std;
 // Global variables
 string tree, ctree;
 uint32_t _t_root;
-vector<uint32_t> t, _t;
+vector<uint32_t> t, t_copy, _t;
 vector<bool> id_ref, _id_ref;
 
 // Main function. Complexity: O(n)
@@ -26,6 +26,7 @@ int main(int argc, char* argv[]) { // 'Argv[1]' must be the name of the file con
         cout << err << nl; // Or otherwise print exception
         return 0;
     }
+    t_copy = t;
     id_ref = buildIdRef(t); // Build the bitvector for nodes ID reference on 't'
     computeSizes(t, id_ref); // Compute the initial sizes on 't'
     pair<uint32_t,vector<uint32_t>> tmp = cover(t, id_ref); // Cover 't'
@@ -36,6 +37,8 @@ int main(int argc, char* argv[]) { // 'Argv[1]' must be the name of the file con
     t1 = getTime(); // Get initial time
     ctree = centroidDecomposition(t, id_ref, _t_root, _t, _id_ref); // Perform linear-time centroid decomposition
     cout << printTime("Linear centroid decomposition", t1, getTime()) << nl; // Print time to compute centroid decomposition
-    // cout << ctree << nl;
+    cout << ctree << nl;
+    // Check correctness
+    cout << "Correctness check: " << ((checkCorrectness(t_copy, ctree))? "true" : "false") << nl;
     return 0;
 }
