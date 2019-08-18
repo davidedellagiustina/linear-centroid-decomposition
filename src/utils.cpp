@@ -129,7 +129,6 @@ pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, const vector<bool> &i
                 }
                 root = id; // Set latest node as root of '_t'
                 cs.push(id); // Push ID of the new node
-                // noc.push(0);
             }
         }
         i--; // Decrement pointer
@@ -175,7 +174,7 @@ inline void rmNodeOnT(vector<uint32_t> &t, vector<bool> &id_ref, const uint32_t 
 
 // Add a node on '_t'
 // Note: when this function is called, the newly added node is ALWAYS the root of a connected component. Therefore, we assume this condition to be true.
-inline uint32_t addNodeOn_T(vector<uint32_t> &_t, vector<bool> &_id_ref, const uint32_t id_ref, const uint32_t size, const vector<uint32_t> children) { // Complexity: O(k) where k = children.size()
+inline uint32_t addNodeOn_T(vector<uint32_t> &_t, vector<bool> &_id_ref, const uint32_t id_ref, const uint32_t size, const vector<uint32_t> &children) { // Complexity: O(k) where k = children.size()
     // Add node on '_t'
     uint32_t id = _t.size(); // ID of the new node
     _t.pb(children.size()); // Number of children
@@ -281,13 +280,7 @@ inline string stdCentroidDecomposition(vector<uint32_t> &t, vector<bool> &id_ref
  */
 
 // Recompute the deltas on a treelet (i.e. a connected component of '_t')
-inline void computeDeltas(const vector<uint32_t> &t, vector<uint32_t> &_t, const uint32_t n) { // Complexity: O(log(n))
-    // Identify root of treelet
-    uint32_t root = n;
-    uint32_t parent = _t[root+1];
-    while (parent != root) { // Navigate up the treelet until the root is found
-        root = parent; parent = _t[root+1]; // Step up
-    }
+inline void computeDeltas(const vector<uint32_t> &t, vector<uint32_t> &_t, const uint32_t root) { // Complexity: O(log(n))
     // Compute total size of treelet
     uint32_t size = 1; // Initialize size of connected component rooted at 'root'
     for (uint32_t i = 0; i < (t[_t[root+3]]&num_c); i++) {
@@ -445,7 +438,7 @@ string centroidDecomposition(vector<uint32_t> &t, vector<bool> &id_ref, const ui
  */
 
 // Check correctness of a centroid decomposition
-bool checkCorrectness(vector<uint32_t> &t, vector<bool> &id_ref, string &ctree) { // Complexity: unknown and not relevant
+bool checkCorrectness(vector<uint32_t> &t, vector<bool> &id_ref, const string &ctree) { // Complexity: unknown and not relevant
     vector<uint32_t> roots; roots.pb(0); // Vector holding all the subtrees' roots
     stack<uint32_t> noc; noc.push(1); // Stack to store number of children of each node
     uint32_t i = 0; // 'ctree' string pointer
