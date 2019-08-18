@@ -9,7 +9,7 @@ using namespace std;
 string tree, ctree;
 uint32_t _t_root;
 vector<uint32_t> t, t_copy, _t;
-vector<bool> id_ref, _id_ref;
+vector<bool> id_ref, id_ref_copy, _id_ref;
 
 // Main function. Complexity: O(n)
 int main(int argc, char* argv[]) { // 'Argv[1]' must be the name of the file containing the tree structure (in BP representation)
@@ -26,9 +26,10 @@ int main(int argc, char* argv[]) { // 'Argv[1]' must be the name of the file con
         cout << err << nl; // Or otherwise print exception
         return 0;
     }
-    t_copy = t;
     id_ref = buildIdRef(t); // Build the bitvector for nodes ID reference on 't'
+    id_ref_copy = id_ref;
     computeSizes(t, id_ref); // Compute the initial sizes on 't'
+    t_copy = t;
     pair<uint32_t,vector<uint32_t>> tmp = cover(t, id_ref); // Cover 't'
     _t_root = tmp.first; _t = tmp.second;
     _id_ref = build_IdRef(_t); // Build the bitvector for nodes ID reference on '_t'
@@ -39,6 +40,6 @@ int main(int argc, char* argv[]) { // 'Argv[1]' must be the name of the file con
     cout << printTime("Linear centroid decomposition", t1, getTime()) << nl; // Print time to compute centroid decomposition
     cout << ctree << nl;
     // Check correctness
-    cout << "Correctness check: " << ((checkCorrectness(t_copy, ctree))? "true" : "false") << nl;
+    cout << "Correctness check: " << ((checkCorrectness(t_copy, id_ref_copy, ctree))? "true" : "false") << nl;
     return 0;
 }

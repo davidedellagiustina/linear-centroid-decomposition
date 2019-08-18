@@ -355,7 +355,7 @@ inline pair<uint32_t,uint32_t> findCentroid(const vector<uint32_t> &t, const vec
 }
 
 // New centroid decomposition algorithm
-string centroidDecomposition(vector<uint32_t> &t, vector<bool> &id_ref, const uint32_t _t_root, vector<uint32_t> &_t, vector<bool> &_id_ref) { // Complexity: ?? -> should be O(n)
+string centroidDecomposition(vector<uint32_t> &t, vector<bool> &id_ref, const uint32_t _t_root, vector<uint32_t> &_t, vector<bool> &_id_ref) { // Complexity: O(n)
     oss os; // Initialize output stream
     stack<uint32_t> s, noc; s.push(_t_root); // Stack with roots of subtrees yet to process
     while (!s.empty()) { // While stack is not empty
@@ -445,9 +445,48 @@ string centroidDecomposition(vector<uint32_t> &t, vector<bool> &id_ref, const ui
  */
 
 // Check correctness of a centroid decomposition
-bool checkCorrectness(vector<uint32_t> &t, string &ctree) { // Complexity: ??
-    // TODO
-    return true;
+bool checkCorrectness(vector<uint32_t> &t, vector<bool> &id_ref, string &ctree) { // Complexity: unknown and not relevant
+    vector<uint32_t> roots; roots.pb(0); // Vector holding all the subtrees' roots
+    stack<uint32_t> noc; noc.push(1); // Stack to store number of children of each node
+    uint32_t i = 0; // 'ctree' string pointer
+    while (i < ctree.length()) { // While the pointer is valid
+        if (ctree[i] == '(') { // If the current charcter means there is a new node
+            // Retrieve node ID
+            string buf = ""; uint32_t id; // Initialize string to hold node ID
+            while (ctree[i+1] != '(' && ctree[i+1] != ')') { // While there are still digits in the ID
+                buf += ctree[i+1]; // Store them in buffer
+                i++; // And increment pointer
+            }
+            iss is (buf); is >> id; // Then convert the ID in the string to an integer
+            // Check correctness
+            bool found = false; // Initialize 'found' to false
+            for (uint32_t j = roots.size()-noc.top(); j < roots.size(); j++) { // For each of the lastly added roots
+                uint32_t r = roots[j]; // Current root being analysed
+                if (id == stdFindCentroid(t, r)) { // If the centroid of this root match with the build centroid tree
+                    found = true; // Mark 'found' as true
+                    roots.erase(roots.begin()+j); // Delete this root from 'roots'
+                    noc.top()--; // Decrement last node's number of children
+                    rmNodeOnT(t, id_ref, id); // Remove the centroid from 't'
+                    uint32_t c = 0; // Initialize new roots counter
+                    for(uint32_t k = (t[id]&num_c); k > 0; k--) { // For each of the centroid's children
+                        roots.pb(t[id+2*k]); // Push it to the back of 'roots'
+                        c++; // And increment counter
+                    }
+                    if (id != r) { // If the centroid is not the root of the subtree
+                        roots.pb(r); // Push the root to 'roots'
+                        c++; // And increment counter
+                    }
+                    noc.push(c); // Eventually push the counter to 'noc'
+                    break; // Then stop searching
+                }
+            }
+            if (!found) return false; // If the centroid doesn't match, the whole centroid tree is incorrect
+        } else if (ctree[i] == ')') { // Otherwise, if the current character means the current node is closed (i.e. has no more children)
+            noc.pop(); // Pop last element from 'noc'
+        }
+        i++; // Eventually increment pointer
+    }
+    return true; // If everything was fine, the centroid tree was built correctly
 }
 
 /*
