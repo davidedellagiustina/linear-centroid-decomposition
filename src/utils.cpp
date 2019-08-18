@@ -349,81 +349,89 @@ inline pair<uint32_t,uint32_t> findCentroid(const vector<uint32_t> &t, const vec
 string centroidDecomposition(vector<uint32_t> &t, vector<bool> &id_ref, const uint32_t _t_root, vector<uint32_t> &_t, vector<bool> &_id_ref) { // Complexity: O(n)
     oss os; // Initialize output stream
     stack<uint32_t> s, noc; s.push(_t_root); // Stack with roots of subtrees yet to process
+    uint32_t treshold = pow(floor(log2((t.size()+2)/4)), 3); // Set treshold as (log(n))^3
     while (!s.empty()) { // While stack is not empty
         uint32_t root = s.top(); s.pop(); // Get root from stack
-        pair<uint32_t,uint32_t> centroid = findCentroid(t, _t, root); // Find centroid of subtree with root 'root'
-        uint32_t _tc = centroid.first, tc = centroid.second; // Parse centroid nodes on 't' and '_t'
-        rmNodeOnT(t, id_ref, tc); // Remove node 'tc' from 't'
-        vector<uint32_t> children = rmNodeOn_T(_t, _id_ref, _tc); // Remove node '_tc' from '_t' and get its children on '_t'
-        // Build children reference vector
-        vector<pair<uint32_t,uint32_t>> c_ref; // Initialize vector
-        for (uint32_t child : children) { // For each child
-            uint32_t n = _t[child+3], p = t[n+1]; // 'n' is the root of 'child' on 't', 'p' is n's parent
-            while (p != n) { // Navigate up the tree to find root
-                n = p; p = t[n+1]; // Step up
+        uint32_t dimens = 1; // Initialize 'dimens'
+        for (uint32_t i = 0; i < (t[_t[root+3]]&num_c); i++) dimens += t[_t[root+3]+2*i+3]; // Compute 'dimens'
+        if (dimens > treshold) { // If 'dimens' is bigger than treshold
+            pair<uint32_t,uint32_t> centroid = findCentroid(t, _t, root); // Find centroid of subtree with root 'root'
+            uint32_t _tc = centroid.first, tc = centroid.second; // Parse centroid nodes on 't' and '_t'
+            rmNodeOnT(t, id_ref, tc); // Remove node 'tc' from 't'
+            vector<uint32_t> children = rmNodeOn_T(_t, _id_ref, _tc); // Remove node '_tc' from '_t' and get its children on '_t'
+            // Build children reference vector
+            vector<pair<uint32_t,uint32_t>> c_ref; // Initialize vector
+            for (uint32_t child : children) { // For each child
+                uint32_t n = _t[child+3], p = t[n+1]; // 'n' is the root of 'child' on 't', 'p' is n's parent
+                while (p != n) { // Navigate up the tree to find root
+                    n = p; p = t[n+1]; // Step up
+                }
+                c_ref.pb(make_pair(n, child)); // Push element to 'c_ref'
             }
-            c_ref.pb(make_pair(n, child)); // Push element to 'c_ref'
-        }
-        // Build new nodes on '_t' for each 'tc's children
-        uint32_t nc = (t[tc]&num_c); // Number of children - used when printing centroid tree representation
-        uint32_t total_number = 0; // Total number of old '_t' nodes whose parent has been found - used when updating 'tc's parent
-        uint32_t total_size = 1; // Total size of the newly created nodes on '_t' - used when updating 'tc's parent
-        for (uint32_t i = nc; i > 0; i--) { // For each children, in reverse order
-            uint32_t new_node; // Initialize 'new_node'
-            uint32_t child = t[tc+2*i]; // Child ID
-            if (!(t[child]&cov_el)) { // If child is not a cover element
-                t[child] |= cov_el; // Mark it as a new cover element
-                uint32_t size = t[tc+2*i+1]; // Initialize its size
-                total_size += size; // Increment 'total_size'
-                vector<uint32_t> c; // Initialize its children vector
-                for (pair<uint32_t,uint32_t> node : c_ref) { // For each node in 'c_ref' (i.e. a node on '_t' whose new parent has to be found)
-                    if (child == node.first) { // If its new parent is the new node being created
-                        c.pb(node.second); // Push its ID on '_t' to 'c'
-                        uint32_t size_dec = 1; // Initialize size decrement
-                        for (uint32_t j = 0; j < (t[_t[node.second+3]]&num_c); j++) size_dec += t[_t[node.second+3]+2*j+3]; // Compute size decrement
-                        size -= size_dec; // Then decrement the new node size
-                        total_number++; // Increment 'total_number'
-                        total_size -= size_dec; // And decrement 'total_size'
+            // Build new nodes on '_t' for each 'tc's children
+            uint32_t nc = (t[tc]&num_c); // Number of children - used when printing centroid tree representation
+            uint32_t total_number = 0; // Total number of old '_t' nodes whose parent has been found - used when updating 'tc's parent
+            uint32_t total_size = 1; // Total size of the newly created nodes on '_t' - used when updating 'tc's parent
+            for (uint32_t i = nc; i > 0; i--) { // For each children, in reverse order
+                uint32_t new_node; // Initialize 'new_node'
+                uint32_t child = t[tc+2*i]; // Child ID
+                if (!(t[child]&cov_el)) { // If child is not a cover element
+                    t[child] |= cov_el; // Mark it as a new cover element
+                    uint32_t size = t[tc+2*i+1]; // Initialize its size
+                    total_size += size; // Increment 'total_size'
+                    vector<uint32_t> c; // Initialize its children vector
+                    for (pair<uint32_t,uint32_t> node : c_ref) { // For each node in 'c_ref' (i.e. a node on '_t' whose new parent has to be found)
+                        if (child == node.first) { // If its new parent is the new node being created
+                            c.pb(node.second); // Push its ID on '_t' to 'c'
+                            uint32_t size_dec = 1; // Initialize size decrement
+                            for (uint32_t j = 0; j < (t[_t[node.second+3]]&num_c); j++) size_dec += t[_t[node.second+3]+2*j+3]; // Compute size decrement
+                            size -= size_dec; // Then decrement the new node size
+                            total_number++; // Increment 'total_number'
+                            total_size -= size_dec; // And decrement 'total_size'
+                        }
+                    }
+                    new_node = addNodeOn_T(_t, _id_ref, child, size, c); // Create the new node on '_t'
+                } else { // If child is already a cover element
+                    for (pair<uint32_t,uint32_t> node : c_ref) { // For each node in 'c_ref'
+                        if (child == node.first) { // If it corresponds to 'child'
+                            new_node = node.second; // Mark it as the new node
+                            total_number++; // And increment 'total_number'
+                            break; // Then stop searching
+                        }
                     }
                 }
-                new_node = addNodeOn_T(_t, _id_ref, child, size, c); // Create the new node on '_t'
-            } else { // If child is already a cover element
+                computeDeltas(t, _t, new_node); // Then compute the deltas of the newly created connected component
+                s.push(new_node); // Eventually push the root of the new connected component to the stack
+            }
+            // If necessary, update nodes on '_t' for 'tc's parent
+            if (_t[_tc+3] != tc) { // If the centroid is not the root of its cover element
+                // Undo '_tc' deletion and update its parameters
+                uint32_t parent = _t[_tc+1];
+                if (parent != _tc) _t[parent]++; // Get back reference on '_tc's parent
+                _t[_tc] -= total_number; // Decrement number of children on '_t'
+                _t[_tc+2] -= total_size; // Update size of cover element
+                uint32_t i = 0; // Initialize counter
                 for (pair<uint32_t,uint32_t> node : c_ref) { // For each node in 'c_ref'
-                    if (child == node.first) { // If it corresponds to 'child'
-                        new_node = node.second; // Mark it as the new node
-                        total_number++; // And increment 'total_number'
-                        break; // Then stop searching
+                    if (_t[root+3] == node.first) { // If it was attached "before" than the removed centroid (i.e. 'tc')
+                        _t[_tc+3*i+4] = node.second; // Then add its ID among the updated '_tc's children
+                        _t[node.second+1] = _tc; // And set '_tc' as its parent
+                        i++; // Increment counter
                     }
                 }
             }
-            computeDeltas(t, _t, new_node); // Then compute the deltas of the newly created connected component
-            s.push(new_node); // Eventually push the root of the new connected component to the stack
-        }
-        // If necessary, update nodes on '_t' for 'tc's parent
-        if (_t[_tc+3] != tc) { // If the centroid is not the root of its cover element
-            // Undo '_tc' deletion and update its parameters
-            uint32_t parent = _t[_tc+1];
-            if (parent != _tc) _t[parent]++; // Get back reference on '_tc's parent
-            _t[_tc] -= total_number; // Decrement number of children on '_t'
-            _t[_tc+2] -= total_size; // Update size of cover element
-            uint32_t i = 0; // Initialize counter
-            for (pair<uint32_t,uint32_t> node : c_ref) { // For each node in 'c_ref'
-                if (_t[root+3] == node.first) { // If it was attached "before" than the removed centroid (i.e. 'tc')
-                    _t[_tc+3*i+4] = node.second; // Then add its ID among the updated '_tc's children
-                    _t[node.second+1] = _tc; // And set '_tc' as its parent
-                    i++; // Increment counter
-                }
+            if (t[tc+1] != tc) { // If centroid on 't' has a parent
+                computeDeltas(t, _t, root); // Then compute deltas of the generated connected component
+                s.push(root); // And push it to stack
+                nc++; // Eventually increment 'nc'
             }
+            // Print the current node to the output stream
+            os << "(" << tc; // Print current node ID
+            if (!noc.empty()) noc.top()--; // Decrement its parent's number of children
+            noc.push(nc); // Push its number of chidren to 'noc'
+        } else { // When 'dimens' is smaller or equal to 'treshold'
+            os << stdCentroidDecomposition(t, id_ref, _t[root+3]); // Than compute standard centroid decomposition
+            if (!noc.empty()) noc.top()--; // Fix 'noc'
         }
-        if (t[tc+1] != tc) { // If centroid on 't' has a parent
-            computeDeltas(t, _t, root); // Then compute deltas of the generated connected component
-            s.push(root); // And push it to stack
-            nc++; // Eventually increment 'nc'
-        }
-        // Print the current node to the output stream
-        os << "(" << tc; // Print current node ID
-        if (!noc.empty()) noc.top()--; // Decrement its parent's number of children
-        noc.push(nc); // Push its number of chidren to 'noc'
         while (!noc.empty() && noc.top() == 0) { // While there are nodes with no more children
             noc.pop(); // Delete them from 'noc'
             os << ")"; // And print the closed bracket
