@@ -411,7 +411,8 @@ string centroidDecomposition(vector<uint32_t> &t, vector<bool> &id_ref, const ui
             uint32_t i = 0; // Initialize counter
             for (pair<uint32_t,uint32_t> node : c_ref) { // For each node in 'c_ref'
                 if (_t[root+3] == node.first) { // If it was attached "before" than the removed centroid (i.e. 'tc')
-                    _t[_tc+3*i+4] = node.second; // Then its parent is the updated '_tc'
+                    _t[_tc+3*i+4] = node.second; // Then add its ID among the updated '_tc's children
+                    _t[node.second+1] = _tc; // And set '_tc' as its parent
                     i++; // Increment counter
                 }
             }
