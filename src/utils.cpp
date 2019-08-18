@@ -60,8 +60,9 @@ vector<bool> buildIdRef(const vector<uint32_t> &t) { // Complexity: O(n)
 }
 
 // Build a reference bitvector to identify the positions of the nodes in '_t'
-vector<bool> build_IdRef(const vector<uint32_t> &_t) { // Complexity: O(n)
+vector<bool> build_IdRef(const vector<uint32_t> &_t, const uint32_t n) { // Complexity: O(n)
     vector<bool> _id_ref = vector<bool>(_t.size(), 0); // Initialize an empty bitvector
+    _id_ref.reserve(7*n-3); // Reserve space to avoid crashes or undefined behaviour
     uint32_t i = 0; // Initialize vector pointer
     while (i < _t.size()) { // While pointer is valid
         _id_ref[i] = 1; // Set 'i'th bit to 1
@@ -187,9 +188,9 @@ inline uint32_t addNodeOn_T(vector<uint32_t> &_t, vector<bool> &_id_ref, const u
         _t[child+1] = id; // Update child's parent ID
     }
     // Update '_id_ref' consequently
-    _id_ref.pb(1);
+    _id_ref.pb(true);
     for (uint32_t i = 0; i < children.size()+3; i++) {
-        _id_ref.pb(0);
+        _id_ref.pb(false);
     }
     return id; // Return the ID of the newly addd node
 }
@@ -283,12 +284,9 @@ inline string stdCentroidDecomposition(vector<uint32_t> &t, vector<bool> &id_ref
 inline void computeDeltas(const vector<uint32_t> &t, vector<uint32_t> &_t, const uint32_t root) { // Complexity: O(log(n))
     // Compute total size of treelet
     uint32_t size = 1; // Initialize size of connected component rooted at 'root'
-    for (uint32_t i = 0; i < (t[_t[root+3]]&num_c); i++) {
-        size += t[_t[root+3]+2*i+3]; // Compute size
-    }
+    for (uint32_t i = 0; i < (t[_t[root+3]]&num_c); i++) size += t[_t[root+3]+2*i+3]; // Compute size
     // Build stack for DFS
-    stack<uint32_t> s; s.push(root); // Initialize stack for DFS
-    stack<uint32_t> dfs;
+    stack<uint32_t> s, dfs; s.push(root); // Initialize stack for DFS
     while (!s.empty()) { // While stack is not empty
         uint32_t node = s.top(); s.pop(); // ID of the node being visited
         dfs.push(node); // Push node to DFS stack
