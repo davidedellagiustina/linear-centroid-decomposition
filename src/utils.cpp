@@ -354,21 +354,6 @@ inline pair<uint32_t,uint32_t> findCentroid(const vector<uint32_t> &t, const vec
     return make_pair(centroid_treelet, centroid_node); // Return the ID of the centroid node both on 't' and '_t'
 }
 
-// TEMP
-inline string print(const vector<uint32_t> &t) { // Complexity: O(n)
-    oss os; // New output stream
-    os << "(";
-    bool first = true; // Used for the first element
-    for (const uint32_t i : t) { // Print each node to 'os'
-        if (first) {
-            os << i;
-            first = false;
-        } else os << " " << i;
-    }
-    os << ")";
-    return os.str(); // Return stream content as a string
-}
-
 // New centroid decomposition algorithm
 string centroidDecomposition(vector<uint32_t> &t, vector<bool> &id_ref, const uint32_t _t_root, vector<uint32_t> &_t, vector<bool> &_id_ref) { // Complexity: ?? -> should be O(n)
     oss os; // Initialize output stream
@@ -488,6 +473,18 @@ inline string printTime(const string t, const chrono::high_resolution_clock::tim
 }
 
 // Print a vector<uint32_t>
-
+inline string print(const vector<uint32_t> &t) { // Complexity: O(n)
+    oss os; // New output stream
+    os << "(";
+    bool first = true; // Used for the first element
+    for (const uint32_t i : t) { // Print each node to 'os'
+        if (first) {
+            os << i;
+            first = false;
+        } else os << " " << i;
+    }
+    os << ")";
+    return os.str(); // Return stream content as a string
+}
 
 #endif
