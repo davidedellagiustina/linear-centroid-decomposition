@@ -5,3 +5,6 @@ main
 treeGen.exe
 treeGen.out
 treeGen
+benchmark.exe
+benchmark.out
+benchmark
