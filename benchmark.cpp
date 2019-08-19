@@ -19,64 +19,79 @@ inline string printDuration(const uint64_t duration) {
     return os.str(); // Return stream content as a string
 }
 
+// Perform standard centroid decomposition
+inline uint32_t nlognCD(const string &tree, const bool &check) { // Complexity: O(n*log(n))
+    chrono::high_resolution_clock::time_point t1 = getTime();
+    uint32_t n = tree.length() / 2;
+    vector<uint32_t> t;
+    try {
+        t = buildTree(tree);
+    } catch (const char* err) {
+        cout << err << nl;
+        return 0;
+    }
+    vector<bool> id_ref = buildIdRef(t);
+    vector<bool> id_ref_copy = id_ref;
+    computeSizes(t, id_ref);
+    vector<uint32_t> t_copy = t;
+    string ctree = stdCentroidDecomposition(t, id_ref, 0);
+    uint32_t time = chrono::duration_cast<chrono::microseconds>(getTime()-t1).count();
+    if (check) cerr << "O(n*log(n)) - " << n << " nodes - correct: " << ((checkCorrectness(t_copy, id_ref_copy, ctree))? "true" : "false") << nl;
+    return time;
+}
+
+// Perform linear centroid decomposition
+inline uint32_t nCD(const string &tree, const bool &check, uint32_t &A, uint32_t &B) { // Complexity: O(n)
+    chrono::high_resolution_clock::time_point t1 = getTime();
+    uint32_t n = tree.length() / 2;
+    vector<uint32_t> t;
+    try {
+        t = buildTree(tree);
+    } catch (const char* err) {
+        cout << err << nl;
+        return 0;
+    }
+    vector<bool> id_ref = buildIdRef(t);
+    vector<bool> id_ref_copy = id_ref;
+    computeSizes(t, id_ref);
+    vector<uint32_t> t_copy = t;
+    pair<uint32_t,vector<uint32_t>> tmp = cover(t, id_ref, A);
+    uint32_t _t_root = tmp.first;
+    vector<uint32_t> _t = tmp.second;
+    vector<bool> _id_ref = build_IdRef(_t, n);
+    string ctree = centroidDecomposition(t, id_ref, _t_root, _t, _id_ref, B);
+    uint32_t time = chrono::duration_cast<chrono::microseconds>(getTime()-t1).count();
+    if (check) cerr << "O(n) - " << n << " nodes - correct: " << ((checkCorrectness(t_copy, id_ref_copy, ctree))? "true" : "false") << nl;
+    return time;
+}
+
 // Settings
 uint32_t start = (uint32_t)1e6; // Starting point of benchmark (size)
 uint32_t stop = (uint32_t)50e6; // Ending point of benchmark (size)
 uint32_t step = (uint32_t)1e6; // Step at every cycle
-bool check = true; // Check if every centroid decomposition was correct (very time-consuming!)
+bool check = false; // Check if every centroid decomposition was correct (very time-consuming!)
+uint32_t A = (uint32_t)1e3; // 'A' parameter
+uint32_t B = (uint32_t)1e3; // 'B' parameter
 
 // Global variables
-string tree, ctree_1, ctree_2;
-uint32_t n, _t_root;
-vector<uint32_t> t_1, t_2, t_copy_1, t_copy_2, _t;
-vector<bool> id_ref_1, id_ref_2, id_ref_copy_1, id_ref_copy_2, _id_ref;
+string tree;
 
-// Main function. Complexity: O(n)
+// Main function
 int main() {
-    for (uint32_t n = start; n <= stop; n += step) { // For every 'n'
-        uint32_t time_1 = 0, time_2 = 0; // Initialize time
+    for (uint32_t n = start; n <= stop; n += step) {
+        uint32_t time_1 = 0, time_2 = 0;
         for (uint32_t i = 0; i < 5; i++) { // Loop 5 times
             // Generate random tree
             system(("treeGen.exe " + to_string(n) + " > tree.txt").c_str()); // Generate random tree
             ifstream in("tree.txt"); in >> tree; in.close(); // Load generated tree
-            // Perform O(n*log(n)) centroid decomposition
-            chrono::high_resolution_clock::time_point t1 = getTime(); // Record initial time 1
-            try {
-                t_1 = buildTree(tree); // Build tree
-            } catch (const char* err) {
-                cout << err << nl;
-                return 0;
-            }
-            id_ref_1 = buildIdRef(t_1); // Build 'id_ref'
-            id_ref_copy_1 = id_ref_1;
-            computeSizes(t_1, id_ref_1); // Compute partial sizes of the tree
-            t_copy_1 = t_1;
-            ctree_1 = stdCentroidDecomposition(t_1, id_ref_1, 0); // Compute the centroid decomposition in O(n*log(n))
-            time_1 += chrono::duration_cast<chrono::microseconds>(getTime()-t1).count(); // Get duration 1
-            if (check) cerr << "O(n*log(n)) - " << n << " nodes - correct: " << ((checkCorrectness(t_copy_1, id_ref_copy_1, ctree_1))? "true" : "false") << nl; // Check correctness
-            // Perform O(n) centroid decomposition
-            t1 = getTime(); // Record initial time 2
-            try {
-                t_2 = buildTree(tree); // Build tree
-            } catch (const char* err) {
-                cout << err << nl;
-                return 0;
-            }
-            id_ref_2 = buildIdRef(t_2); // Build 'id_ref'
-            id_ref_copy_2 = id_ref_2;
-            computeSizes(t_2, id_ref_2); // Compute partial sizes of the tree
-            t_copy_2 = t_2;
-            pair<uint32_t,vector<uint32_t>> tmp = cover(t_2, id_ref_2); // Cover tree
-            _t_root = tmp.first; _t = tmp.second;
-            _id_ref = build_IdRef(_t, n); // Build '_id_ref'
-            ctree_2 = centroidDecomposition(t_2, id_ref_2, _t_root, _t, _id_ref); // Compute the centroid decomposition in O(n)
-            time_2 += chrono::duration_cast<chrono::microseconds>(getTime()-t1).count(); // Get duration 2
-            if (check) cerr << "O(n) - " << n << " nodes - correct: " << ((checkCorrectness(t_copy_2, id_ref_copy_2, ctree_2))? "true" : "false") << nl; // Check correctness
+            time_1 += nlognCD(tree, check); // Perform O(n*log(n)) centroid decomposition
+            time_2 += nCD(tree, check, A, B); // Perform O(n) centroid decomposition
         }
         time_1 /= 5; time_2 /= 5; // Compute average of 5 times (1 and 2)
         cout << "O(n*log(n)) - " << n << " nodes - time: " << time_1 << " -  formatted: " << printDuration(time_1) << nl; // Output average duration for O(n*log(n)) algorithm
         cout << "O(n) - " << n << " nodes - time: " << time_2 << " - formatted: " << printDuration(time_2) << nl << nl; // Output average duration for O(n) algorithm
+        if (!check) cerr << "Done for " << n << " nodes." << nl;
         if (check) cerr << nl;
     }
-    return 0; // Exit
+    return 0;
 }

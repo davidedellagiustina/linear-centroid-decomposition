@@ -88,7 +88,7 @@ void computeSizes(vector<uint32_t> &t, const vector<bool> &id_ref) { // Complexi
 }
 
 // Cover 't' and build '_t'
-pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, const vector<bool> &id_ref) { // Complexity: O(n)
+pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, const vector<bool> &id_ref, const uint32_t A) { // Complexity: O(n)
     vector<uint32_t> _t; // Initialize '_t'
     stack<uint32_t> s, noc, cs; // 'noc' represents the number of children of each cover element
     uint32_t m = floor(log2((t.size()+2)/4)); // m = log(n)
@@ -346,7 +346,7 @@ inline pair<uint32_t,uint32_t> findCentroid(const vector<uint32_t> &t, const vec
 }
 
 // New centroid decomposition algorithm
-string centroidDecomposition(vector<uint32_t> &t, vector<bool> &id_ref, const uint32_t _t_root, vector<uint32_t> &_t, vector<bool> &_id_ref) { // Complexity: O(n)
+string centroidDecomposition(vector<uint32_t> &t, vector<bool> &id_ref, const uint32_t _t_root, vector<uint32_t> &_t, vector<bool> &_id_ref, const uint32_t B) { // Complexity: O(n)
     oss os; // Initialize output stream
     stack<uint32_t> s, noc; s.push(_t_root); // Stack with roots of subtrees yet to process
     uint32_t treshold = pow(floor(log2((t.size()+2)/4)), 3); // Set treshold as (log(n))^3

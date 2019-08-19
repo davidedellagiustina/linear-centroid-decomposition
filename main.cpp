@@ -5,6 +5,10 @@ using namespace std;
  * PERFORM CENTROID DECOMPOSITION IN LINEAR TIME
  */
 
+// Settings
+uint32_t A = (uint32_t)1e3;
+uint32_t B = (uint32_t)1e3;
+
 // Global variables
 bool print_output = false;
 string tree, ctree;
@@ -33,13 +37,13 @@ int main(int argc, char* argv[]) { // 'Argv[1]' must be the name of the file con
     id_ref_copy = id_ref;
     computeSizes(t, id_ref); // Compute the initial sizes on 't'
     t_copy = t;
-    pair<uint32_t,vector<uint32_t>> tmp = cover(t, id_ref); // Cover 't'
+    pair<uint32_t,vector<uint32_t>> tmp = cover(t, id_ref, A); // Cover 't'
     _t_root = tmp.first; _t = tmp.second;
     _id_ref = build_IdRef(_t, n); // Build the bitvector for nodes ID reference on '_t'
     cout << printTime("Structure building", t1, getTime()) << nl; // Print time to build structure
     // Perform linear-time centroid decomposition of 't': O(n)
     t1 = getTime(); // Get initial time
-    ctree = centroidDecomposition(t, id_ref, _t_root, _t, _id_ref); // Perform linear-time centroid decomposition
+    ctree = centroidDecomposition(t, id_ref, _t_root, _t, _id_ref, B); // Perform linear-time centroid decomposition
     cout << printTime("Linear centroid decomposition", t1, getTime()) << nl; // Print time to compute centroid decomposition
     if (print_output) cout << ctree << nl; // Print output
     // Check correctness
