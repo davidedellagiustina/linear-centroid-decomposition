@@ -2,6 +2,8 @@
 #define UTILS
 
 #include "main.hpp"
+#include <algorithm>
+#include <cassert>
 using namespace std;
 
 /*
@@ -45,6 +47,86 @@ vector<uint32_t> buildTree(const string &tree) { // Complexity: O(n)
             s.pop(); // Pop its ID from 's'
         }
     }
+    return t; // Return 't'
+}
+
+
+// Build tree structure from balanced parenthesis representation, level-wise
+vector<uint32_t> buildTree_l(const string &tree) { // Complexity: O(n)
+
+    uint32_t n = tree.length()/2;//number of nodes
+    uint32_t N = 4*n-2;
+    auto t = vector<uint32_t>(N);// Initialize an empty vector for the tree
+
+    //compute max heigth
+    int64_t h = 0;
+    uint32_t H=0; 
+    for(auto c:tree){
+       h += (c=='('?1:-1);
+       H = std::max(uint32_t(h),H);
+    }
+
+    auto levels = vector<uint32_t>(H);//for each level, collect number of nodes. Root=level 0
+    h=1;
+    for(uint32_t i=0;i<tree.length();++i){
+       levels[h-1] += (tree[i]=='(');
+       h += (tree[i]=='('?1:-1); 
+    }
+
+    //partial sums in levels
+    uint32_t psum=0, tmp;
+    for(uint32_t i=0;i<levels.size();++i){
+       tmp=levels[i];
+       levels[i]=psum;
+       psum+=tmp;
+    }    
+
+    //now count number of children for each node
+    h=0;
+    for(uint32_t i=1;i<tree.length();++i){
+       t[levels[h]] += (tree[i]=='(');
+       levels[h] += (tree[i]==')');
+       h += (tree[i]=='('?1:-1);    
+    }
+
+    uint32_t r = levels[H-1];//t[r] = number of children of last allocated node
+    uint32_t R = N;//start position (=ID) in t of last allocated node
+
+    assert(r==n);
+
+    levels[0]=0;
+
+    h = H-1;
+    for(uint32_t i = 0; i<n; ++i){//for all nodes
+       r--;
+       R -= 2+2*t[r];//node ID
+       t[R] = t[r];//number of children
+       for(int j=0;j<1+2*t[r];++j) t[R+1+j]=0;//set to 0 all values but number of children
+   }
+
+   //now set parent/children pointers
+
+   uint32_t i = 0;//pointer to current node X in current level
+   uint32_t j = t[0]*2 + 2;//pointer to child of X in next level
+   t[1] = 0;//parent of root = root   
+
+   while(j<N){
+ 
+      uint32_t x = i;//this node
+      uint32_t n_c = t[x];//number of children of this node
+
+      i+=2;//jump to children area
+      for(int k=0;k<n_c;++k){
+
+         t[i] = j;//write child's ID
+         i+=2;//jump to next child 
+         t[j+1] = x;//store parent of j
+         j += 2*t[j]+2;//jump to next child's area
+
+      }
+
+   }
+
     return t; // Return 't'
 }
 
