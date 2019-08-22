@@ -55,13 +55,12 @@ vector<uint32_t> buildTree(const string &tree) { // Complexity: O(n)
 vector<uint32_t> buildTree_l(const string &tree) { // Complexity: O(n)
 
     uint32_t n = tree.length()/2;//number of nodes
-    uint32_t N = 4*n-2;
-    auto t = vector<uint32_t>(N);// Initialize empty t
-    int64_t h = 0;//current height
+    uint32_t N = 4*n-2;//size of t
+    auto t = vector<uint32_t>(N);//Initialize empty t
     uint32_t H = 0;//max height
 
     //in t[0...max_height-1] we now compute number of nodes per level
-    h=1;
+    int64_t h = 1;//current height
     for(uint32_t i=0;i<tree.length();++i){
        t[h-1] += (tree[i]=='(');
        h += (tree[i]=='('?1:-1); 
@@ -90,7 +89,6 @@ vector<uint32_t> buildTree_l(const string &tree) { // Complexity: O(n)
     uint32_t r = n;//t[r] = number of children of last allocated node
     uint32_t R = N;//start position (=ID) in t of last allocated node
 
-    h = H-1;
     for(uint32_t i = 0; i<n; ++i){//for all nodes
        r--;//process next node (right to left)
        R -= 2+2*t[r];//node ID
@@ -105,7 +103,6 @@ vector<uint32_t> buildTree_l(const string &tree) { // Complexity: O(n)
    t[1] = 0;//parent of root = root   
 
    while(j<N){
- 
       uint32_t x = i;//this node
       uint32_t n_c = t[x];//number of children of this node
 
