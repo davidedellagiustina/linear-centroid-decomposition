@@ -33,6 +33,7 @@ int main(int argc, char* argv[]) { // 'Argv[1]' must be the name of the file con
         cout << err << nl; // Or otherwise print exception
         return 0;
     }
+    cout << printTime("T building", t1, getTime()) << nl; // Print time to build T
     id_ref = buildIdRef(t); // Build the bitvector for nodes ID reference on 't'
     id_ref_copy = id_ref;
     computeSizes(t, id_ref); // Compute the initial sizes on 't'

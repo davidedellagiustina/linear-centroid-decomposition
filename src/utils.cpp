@@ -2,6 +2,8 @@
 #define UTILS
 
 #include "main.hpp"
+#include <algorithm>
+#include <cassert>
 using namespace std;
 
 /*
@@ -48,6 +50,77 @@ vector<uint32_t> buildTree(const string &tree) { // Complexity: O(n)
     return t; // Return 't'
 }
 
+
+// Build tree structure from balanced parenthesis representation, level-wise, in-place
+vector<uint32_t> buildTree_l(const string &tree) { // Complexity: O(n)
+
+    uint32_t n = tree.length()/2;//number of nodes
+    uint32_t N = 4*n-2;//size of t
+    auto t = vector<uint32_t>(N);//Initialize empty t
+    uint32_t H = 0;//max height
+
+    //in t[0...max_height-1] we now compute number of nodes per level
+    int64_t h = 1;//current height
+    for(uint32_t i=0;i<tree.length();++i){
+       t[h-1] += (tree[i]=='(');
+       h += (tree[i]=='('?1:-1); 
+       H = std::max(uint32_t(h),H);//also compute max height
+    }
+
+    //partial sums in t[0...H-1]
+    uint32_t psum=0, tmp;
+    for(uint32_t i=0;i<H;++i){
+       tmp=t[i];
+       t[i]=psum;
+       psum+=tmp;
+    }    
+
+    //count number of children for each node. We store this info in t[H...H+n-1]
+    h=0;
+    for(uint32_t i=1;i<tree.length();++i){
+       t[H+t[h]] += (tree[i]=='(');
+       t[h] += (tree[i]==')');
+       h += (tree[i]=='('?1:-1);    
+    }
+
+    //left-shift t[H...H+n-1] in t[0...n-1]
+    for(uint32_t i=0;i<n;++i) t[i] = t[i+H];
+
+    uint32_t r = n;//t[r] = number of children of last allocated node
+    uint32_t R = N;//start position (=ID) in t of last allocated node
+
+    for(uint32_t i = 0; i<n; ++i){//for all nodes
+       r--;//process next node (right to left)
+       R -= 2+2*t[r];//node ID
+       t[R] = t[r];//number of children
+       //for(int j=0;j<1+2*t[r];++j) t[R+1+j]=0;//set to 0 all values but number of children (not needed it seems)
+   }
+
+   //now set parent/children pointers
+
+   uint32_t i = 0;//pointer to current node X in current level
+   uint32_t j = t[0]*2 + 2;//pointer to child of X in next level
+   t[1] = 0;//parent of root = root   
+
+   while(j<N){
+      uint32_t x = i;//this node
+      uint32_t n_c = t[x];//number of children of this node
+
+      i+=2;//jump to children area
+      for(int k=0;k<n_c;++k){
+
+         t[i] = j;//write child's ID
+         i+=2;//jump to next child 
+         t[j+1] = x;//store parent of j
+         j += 2*t[j]+2;//jump to next child's area
+
+      }
+
+   }
+
+    return t; // Return 't'
+}
+
 // Build a reference bitvector to identify the positions of the nodes in 't'
 vector<bool> buildIdRef(const vector<uint32_t> &t) { // Complexity: O(n)
     vector<bool> id_ref = vector<bool>(t.size(), 0); // Initialize an empty bitvector
@@ -86,6 +159,41 @@ void computeSizes(vector<uint32_t> &t, const vector<bool> &id_ref) { // Complexi
         i--; // Decrement pointer
     }
 }
+
+
+void computeSizes_l(vector<uint32_t> &t, const vector<bool> &id_ref) { // Complexity: O(n)
+    uint32_t i = t.size()-1; // Initialize vector pointer
+    uint32_t p = t.size(); //parent of current node (invalid at the beginning)
+    uint32_t nc = 0;//current node is the nc-th child of its parent
+
+    while(i>0){
+
+      if (id_ref[i]) { // If the current element on 'id_ref' equals 1 (i.e. there is a node with this ID on 't')
+
+          assert(t[i+1] != p or nc>0);
+          assert((t[t[i+1]]&num_c)>0);
+
+          nc = t[i+1] != p ? (t[t[i+1]]&num_c)-1 : nc-1;//update child's number
+          p = t[i+1];//update parent
+
+          uint32_t size = 1; // size of subtree rooted in i
+          for (uint32_t j = 0; j < (t[i]&num_c); j++) // For each of its children
+              size += t[i+2*j+3]; // size of the child
+ 
+          t[p+3+nc*2] = size;
+            
+      }
+
+      i--;
+
+    }
+   
+}
+
+
+
+
+
 
 // Cover 't' and build '_t'
 pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, const vector<bool> &id_ref, const uint32_t A) { // Complexity: O(n)
