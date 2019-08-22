@@ -20,3 +20,4 @@ clear:
 	rm -rf nlognCD
 	rm -rf tree_generators/random
 	rm -rf tree_generators/path
+	rm -rf tree_generators/binary_height_half_n

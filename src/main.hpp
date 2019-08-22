@@ -4,7 +4,10 @@
 #include <vector> // Used to represent a tree
 #include <stack> // Used to visit the trees
 #include <chrono> // Used to measure execution times
+#include <algorithm>
 #include <cmath>
+#include <cassert>
+#include <unistd.h>
 #include "utils.cpp" // Contains all the functions
 
 #define max_deg             pow(2, 31) // Max out-degree of the tree
