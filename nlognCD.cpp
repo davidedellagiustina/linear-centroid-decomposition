@@ -18,9 +18,7 @@ uint32_t n, _t_root;
 vector<uint32_t> t, t_copy, _t;
 vector<bool> id_ref, id_ref_copy, _id_ref;
 
-
 void help(){
-
 	cout << "nlognCD [options]" << endl <<
 	"Options:" << endl <<
 	"-h        Print this help." << endl <<
@@ -32,7 +30,7 @@ void help(){
 
 
 // Main function. Complexity: O(n)
-int main(int argc, char* argv[]) { // 'Argv[1]' must be the name of the file containing the tree structure (in BP representation), 'argv[2]' should be 'true' if you want to print output, argv[3] should be 'true' 
+int main(int argc, char* argv[]) {
 
     string input_path;
     int opt;
@@ -56,7 +54,7 @@ int main(int argc, char* argv[]) { // 'Argv[1]' must be the name of the file con
 	}
     }
 
-    cout << "processing " << input_path<<endl;
+    cout << "processing file " << input_path<<endl;
 
     if(input_path.compare("")==0) help();
  
@@ -65,6 +63,7 @@ int main(int argc, char* argv[]) { // 'Argv[1]' must be the name of the file con
     chrono::high_resolution_clock::time_point t1 = getTime(); // Get initial time
     n = tree.length() / 2;
     try {
+        //t = buildTree(tree); // Try building 't' (if not too big)
         t = buildTree_l(tree); // Try building 't' (if not too big)
     } catch (const char* err) {
         cout << err << nl; // Or otherwise print exception
@@ -79,7 +78,8 @@ int main(int argc, char* argv[]) { // 'Argv[1]' must be the name of the file con
     vector<bool> id_ref_copy;
     if(check) id_ref_copy = id_ref;//perform expensive copy only if needed!
 
-    computeSizes(t, id_ref); // Compute the initial sizes on 't'
+    computeSizes_l(t, id_ref); // Compute the initial sizes on 't'
+    //computeSizes(t, id_ref); // Compute the initial sizes on 't'
     
     vector<uint32_t> t_copy;
     if(check) t_copy = t;//perform expensive copy only if needed!
@@ -96,3 +96,4 @@ int main(int argc, char* argv[]) { // 'Argv[1]' must be the name of the file con
     if(check) cout << "Correctness check: " << ((checkCorrectness(t_copy, id_ref_copy, ctree))? "true" : "false") << nl; // Correctness check
     return 0;
 }
+

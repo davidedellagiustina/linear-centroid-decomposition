@@ -160,6 +160,41 @@ void computeSizes(vector<uint32_t> &t, const vector<bool> &id_ref) { // Complexi
     }
 }
 
+
+void computeSizes_l(vector<uint32_t> &t, const vector<bool> &id_ref) { // Complexity: O(n)
+    uint32_t i = t.size()-1; // Initialize vector pointer
+    uint32_t p = t.size(); //parent of current node (invalid at the beginning)
+    uint32_t nc = 0;//current node is the nc-th child of its parent
+
+    while(i>0){
+
+      if (id_ref[i]) { // If the current element on 'id_ref' equals 1 (i.e. there is a node with this ID on 't')
+
+          assert(t[i+1] != p or nc>0);
+          assert((t[t[i+1]]&num_c)>0);
+
+          nc = t[i+1] != p ? (t[t[i+1]]&num_c)-1 : nc-1;//update child's number
+          p = t[i+1];//update parent
+
+          uint32_t size = 1; // size of subtree rooted in i
+          for (uint32_t j = 0; j < (t[i]&num_c); j++) // For each of its children
+              size += t[i+2*j+3]; // size of the child
+ 
+          t[p+3+nc*2] = size;
+            
+      }
+
+      i--;
+
+    }
+   
+}
+
+
+
+
+
+
 // Cover 't' and build '_t'
 pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, const vector<bool> &id_ref, const uint32_t A) { // Complexity: O(n)
     vector<uint32_t> _t; // Initialize '_t'
