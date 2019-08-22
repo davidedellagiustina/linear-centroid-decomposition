@@ -51,57 +51,51 @@ vector<uint32_t> buildTree(const string &tree) { // Complexity: O(n)
 }
 
 
-// Build tree structure from balanced parenthesis representation, level-wise
+// Build tree structure from balanced parenthesis representation, level-wise, in-place
 vector<uint32_t> buildTree_l(const string &tree) { // Complexity: O(n)
 
     uint32_t n = tree.length()/2;//number of nodes
     uint32_t N = 4*n-2;
-    auto t = vector<uint32_t>(N);// Initialize an empty vector for the tree
+    auto t = vector<uint32_t>(N);// Initialize empty t
+    int64_t h = 0;//current height
+    uint32_t H = 0;//max height
 
-    //compute max heigth
-    int64_t h = 0;
-    uint32_t H=0; 
-    for(auto c:tree){
-       h += (c=='('?1:-1);
-       H = std::max(uint32_t(h),H);
-    }
-
-    auto levels = vector<uint32_t>(H);//for each level, collect number of nodes. Root=level 0
+    //in t[0...max_height-1] we now compute number of nodes per level
     h=1;
     for(uint32_t i=0;i<tree.length();++i){
-       levels[h-1] += (tree[i]=='(');
+       t[h-1] += (tree[i]=='(');
        h += (tree[i]=='('?1:-1); 
+       H = std::max(uint32_t(h),H);//also compute max height
     }
 
-    //partial sums in levels
+    //partial sums in t[0...H-1]
     uint32_t psum=0, tmp;
-    for(uint32_t i=0;i<levels.size();++i){
-       tmp=levels[i];
-       levels[i]=psum;
+    for(uint32_t i=0;i<H;++i){
+       tmp=t[i];
+       t[i]=psum;
        psum+=tmp;
     }    
 
-    //now count number of children for each node
+    //count number of children for each node. We store this info in t[H...H+n-1]
     h=0;
     for(uint32_t i=1;i<tree.length();++i){
-       t[levels[h]] += (tree[i]=='(');
-       levels[h] += (tree[i]==')');
+       t[H+t[h]] += (tree[i]=='(');
+       t[h] += (tree[i]==')');
        h += (tree[i]=='('?1:-1);    
     }
 
-    uint32_t r = levels[H-1];//t[r] = number of children of last allocated node
+    //left-shift t[H...H+n-1] in t[0...n-1]
+    for(uint32_t i=0;i<n;++i) t[i] = t[i+H];
+
+    uint32_t r = n;//t[r] = number of children of last allocated node
     uint32_t R = N;//start position (=ID) in t of last allocated node
-
-    assert(r==n);
-
-    levels[0]=0;
 
     h = H-1;
     for(uint32_t i = 0; i<n; ++i){//for all nodes
-       r--;
+       r--;//process next node (right to left)
        R -= 2+2*t[r];//node ID
        t[R] = t[r];//number of children
-       for(int j=0;j<1+2*t[r];++j) t[R+1+j]=0;//set to 0 all values but number of children
+       //for(int j=0;j<1+2*t[r];++j) t[R+1+j]=0;//set to 0 all values but number of children (not needed it seems)
    }
 
    //now set parent/children pointers
