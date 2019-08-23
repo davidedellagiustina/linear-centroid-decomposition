@@ -17,7 +17,7 @@ vector<uint32_t> t, t_copy, _t;
 vector<bool> id_ref, id_ref_copy, _id_ref;
 
 // Print help
-void help(){
+void help() {
 	cout << "Usage: cdlin [options]" << nl <<
 	"Options:" << nl <<
 	" -h        Print this help." << nl <<
@@ -27,7 +27,7 @@ void help(){
 	exit(0);
 }
 
-// Main function
+// Main
 int main(int argc, char* argv[]) { // Complexity: O(n)
     // Process command line options
 	int opt;

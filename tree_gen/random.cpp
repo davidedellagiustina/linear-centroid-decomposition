@@ -1,13 +1,17 @@
-#include <iostream>
-#include <sstream>
-#include <time.h>
 #include "../src/main.hpp"
+#include <time.h>
 using namespace std;
 
+// Global variables
+uint32_t n, layer = 0;
+
+// Main
 int main(int argc, char* argv[]) {
-    iss is(argv[1]); // Initialize input stream
-    uint64_t n, layer = 0; // 'layer' counts which layer of the tree you are on
-    is >> n; // Get nuber of nodes
+	if (argc < 2) return 0;
+	else {
+		iss is(argv[1]);
+		is >> n;
+	}
     oss os; // Initialize output stream
     srand((unsigned int)time(0)); // Set seed for 'rand()'
     while (n > 0) { // While there are still nodes to add

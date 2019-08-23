@@ -14,7 +14,7 @@ vector<uint32_t> t, t_copy, _t;
 vector<bool> id_ref, id_ref_copy, _id_ref;
 
 // Print help
-void help(){
+void help() {
 	cout << "Usage: cdstd [options]" << nl <<
 	"Options:" << nl <<
 	" -h        Print this help." << nl <<
@@ -23,7 +23,6 @@ void help(){
 	" -c        Check correctness." << nl;
 	exit(0);
 }
-
 
 // Main
 int main(int argc, char* argv[]) { // Complexity: O(n*log(n))
