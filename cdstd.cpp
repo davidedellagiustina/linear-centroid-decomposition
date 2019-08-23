@@ -15,7 +15,7 @@ vector<bool> id_ref, id_ref_copy, _id_ref;
 
 // Print help
 void help(){
-	cout << "Usage: nlognCD [options]" << nl <<
+	cout << "Usage: cdstd [options]" << nl <<
 	"Options:" << nl <<
 	" -h        Print this help." << nl <<
 	" -i <arg>  Input tree [REQUIRED]." << nl <<
@@ -25,7 +25,7 @@ void help(){
 }
 
 
-// Main function
+// Main
 int main(int argc, char* argv[]) { // Complexity: O(n*log(n))
 	// Process command line options
 	int opt;
@@ -49,33 +49,34 @@ int main(int argc, char* argv[]) { // Complexity: O(n*log(n))
 		}
 	}
 	// Centroid decomposition
-	cout << "Processing file " << input_path << "..." << nl;
+	cout << "Processing file '" << input_path << "'..." << nl << "Partial times:" << nl;
     if (input_path.compare("") == 0) help(); // If no input is given
-	ifstream in(input_path); in >> tree; in.close(); // Copy input into string
+	ifstream in(input_path); in >> tree; in.close();
+	// Build 't'
 	chrono::high_resolution_clock::time_point t1 = getTime();
     try {
-        // t = buildTree(tree);
-        t = buildTree_l(tree); // Try building 't' (if not too big)
+        t = buildTree(tree);
     } catch (const char* err) {
-        cout << err << nl; // Or otherwise print exception
+        cout << err << nl;
         return 0;
     }
-    cout << printTime("T building", t1, getTime()) << nl;
+    cout << printTime(" - T building", t1, getTime()) << nl;
+	// Build 't' reference bitvector
     chrono::high_resolution_clock::time_point t2 = getTime();
-    id_ref = buildIdRef(t); // Build the bitvector for nodes ID reference on 't'
+    id_ref = buildIdRef(t);
 	if (check) id_ref_copy = id_ref;
-    cout << printTime("T bitvector building", t2, getTime()) << nl;
+    cout << printTime(" - T reference bitvector building", t2, getTime()) << nl;
+	// Compute partial sizes on 't'
     chrono::high_resolution_clock::time_point t3 = getTime();
-	// computeSizes(t, id_ref);
-    computeSizes_l(t, id_ref); // Compute the initial sizes on 't'
+    computeSizes(t, id_ref);
     if (check) t_copy = t;
-    cout << printTime("Computing sizes", t3, getTime()) << nl;
-    cout << printTime("Total structure building", t1, getTime()) << nl; // Total time
-    // Perform O(n*log(n)) time centroid decomposition of 't': O(n*log(n))
+    cout << printTime(" - Computing sizes", t3, getTime()) << nl;
+    cout << printTime(" - Total structure building", t1, getTime()) << nl; // Total time
+    // Perform centroid decomposition: O(n*log(n))
     t1 = getTime();
     ctree = stdCentroidDecomposition(t, id_ref, 0);
-    cout << printTime("Standard centroid decomposition", t1, getTime()) << nl;
-	if(check) cout << "Correctness check: " << ((checkCorrectness(t_copy, id_ref_copy, ctree))? "true" : "false") << nl; // Correctness check
+    cout << printTime(" - Standard centroid decomposition", t1, getTime()) << nl;
+	if(check) cout << "Correct: " << ((checkCorrectness(t_copy, id_ref_copy, ctree))? "true" : "false") << nl; // Correctness check
     if (print_output) cout << "Output: " << ctree << nl; // Print output
     return 0;
 }

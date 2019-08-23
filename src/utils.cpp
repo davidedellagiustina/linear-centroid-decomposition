@@ -9,7 +9,7 @@ using namespace std;
  */
 
 // Build tree structure from balanced parenthesis representation
-vector<uint32_t> buildTree(const string &tree) { // Complexity: O(n)
+vector<uint32_t> buildTree_old(const string &tree) { // Complexity: O(n)
     stack<uint32_t> s, cs;
     // Build vector of number of children: O(n)
     uint32_t n = 1; // Number of nodes = 1 + number of total children
@@ -50,7 +50,7 @@ vector<uint32_t> buildTree(const string &tree) { // Complexity: O(n)
 
 
 // Build tree structure from balanced parenthesis representation, level-wise, in-place
-vector<uint32_t> buildTree_l(const string &tree) { // Complexity: O(n)
+vector<uint32_t> buildTree(const string &tree) { // Complexity: O(n)
 
     uint32_t n = tree.length()/2;//number of nodes
     uint32_t N = 4*n-2;//size of t
@@ -143,7 +143,7 @@ vector<bool> build_IdRef(const vector<uint32_t> &_t, const uint32_t n) { // Comp
 }
 
 // Compute the initial sizes of the tree
-void computeSizes(vector<uint32_t> &t, const vector<bool> &id_ref) { // Complexity: O(n)
+void computeSizes_old(vector<uint32_t> &t, const vector<bool> &id_ref) { // Complexity: O(n)
     uint32_t i = t.size() - 1; // Initialize vector pointer
     for (auto it = id_ref.rbegin(); it != id_ref.rend(); it++) { // Visit each element of 'id_ref' in reverse order
         if (*it) { // If the current element on 'id_ref' equals 1 (i.e. there is a node with this ID on 't')
@@ -159,7 +159,7 @@ void computeSizes(vector<uint32_t> &t, const vector<bool> &id_ref) { // Complexi
 }
 
 
-void computeSizes_l(vector<uint32_t> &t, const vector<bool> &id_ref) { // Complexity: O(n)
+void computeSizes(vector<uint32_t> &t, const vector<bool> &id_ref) { // Complexity: O(n)
     uint32_t i = t.size()-1; // Initialize vector pointer
     uint32_t p = t.size(); //parent of current node (invalid at the beginning)
     uint32_t nc = 0;//current node is the nc-th child of its parent
@@ -613,7 +613,7 @@ inline string printTime(const string t, const chrono::high_resolution_clock::tim
     int m = s/60; s %= 60; // Minutes
     int h = m/60; m %= 60; // Hours
     oss os; // New output stream
-    os << t << " time: " << h << "h " << m << "m " << s << "s " << ms << "ms " << us << "us"; // Print to 'os'
+    os << t << ": " << h << "h " << m << "m " << s << "s " << ms << "ms " << us << "us"; // Print to 'os'
     return os.str(); // Return stream content as a string
 }
 
