@@ -8,9 +8,9 @@ install:
 	$(CC) $(CFLAGS) cdstd.cpp -o cdstd
 
 tools:
-	$(CC) $(CFLAGS) tree_gen/random.cpp -o tree_generators/random
-	$(CC) $(CFLAGS) tree_gen/path.cpp -o tree_generators/path
-	$(CC) $(CFLAGS) tree_gen/binary_halfn.cpp -o tree_generators/binary_halfn
+	$(CC) $(CFLAGS) tree_gen/random.cpp -o tree_gen/random
+	$(CC) $(CFLAGS) tree_gen/path.cpp -o tree_gen/path
+	$(CC) $(CFLAGS) tree_gen/binary_halfn.cpp -o tree_gen/binary_halfn
 	$(CC) $(CFLAGS) benchmark.cpp -o benchmark
 
 all: tools install
