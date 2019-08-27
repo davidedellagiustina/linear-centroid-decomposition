@@ -6,15 +6,14 @@ using namespace std;
  */
 
 // Settings
-uint32_t A = (uint32_t)1e3;
-uint32_t B = (uint32_t)1e3;
+uint32_t A = 0;
+uint32_t B = 0;
 
 // Global variables
 bool print_output = false, check = false;
 string input_path, tree, ctree;
 uint32_t n, _t_root;
 vector<uint32_t> t, t_copy, _t;
-vector<bool> id_ref, id_ref_copy, _id_ref;
 
 // Print help
 void help() {
@@ -64,31 +63,22 @@ int main(int argc, char* argv[]) { // Complexity: O(n)
         return 0;
     }
 	cout << printTime(" - T building", t1, getTime()) << nl;
-	// Build 't' reference bitvector
-	chrono::high_resolution_clock::time_point t2 = getTime();
-    id_ref = buildIdRef(t);
-	if (check) id_ref_copy = id_ref;
-    cout << printTime(" - T reference bitvector building", t2, getTime()) << nl;
 	// Compute partial sizes on't'
-    chrono::high_resolution_clock::time_point t3 = getTime();
-    computeSizes(t, id_ref);
+    chrono::high_resolution_clock::time_point t2 = getTime();
+    computeSizes(t);
     if (check) t_copy = t;
-    cout << printTime(" - Computing sizes", t3, getTime()) << nl;
+    cout << printTime(" - Computing sizes", t2, getTime()) << nl;
 	// Tree covering
-	chrono::high_resolution_clock::time_point t4 = getTime();
-    pair<uint32_t,vector<uint32_t>> tmp = cover(t, id_ref, A);
-    _t_root = tmp.first; _t = tmp.second;
-	cout << printTime(" - Tree covering", t4, getTime()) << nl;
-	// Build '_t' reference bitvector
-	chrono::high_resolution_clock::time_point t5 = getTime();
-    _id_ref = build_IdRef(_t, n);
-	cout << printTime(" - T'' reference bitvector building", t5, getTime()) << nl;
+	chrono::high_resolution_clock::time_point t3 = getTime();
+	pair<uint32_t,vector<uint32_t>> tmp = cover(t, A);
+	_t_root = tmp.first; _t = tmp.second;
+	cout << printTime(" - Tree covering", t3, getTime()) << nl;
 	cout << printTime(" - Total structure building", t1, getTime()) << nl; // Total time
     // Perform centroid decomposition: O(n)
     t1 = getTime();
-    ctree = centroidDecomposition(t, id_ref, _t_root, _t, _id_ref, B);
+    ctree = centroidDecomposition(t, _t_root, _t, B);
     cout << printTime(" - Linear centroid decomposition", t1, getTime()) << nl;
-    if(check) cout << "Correct:" << ((checkCorrectness(t_copy, id_ref_copy, ctree))? "true" : "false") << nl; // Correctness check
+    if(check) cout << "Correct:" << ((checkCorrectness(t_copy, ctree))? "true" : "false") << nl; // Correctness check
     if (print_output) cout << "Output: " << ctree << nl; // Print output
     return 0;
 }
