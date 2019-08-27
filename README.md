@@ -4,7 +4,7 @@ The centroid of a tree is a node that, when removed, breaks the tree in connecte
 
 # Installing
 
-The main scripts are `cdstd.cpp` and `cdlin.cpp`, which are respectively the standard `O(n*log(n))` and our new `O(n)` algorithms for computing the centroid decomposition of a tree. We also provide the `benchmark.cpp` script that we used to measure theperformance of out algorithm over the standard one, and some random tree generators, included in the `./tree_gen/` folder. To compile everything, just run `make all`.
+The main scripts are `cdstd.cpp` and `cdlin.cpp`, which are respectively the standard `O(n*log(n))` and our new `O(n)` algorithms for computing the centroid decomposition of a tree. We also provide the `benchmark.cpp` script that we used to measure the performance of our algorithm over the standard one, and some random tree generators, included in the `./tree_gen/` folder. To compile everything, just run `make all`.
 
 # Implementation details
 
