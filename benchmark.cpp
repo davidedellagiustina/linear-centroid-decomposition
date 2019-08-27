@@ -23,45 +23,40 @@ inline string printDuration(const uint64_t duration) {
 inline uint32_t nlognCD(const string &tree, const bool &check) { // Complexity: O(n*log(n))
     chrono::high_resolution_clock::time_point t1 = getTime();
     uint32_t n = tree.length() / 2;
-    vector<uint32_t> t;
+    vector<uint32_t> t, t_copy;
     try {
         t = buildTree(tree);
     } catch (const char* err) {
         cout << err << nl;
         return 0;
     }
-    vector<bool> id_ref = buildIdRef(t);
-    vector<bool> id_ref_copy = id_ref;
-    computeSizes(t, id_ref);
-    vector<uint32_t> t_copy = t;
-    string ctree = stdCentroidDecomposition(t, id_ref, 0);
+    computeSizes(t);
+    if (check) t_copy = t;
+    string ctree = stdCentroidDecomposition(t);
     uint32_t time = chrono::duration_cast<chrono::microseconds>(getTime()-t1).count();
-    if (check) cerr << "O(n*log(n)) - " << n << " nodes - correct: " << ((checkCorrectness(t_copy, id_ref_copy, ctree))? "true" : "false") << nl;
+    if (check) cerr << "O(n*log(n)) - " << n << " nodes - correct: " << ((checkCorrectness(t_copy, ctree))? "true" : "false") << nl;
     return time;
 }
 
 // Perform linear centroid decomposition
-inline uint32_t nCD(const string &tree, const bool &check, uint32_t &A, uint32_t &B) { // Complexity: O(n)
+inline uint32_t nCD(const string &tree, const bool &check, const uint32_t &A, const uint32_t &B) { // Complexity: O(n)
     chrono::high_resolution_clock::time_point t1 = getTime();
     uint32_t n = tree.length() / 2;
-    vector<uint32_t> t;
+    vector<uint32_t> t, t_copy, _t;
+    uint32_t _t_root;
     try {
         t = buildTree(tree);
     } catch (const char* err) {
         cout << err << nl;
         return 0;
     }
-    vector<bool> id_ref = buildIdRef(t);
-    vector<bool> id_ref_copy = id_ref;
-    computeSizes(t, id_ref);
-    vector<uint32_t> t_copy = t;
-    pair<uint32_t,vector<uint32_t>> tmp = cover(t, id_ref, A);
-    uint32_t _t_root = tmp.first;
-    vector<uint32_t> _t = tmp.second;
-    vector<bool> _id_ref = build_IdRef(_t, n);
-    string ctree = centroidDecomposition(t, id_ref, _t_root, _t, _id_ref, B);
+    computeSizes(t);
+    if (check) t_copy = t;
+    pair<uint32_t,vector<uint32_t>> tmp = cover(t, A);
+    _t_root = tmp.first; _t = tmp.second;
+    string ctree = centroidDecomposition(t, _t_root, _t, B);
     uint32_t time = chrono::duration_cast<chrono::microseconds>(getTime()-t1).count();
-    if (check) cerr << "O(n) - " << n << " nodes - correct: " << ((checkCorrectness(t_copy, id_ref_copy, ctree))? "true" : "false") << nl;
+    if (check) cerr << "O(n) - " << n << " nodes - correct: " << ((checkCorrectness(t_copy, ctree))? "true" : "false") << nl;
     return time;
 }
 
@@ -70,8 +65,8 @@ uint32_t start = (uint32_t)1e6; // Starting point of benchmark (size)
 uint32_t stop = (uint32_t)50e6; // Ending point of benchmark (size)
 uint32_t step = (uint32_t)1e6; // Step at every cycle
 bool check = false; // Check if every centroid decomposition was correct (very time-consuming!)
-uint32_t A = (uint32_t)1e3; // 'A' parameter
-uint32_t B = (uint32_t)1e3; // 'B' parameter
+uint32_t A = 0; // 'A' parameter
+uint32_t B = 0; // 'B' parameter
 
 // Global variables
 string tree;
@@ -82,7 +77,7 @@ int main() {
         uint32_t time_1 = 0, time_2 = 0;
         for (uint32_t i = 0; i < 5; i++) { // Loop 5 times
             // Generate random tree
-            system(("treeGen.exe " + to_string(n) + " > tree.txt").c_str()); // Generate random tree
+            system(("tree_gen/random " + to_string(n) + " > tree.txt").c_str()); // Generate random tree
             ifstream in("tree.txt"); in >> tree; in.close(); // Load generated tree
             time_1 += nlognCD(tree, check); // Perform O(n*log(n)) centroid decomposition
             time_2 += nCD(tree, check, A, B); // Perform O(n) centroid decomposition
@@ -93,5 +88,6 @@ int main() {
         if (!check) cerr << "Done for " << n << " nodes." << nl;
         if (check) cerr << nl;
     }
+    system("rm -rf tree.txt"); // Remove 'tree.txt' temporary file
     return 0;
 }
