@@ -51,14 +51,14 @@ int main(int argc, char* argv[]) { // Complexity: O(n)
 		}
 	}
     // Centroid decomposition
+	if (input_path.compare("") == 0) { cout << "Error: no input file." << nl << nl; help(); } // If no input is given
 	cout << "Processing file '" << input_path << "'..." << nl << "Partial times:" << nl;
-	if (input_path.compare("") == 0) help(); // If no input is given
     ifstream in(input_path); in >> tree; in.close();
 	// Build 't'
     chrono::high_resolution_clock::time_point t1 = getTime();
     n = tree.length() / 2;
     try {
-        t = buildTree_old(tree);
+        t = buildTree(tree);
     } catch (const char* err) {
         cout << err << nl;
         return 0;
@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) { // Complexity: O(n)
     cout << printTime(" - T reference bitvector building", t2, getTime()) << nl;
 	// Compute partial sizes on't'
     chrono::high_resolution_clock::time_point t3 = getTime();
-    computeSizes_old(t, id_ref);
+    computeSizes(t, id_ref);
     if (check) t_copy = t;
     cout << printTime(" - Computing sizes", t3, getTime()) << nl;
 	// Tree covering
