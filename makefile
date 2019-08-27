@@ -15,7 +15,7 @@ tools:
 
 all: tools install
 
-clear:
+clean:
 	rm -rf cdlin
 	rm -rf cdstd
 	rm -rf tree_gen/random
