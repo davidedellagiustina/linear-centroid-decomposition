@@ -77,7 +77,7 @@ int main() {
         uint32_t time_1 = 0, time_2 = 0;
         for (uint32_t i = 0; i < 5; i++) { // Loop 5 times
             // Generate random tree
-            system(("tree_gen\\random " + to_string(n) + " > tree.txt").c_str()); // Generate random tree
+            system(("tree_gen/random " + to_string(n) + " > tree.txt").c_str()); // Generate random tree
             ifstream in("tree.txt"); in >> tree; in.close(); // Load generated tree
             time_1 += nlognCD(tree, check); // Perform O(n*log(n)) centroid decomposition
             time_2 += nCD(tree, check, A, B); // Perform O(n) centroid decomposition
