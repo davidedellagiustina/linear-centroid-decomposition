@@ -70,7 +70,8 @@ int main(int argc, char* argv[]) { // Complexity: O(n)
 	cout << printTime(" - T reference bitvector building", t2, getTime()) << nl;
 	// Tree covering
 	chrono::high_resolution_clock::time_point t3 = getTime();
-	pair<uint32_t,vector<uint32_t>> tmp = cover(t, id_ref, A);
+	pair<uint32_t,vector<uint32_t>> tmp = cover_old(t, A);
+	// pair<uint32_t,vector<uint32_t>> tmp = cover(t, id_ref, A); // FUTURE FASTER VERSION
 	_t_root = tmp.first; _t = tmp.second;
 	cout << printTime(" - Tree covering", t3, getTime()) << nl;
 	// Compute partial sizes on't'

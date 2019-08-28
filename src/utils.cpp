@@ -83,10 +83,10 @@ vector<bool> buildIdRef(const vector<uint32_t> &t) { // Complexity: O(n)
 // @param t: tree structure
 // @param id_ref: reference bitvector
 void computeSizes(vector<uint32_t> &t, vector<bool> &id_ref) { // Complexity: O(n)
-    uint32_t i = t.size() - 1; // Initialize vector pointer
+    uint32_t i = t.size() - 2; // Initialize vector pointer (last node has ID 't.size()-2')
     uint32_t p = t.size(); // Parent of current node (invalid at the beginning)
     uint32_t nc = 0; // Current node is the 'nc'-th child of its parent
-    while (i > 0) {
+    while (i > 0) { // While pointer is valid
         if (id_ref[i]) { // If the current element on 'id_ref' equals 1 (i.e. there is a node with this ID on 't')
             // assert(t[i+1] != p or nc > 0);
             // assert((t[t[i+1]]&num_c) > 0);
@@ -95,9 +95,9 @@ void computeSizes(vector<uint32_t> &t, vector<bool> &id_ref) { // Complexity: O(
             uint32_t size = 1; // Size of subtree rooted at 'i'
             for (uint32_t j = 0; j < (t[i]&num_c); j++) // For each of its children
                 size += t[i+2*j+3]; // Size of the child
-            t[p+3+nc*2] = size;
+            t[p+3+nc*2] = size; // Set size
         }
-        i--;
+        i--; // Decrement pointer
     }
 }
 
@@ -132,7 +132,7 @@ pair<uint32_t,vector<uint32_t>> cover_old(vector<uint32_t> &t, uint32_t A = 0) {
                     _t[pcs_c.top()+1] = id; // Update child's parent
                     _t.pb(pcs_c.top()); // Child ID
                     _t.pb(_t[pcs_c.top()+2]); // Initialize delta_1
-                    for (uint32_t k = 0; k < _t[pcs_c.top()]; k++) _t.back() += _t[pcs_c.top()+3*k+5]; // COmpute delta_1
+                    for (uint32_t k = 0; k < _t[pcs_c.top()]; k++) _t.back() += _t[pcs_c.top()+3*k+5]; // Compute delta_1
                     _t.pb(n-_t.back()); // Delta_2
                     pcs_c.pop();
                 }
@@ -148,14 +148,41 @@ pair<uint32_t,vector<uint32_t>> cover_old(vector<uint32_t> &t, uint32_t A = 0) {
 }
 
 // Cover 't' and build '_t'
+// Note: 'computeSizes()' must be called after 'cover()'
 // @param t: tree structure
 // @param id_ref: reference bitvector
 // @param A: minimum size of cover elements - log(n) if not given
 // @return '_t' and its root ID
-pair<uint32_t,vector<uint32_t>> cover (vector<uint32_t> &t, const vector<bool> &id_ref, uint32_t A = 0) { // Complexity: O(n)
-    uint32_t root = 0;
-    vector<uint32_t> _t = vector<uint32_t>(1, 0);
-    return make_pair(root, _t);
+pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, const vector<bool> &id_ref, uint32_t A = 0) { // Complexity: O(n)
+    vector<uint32_t> _t; // Initialize '_t'
+    uint32_t root = 0; // Initialize root
+    uint32_t n = (t.size()+2)/4; // Number of nodes
+    if (!A) A = floor(log2(n)); // If 'A' is not given
+    int64_t i = t.size() - 2; // Initialize vector pointer
+    uint32_t p = t.size(), nc = 0;
+    while (i >= 0) { // While pointer is valid
+        if (id_ref[i]) { // If the current element on 'id_ref' equals 1 (i.e. there is a node with this ID on 't')
+            nc = ((t[i+1] != p)? (t[t[i+1]]&num_c)-1 : nc-1); // Update child's number
+            p = t[i+1]; // Update parent
+            uint32_t size = 1; // Size of subtree rooted at 'i'
+            for (uint32_t j = 0; j < (t[i]&num_c); j++) { // For each of its children
+                if (!(t[t[i+2*j+2]]&cov_el)) size += t[i+2*j+3]; // Size of the child
+            }
+            if (size >= A || i == 0) { // If PCS is big enough
+                t[i] |= cov_el; // Mark it as cover element
+                uint32_t id = _t.size(); // ID of the new node
+                _t.pb(0); // Number of children // NO IDEA HOW TO KNOW CHILDREN NUMBER AND IDS
+                _t.pb(id); // Parent ID
+                _t.pb(size); // Size of treelet
+                _t.pb(i); // Treelet root ID reference on 't' (i.e. alpha function)
+                // for (uint32_t j = 0; j < C; j++) { // For each of its children
+                    //
+                // }
+            } else t[p+3+nc*2] = size; // Set size
+        }
+        i--; // Decrement pointer
+    }
+    return make_pair(root, _t); // Return both 'root' and '_t'
 }
 
 /*
