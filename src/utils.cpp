@@ -105,7 +105,7 @@ void computeSizes(vector<uint32_t> &t, vector<bool> &id_ref) { // Complexity: O(
 // @param t: tree structure
 // @param A: minimum size of cover elements - log(n) if not given
 // @return '_t' and its root ID
-pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, uint32_t A = 0) { // Complexity: O(n)
+pair<uint32_t,vector<uint32_t>> cover_old(vector<uint32_t> &t, uint32_t A = 0) { // Complexity: O(n)
     uint32_t n = (t.size()+2)/4; // Number of nodes
     vector<uint32_t> _t; // Initialize '_t'
     if (!A) A = floor(log2(n)); // If 'A' is not given
@@ -145,6 +145,17 @@ pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, uint32_t A = 0) { // 
         }
     }
     return make_pair(root, _t); // Return both '_t' and its root ID
+}
+
+// Cover 't' and build '_t'
+// @param t: tree structure
+// @param id_ref: reference bitvector
+// @param A: minimum size of cover elements - log(n) if not given
+// @return '_t' and its root ID
+pair<uint32_t,vector<uint32_t>> cover (vector<uint32_t> &t, const vector<bool> &id_ref, uint32_t A = 0) { // Complexity: O(n)
+    uint32_t root = 0;
+    vector<uint32_t> _t = vector<uint32_t>(1, 0);
+    return make_pair(root, _t);
 }
 
 /*

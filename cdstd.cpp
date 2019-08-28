@@ -11,6 +11,7 @@ bool print_output = false, check = false;
 string input_path, tree, ctree;
 uint32_t _t_root;
 vector<uint32_t> t, t_copy, _t;
+vector<bool> id_ref;
 
 // Print help
 void help() {
@@ -52,19 +53,24 @@ int main(int argc, char* argv[]) { // Complexity: O(n*log(n))
 	ifstream in(input_path); in >> tree; in.close();
 	// Build 't'
 	chrono::high_resolution_clock::time_point t1 = getTime();
-    try {
+	try {
         t = buildTree(tree);
     } catch (const char* err) {
         cout << err << nl;
         return 0;
     }
     cout << printTime(" - T building", t1, getTime()) << nl;
+	// Build 't' reference bitvector
+	chrono::high_resolution_clock::time_point t2 = getTime();
+	id_ref = buildIdRef(t);
+	cout << printTime(" - T reference bitvector building", t2, getTime()) << nl;
 	// Compute partial sizes on 't'
-    chrono::high_resolution_clock::time_point t2 = getTime();
-    computeSizes(t);
-    if (check) t_copy = t;
-    cout << printTime(" - Computing sizes", t2, getTime()) << nl;
+    chrono::high_resolution_clock::time_point t3 = getTime();
+    computeSizes(t, id_ref);
+    cout << printTime(" - Computing sizes", t3, getTime()) << nl;
     cout << printTime(" - Total structure building", t1, getTime()) << nl; // Total time
+	// Copy structures
+	if (check) t_copy = t;
     // Perform centroid decomposition: O(n*log(n))
     t1 = getTime();
     ctree = stdCentroidDecomposition(t);
