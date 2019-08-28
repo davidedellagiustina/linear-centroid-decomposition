@@ -9,6 +9,8 @@ using namespace std;
  */
 
 // Build tree structure from balanced parenthesis representation, level-wise, in-place
+// @param tree: BP representation of tree
+// @return tree structure
 vector<uint32_t> buildTree(const string &tree) { // Complexity: O(n)
     uint32_t n = tree.length() / 2; // Number of nodes
     uint32_t N = 4*n - 2; // Size of 't'
@@ -64,17 +66,24 @@ vector<uint32_t> buildTree(const string &tree) { // Complexity: O(n)
     return t; // Return 't'
 }
 
-// Compute the initial sizes of the tree
-void computeSizes(vector<uint32_t> &t) { // Complexity: O(n)
-    // Build a reference bitvector to identify the position of nodes in 't': O(n)
+// Build a reference bitvector to identify the positions of the nodes n 't'
+// @param t: tree structure
+// @return reference bitvector
+vector<bool> buildIdRef(const vector<uint32_t> &t) { // Complexity: O(n)
     vector<bool> id_ref = vector<bool>(t.size(), 0); // Initialize an empty bitvector
     uint32_t i = 0; // Initialize vector pointer
     while (i < t.size()) { // While pointer is valid
-        id_ref[i] = 1; // Set 'i'th bit to 1
-        i += 2*t[i] + 2; // And increment pointer
+        id_ref[i] = 1; // Set 'i'-th bit to 1
+        i += 2*(t[i]&num_c)+2; // And increment pointer
     }
-    // Compute partial sizes on 't': O(n)
-    i = t.size() - 1; // Initialize vector pointer
+    return id_ref; // Return 'id_ref'
+}
+
+// Compute the initial sizes of the tree
+// @param t: tree structure
+// @param id_ref: reference bitvector
+void computeSizes(vector<uint32_t> &t, vector<bool> &id_ref) { // Complexity: O(n)
+    uint32_t i = t.size() - 1; // Initialize vector pointer
     uint32_t p = t.size(); // Parent of current node (invalid at the beginning)
     uint32_t nc = 0; // Current node is the 'nc'-th child of its parent
     while (i > 0) {
@@ -93,7 +102,9 @@ void computeSizes(vector<uint32_t> &t) { // Complexity: O(n)
 }
 
 // Cover 't' and build '_t'
+// @param t: tree structure
 // @param A: minimum size of cover elements - log(n) if not given
+// @return '_t' and its root ID
 pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, uint32_t A = 0) { // Complexity: O(n)
     uint32_t n = (t.size()+2)/4; // Number of nodes
     vector<uint32_t> _t; // Initialize '_t'
@@ -141,6 +152,8 @@ pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, uint32_t A = 0) { // 
  */
 
 // Remove a node 'n' from 't'
+// @param t: tree structure
+// @param n: ID of note to be removed
 inline void rmNodeOnT(vector<uint32_t> &t, const uint32_t n) { // Complexity: O(k) where k = t[t[n+1]]
     // Remove node from 't'
     uint32_t parent = t[n+1]; // Parent of the node ID
@@ -172,13 +185,18 @@ inline void rmNodeOnT(vector<uint32_t> &t, const uint32_t n) { // Complexity: O(
 
 // Add a node on '_t'
 // Note: when this function is called, the newly added node is ALWAYS the root of a connected component. Therefore, we assume this condition to be true.
-inline uint32_t addNodeOn_T(vector<uint32_t> &_t, const uint32_t id_ref, const uint32_t size, const vector<uint32_t> &children) { // Complexity: O(k) where k = children.size()
+// @param _t: '_t' tree structure
+// @param ref: reference ID on 't'
+// @param size: size of treelet
+// @param children: vector of the children of the new node
+// @return ID of the newly added node
+inline uint32_t addNodeOn_T(vector<uint32_t> &_t, const uint32_t ref, const uint32_t size, const vector<uint32_t> &children) { // Complexity: O(k) where k = children.size()
     // Add node on '_t'
     uint32_t id = _t.size(); // ID of the new node
     _t.pb(children.size()); // Number of children
     _t.pb(id); // Parent ID (i.e. itself, see assumption above)
     _t.pb(size); // Size of treelet
-    _t.pb(id_ref); // Treelet root ID reference on 't'
+    _t.pb(ref); // Treelet root ID reference on 't'
     for (uint32_t child : children) { // For each of its children
         _t.pb(child); // Insert child ID
         _t.pb(0); _t.pb(0); // Empty deltas (will be computed by the proper function)
@@ -188,6 +206,9 @@ inline uint32_t addNodeOn_T(vector<uint32_t> &_t, const uint32_t id_ref, const u
 }
 
 // Remove a node 'n' from '_t'
+// @param _t: '_t' tree structure
+// @param n: ID of the node to be removed
+// @return vector of the children of the removed node
 inline vector<uint32_t> rmNodeOn_T(vector<uint32_t> &_t, const uint32_t n) { // Complexity: O(k) where k = _t[_t[n+1]]
     // Remove node from '_t'
     uint32_t parent = _t[n+1]; // Parent of the node ID
@@ -213,6 +234,9 @@ inline vector<uint32_t> rmNodeOn_T(vector<uint32_t> &_t, const uint32_t n) { // 
 }
 
 // Standard centroid search algorithm
+// @param t: tree structure
+// @param root: root of the connected component
+// @return centroid of the connected component
 inline uint32_t stdFindCentroid(const vector<uint32_t> &t, const uint32_t root) { // Complexity: O(n)
     // Compute size of subtree: O(k) where k = (t[root]&num_c)
     uint32_t size = 1; // Initialize size
@@ -238,6 +262,9 @@ inline uint32_t stdFindCentroid(const vector<uint32_t> &t, const uint32_t root) 
 }
 
 // Standard centroid decomposition algorithm
+// @param t: tree structure
+// @param root: root of the tree/connected component
+// @return string representation of the centroid tree
 inline string stdCentroidDecomposition(vector<uint32_t> &t, const uint32_t root = 0) { // Complexity: O(n*log(n))
     oss os; // Initialize output stream
     stack<uint32_t> s, noc; s.push(root); // Stack with roots of subtrees yet to process
@@ -271,6 +298,9 @@ inline string stdCentroidDecomposition(vector<uint32_t> &t, const uint32_t root 
  */
 
 // Recompute the deltas on a treelet (i.e. a connected component of '_t')
+// @param t: tree structure
+// @param _t: '_t' tree structure
+// @param root: root of the connected component of which to compute deltas
 inline void computeDeltas(const vector<uint32_t> &t, vector<uint32_t> &_t, const uint32_t root) { // Complexity: O(log(n))
     // Compute total size of treelet
     uint32_t size = 1; // Initialize size of connected component rooted at 'root'
@@ -296,6 +326,10 @@ inline void computeDeltas(const vector<uint32_t> &t, vector<uint32_t> &_t, const
 }
 
 // New centroid search algorithm
+// @param t: tree structure
+// @param _t: '_t' tree structure
+// @param root: root of the connected component
+// return centroid of the connected component (both IDs on 't' and '_t')
 inline pair<uint32_t,uint32_t> findCentroid(const vector<uint32_t> &t, const vector<uint32_t> &_t, const uint32_t root) { // Complexity: O(n/log(n))
     // Compute size of subtree (i.e. connected component): O(1)
     uint32_t size = ((_t[root] == 0)? _t[root+2] : _t[root+5]+_t[root+6]); // Compute size
@@ -336,7 +370,11 @@ inline pair<uint32_t,uint32_t> findCentroid(const vector<uint32_t> &t, const vec
 }
 
 // New centroid decomposition algorithm
+// @param t: tree structure
+// @param _t_root: ID of the root of '_t'
+// @param _t: '_t' tree structure
 // @param B: maximum size when to apply standard centroid decomposition - (log(n))^3 if not given
+// @return string representation of the centroid tree
 string centroidDecomposition(vector<uint32_t> &t, const uint32_t _t_root, vector<uint32_t> &_t, uint32_t B = 0) { // Complexity: O(n)
     uint32_t N = (t.size()+2)/4; // Nuber of nodes
     if (!B) B = pow(floor(log2(N)), 3); // If 'B' is not given
@@ -437,6 +475,9 @@ string centroidDecomposition(vector<uint32_t> &t, const uint32_t _t_root, vector
  */
 
 // Check correctness of a centroid decomposition
+// @param t: tree structure
+// @param ctree: string representation of computed centroid tree
+// @return true if centroid tree is correct, false otherwise
 bool checkCorrectness(vector<uint32_t> &t, const string &ctree) { // Complexity: unknown and not relevant
     vector<uint32_t> roots; roots.pb(0); // Vector holding all the subtrees' roots
     stack<uint32_t> noc; noc.push(1); // Stack to store number of children of each node
@@ -486,11 +527,16 @@ bool checkCorrectness(vector<uint32_t> &t, const string &ctree) { // Complexity:
  */
 
 // Get time
+// @return timestamp
 inline chrono::high_resolution_clock::time_point getTime() { // Complexity: O(1)
     return chrono::high_resolution_clock::now(); // Get new time reference and return
 }
 
 // Print elapsed time
+// @param t: short description of time count
+// @param t1: initial time
+// @patam t2: final time
+// @return string formatted representation of elapsed time
 inline string printTime(const string t, const chrono::high_resolution_clock::time_point t1, const chrono::high_resolution_clock::time_point t2) { // Complexity: O(1)
     auto duration = chrono::duration_cast<chrono::microseconds>(t2-t1).count(); // Compute duration
     int us = duration; // Microseconds
@@ -504,6 +550,8 @@ inline string printTime(const string t, const chrono::high_resolution_clock::tim
 }
 
 // Print a vector<uint32_t>
+// @param t: tree structure
+// @return string representation of 't'
 inline string print(const vector<uint32_t> &t) { // Complexity: O(n)
     oss os; // New output stream
     os << "(";
