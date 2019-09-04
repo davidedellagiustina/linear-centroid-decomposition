@@ -24,13 +24,15 @@ inline uint32_t nlognCD(const string &tree, const bool &check) { // Complexity: 
     chrono::high_resolution_clock::time_point t1 = getTime();
     uint32_t n = tree.length() / 2;
     vector<uint32_t> t, t_copy;
+    vector<bool> id_ref;
     try {
         t = buildTree(tree);
     } catch (const char* err) {
         cout << err << nl;
         return 0;
     }
-    computeSizes(t);
+    id_ref = buildIdRef(t);
+    computeSizes(t, id_ref);
     if (check) t_copy = t;
     string ctree = stdCentroidDecomposition(t);
     uint32_t time = chrono::duration_cast<chrono::microseconds>(getTime()-t1).count();
@@ -43,6 +45,7 @@ inline uint32_t nCD(const string &tree, const bool &check, const uint32_t &A, co
     chrono::high_resolution_clock::time_point t1 = getTime();
     uint32_t n = tree.length() / 2;
     vector<uint32_t> t, t_copy, _t;
+    vector<bool> id_ref;
     uint32_t _t_root;
     try {
         t = buildTree(tree);
@@ -50,9 +53,10 @@ inline uint32_t nCD(const string &tree, const bool &check, const uint32_t &A, co
         cout << err << nl;
         return 0;
     }
-    computeSizes(t);
+    id_ref = buildIdRef(t);
+    computeSizes(t, id_ref);
     if (check) t_copy = t;
-    pair<uint32_t,vector<uint32_t>> tmp = cover(t, A);
+    pair<uint32_t,vector<uint32_t>> tmp = cover_old(t, A);
     _t_root = tmp.first; _t = tmp.second;
     string ctree = centroidDecomposition(t, _t_root, _t, B);
     uint32_t time = chrono::duration_cast<chrono::microseconds>(getTime()-t1).count();
