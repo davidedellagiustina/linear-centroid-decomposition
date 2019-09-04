@@ -30,7 +30,6 @@ for i in range(2, n):
         edges.add(edge)
         i = j
 
-# Build tree's adj lists
 max_v = 0
 for p in edges:
     max_v = max(max_v, p[0], p[1])
