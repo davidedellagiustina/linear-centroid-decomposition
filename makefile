@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := install
 
 CC = g++
-CFLAGS = -g -ofast
+CFLAGS = -g -O3 -mtune=native -march=native
 
 install:
 	$(CC) $(CFLAGS) cdlin.cpp -o cdlin
