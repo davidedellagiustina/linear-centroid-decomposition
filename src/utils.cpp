@@ -302,36 +302,30 @@ inline uint32_t stdFindCentroid(const vector<uint32_t> &t, const uint32_t root) 
 // Standard centroid decomposition algorithm
 // @param t: tree structure
 // @param root: root of the tree/connected component
-// @return string representation of the centroid tree
-inline vector<uint32_t> stdCentroidDecomposition(vector<uint32_t> &t, const uint32_t root = 0) { // Complexity: O(n*log(n))
-    uint32_t N = (t.size()+3)/4;
-    vector<uint32_t> out = vector<uint32_t>(3*N, 0);
-    uint32_t pos = 0;
-    stack<uint32_t> s, noc; s.push(root); // Stack with roots of subtrees yet to process
+// @param N: numerb of nodes of the tree to elaborate
+// @return vector representation of the centroid tree
+inline vector<uint32_t> stdCentroidDecomposition(vector<uint32_t> &t, const uint32_t root = 0, uint32_t N = 0) { // Complexity: O(n*log(n))
+    if (!N) N = (t.size()+2)/4; // Number of nodes
+    vector<uint32_t> out = vector<uint32_t>(3*N, 0); // Initialize output vector
+    uint32_t pos = 0; // Output vector pointer
+    stack<uint32_t> s; s.push(root); // Stack with roots of subtrees yet to process
     while (!s.empty()) { // While there are still subtrees to process
         uint32_t r = s.top(); s.pop(); // Get root of subtree
         uint32_t centroid = stdFindCentroid(t, r); // Find centroid of subtree
+        uint32_t c = 0; for (uint32_t i = 0; i < (t[centroid]&num_c); i++) c += t[centroid+2*i+3]; // Total size of centroid subtrees
         rmNodeOnT(t, centroid); // Remove the centroid from T
-        uint32_t c = 0; // Subtree counter
-        for(uint32_t i = (t[centroid]&num_c); i > 0; i--) { // Navigate the children in reverse order
+        for(uint32_t i = (t[centroid]&num_c); i > 0; i--) // Navigate the children in reverse order
             s.push(t[centroid+2*i]); // Then push them to 's'
-            c++; // And increment counter
-        }
         if (centroid != r) { // If the root of the subtree is not its centroid
             s.push(r); // Then it is the root of a new subtree
-            c++; // Increment counter
+            c++; for (uint32_t i = 0; i < (t[r]&num_c); i++) c += t[r+2*i+3]; // Size of root subtree
         }
         // Print the current node to the output stream
-        out[pos] = 0; // "("
-        out[pos+1] = centroid + 2; // Centroid ID
-        pos += 2;
-        if (!noc.empty()) noc.top()--;
-        noc.push(c);
-        while (!noc.empty() && noc.top() == 0) {
-            noc.pop();
-            out[pos] = 1; // "("
-            pos++;
-        }
+        while (out[pos] == 1) pos++;
+        out[pos] = 0; // Print "("
+        out[pos+1] = centroid + 2; // Print centroid ID
+        pos += 2; // Update 'pos'
+        out[pos+3*c] = 1; // Print "("
     }
     return out;
 }
@@ -417,11 +411,12 @@ inline pair<uint32_t,uint32_t> findCentroid(const vector<uint32_t> &t, const vec
 // @param _t_root: ID of the root of '_t'
 // @param _t: '_t' tree structure
 // @param B: maximum size when to apply standard centroid decomposition - (log(n))^3 if not given
-// @return string representation of the centroid tree
-/*string centroidDecomposition(vector<uint32_t> &t, const uint32_t _t_root, vector<uint32_t> &_t, uint32_t B = 0) { // Complexity: O(n)
+// @return vector representation of the centroid tree
+vector<uint32_t> centroidDecomposition(vector<uint32_t> &t, const uint32_t _t_root, vector<uint32_t> &_t, uint32_t B = 0) { // Complexity: O(n)
     uint32_t N = (t.size()+2)/4; // Nuber of nodes
     if (!B) B = pow(floor(log2(N)), 3); // If 'B' is not given
-    oss os; // Initialize output stream
+    vector<uint32_t> out = vector<uint32_t>(3*N, 0); // Initialize output vector
+    uint32_t pos = 0; // Output vector pointer
     stack<uint32_t> s, noc; s.push(_t_root); // Stack with roots of subtrees yet to process
     while (!s.empty()) { // While stack is not empty
         uint32_t root = s.top(); s.pop(); // Get root from stack
@@ -497,21 +492,27 @@ inline pair<uint32_t,uint32_t> findCentroid(const vector<uint32_t> &t, const vec
                 s.push(root); // And push it to stack
                 nc++; // Eventually increment 'nc'
             }
-            // Print the current node to the output stream
-            os << "(" << tc; // Print current node ID
+            out[pos] = 0; // Print "("
+            out[pos+1] = tc + 2; // Print centroid ID
+            pos += 2; // Increment pointer
             if (!noc.empty()) noc.top()--; // Decrement its parent's number of children
             noc.push(nc); // Push its number of chidren to 'noc'
-        } else { // When 'dimens' is smaller or equal to 'treshold'
-            os << stdCentroidDecomposition(t, _t[root+3]); // Than compute standard centroid decomposition
+        } else { // When 'dimens' is smaller or equal to 'B'
+            vector<uint32_t> tmp = stdCentroidDecomposition(t, _t[root+3], dimens); // Then compute standard centroid decompsition
+            for (uint32_t el : tmp) { // And copy resulting vector to 'out'
+                out[pos] = el;
+                pos++;
+            }
             if (!noc.empty()) noc.top()--; // Fix 'noc'
         }
         while (!noc.empty() && noc.top() == 0) { // While there are nodes with no more children
             noc.pop(); // Delete them from 'noc'
-            os << ")"; // And print the closed bracket
+            out[pos] = 1; // Print ")"
+            pos++; // Increment pointer
         }
     }
-    return os.str(); // Return the BP representation of the centroid tree
-}*/
+    return out; // Return vector rempresentation of the centroid tree
+}
 
 /*
  * CORRECTNESS CHECK

@@ -8,7 +8,7 @@ using namespace std;
 
 // Global variables
 bool print_output = false, check = false;
-string input_path, tree, ctree;
+string input_path, tree;
 uint32_t _t_root;
 vector<uint32_t> t, t_copy, _t, ct;
 vector<bool> id_ref;

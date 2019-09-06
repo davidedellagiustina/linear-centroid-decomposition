@@ -11,9 +11,9 @@ uint32_t B = 0;
 
 // Global variables
 bool print_output = false, check = false;
-string input_path, tree, ctree;
+string input_path, tree;
 uint32_t n, _t_root;
-vector<uint32_t> t, t_copy, _t;
+vector<uint32_t> t, t_copy, _t, ct;
 vector<bool> id_ref;
 
 // Print help
@@ -52,10 +52,10 @@ int main(int argc, char* argv[]) { // Complexity: O(n)
 	}
     // Centroid decomposition
 	if (input_path.compare("") == 0) { cout << "Error: no input file." << nl << nl; help(); } // If no input is given
-	cout << "Processing file '" << input_path << "'..." << nl << "Partial times:" << nl;
+	cout << "Processing file '" << input_path << "'..." << nl;
     ifstream in(input_path); in >> tree; in.close();
 	// Build 't'
-    chrono::high_resolution_clock::time_point t1 = getTime();
+    cout << "Building internal representation ..." << nl;
     n = tree.length() / 2;
     try {
         t = buildTree(tree);
@@ -63,29 +63,29 @@ int main(int argc, char* argv[]) { // Complexity: O(n)
         cout << err << nl;
         return 0;
     }
-	cout << printTime(" - T building", t1, getTime()) << nl;
+	cout << "Partial times:" << nl;
 	// Build 't' reference bitvector
-	chrono::high_resolution_clock::time_point t2 = getTime();
+	chrono::high_resolution_clock::time_point t1 = getTime();
 	id_ref = buildIdRef(t);
-	cout << printTime(" - T reference bitvector building", t2, getTime()) << nl;
+	cout << printTime(" - T reference bitvector building", t1, getTime()) << nl;
 	// Tree covering
-	chrono::high_resolution_clock::time_point t3 = getTime();
+	chrono::high_resolution_clock::time_point t2 = getTime();
 	pair<uint32_t,vector<uint32_t>> tmp = cover_old(t, A);
 	// pair<uint32_t,vector<uint32_t>> tmp = cover(t, id_ref, A); // FUTURE FASTER VERSION
 	_t_root = tmp.first; _t = tmp.second;
-	cout << printTime(" - Tree covering", t3, getTime()) << nl;
+	cout << printTime(" - Tree covering", t2, getTime()) << nl;
 	// Compute partial sizes on't'
-    chrono::high_resolution_clock::time_point t4 = getTime();
+    chrono::high_resolution_clock::time_point t3 = getTime();
     computeSizes(t, id_ref);
-    cout << printTime(" - Computing sizes", t4, getTime()) << nl;
+    cout << printTime(" - Computing partial sizes", t3, getTime()) << nl;
 	cout << printTime(" - Total structure building", t1, getTime()) << nl; // Total time
 	// Copy structures
 	if (check) t_copy = t;
     // Perform centroid decomposition: O(n)
     t1 = getTime();
-    ctree = centroidDecomposition(t, _t_root, _t, B);
+    ct = centroidDecomposition(t, _t_root, _t, B);
     cout << printTime(" - Linear centroid decomposition", t1, getTime()) << nl;
-    if(check) cout << "Correct: " << ((checkCorrectness(t_copy, ctree))? "true" : "false") << nl; // Correctness check
-    if (print_output) cout << "Output: " << ctree << nl; // Print output
+    if(check) cout << "Correct: " << ((checkCorrectness(t_copy, ct))? "true" : "false") << nl; // Correctness check
+    if (print_output) cout << "Output: " << ctToString(ct) << nl; // Print output
     return 0;
 }
