@@ -302,7 +302,7 @@ inline uint32_t stdFindCentroid(const vector<uint32_t> &t, const uint32_t root) 
 // Standard centroid decomposition algorithm
 // @param t: tree structure
 // @param root: root of the tree/connected component
-// @param N: numerb of nodes of the tree to elaborate
+// @param N: number of nodes of the tree to elaborate
 // @return vector representation of the centroid tree
 inline vector<uint32_t> stdCentroidDecomposition(vector<uint32_t> &t, const uint32_t root = 0, uint32_t N = 0) { // Complexity: O(n*log(n))
     if (!N) N = (t.size()+2)/4; // Number of nodes
@@ -320,7 +320,7 @@ inline vector<uint32_t> stdCentroidDecomposition(vector<uint32_t> &t, const uint
             s.push(r); // Then it is the root of a new subtree
             c++; for (uint32_t i = 0; i < (t[r]&num_c); i++) c += t[r+2*i+3]; // Size of root subtree
         }
-        // Print the current node to the output stream
+        // Print the current node to the output vector
         while (out[pos] == 1) pos++;
         out[pos] = 0; // Print "("
         out[pos+1] = centroid + 2; // Print centroid ID
