@@ -303,8 +303,10 @@ inline uint32_t stdFindCentroid(const vector<uint32_t> &t, const uint32_t root) 
 // @param t: tree structure
 // @param root: root of the tree/connected component
 // @return string representation of the centroid tree
-inline string stdCentroidDecomposition(vector<uint32_t> &t, const uint32_t root = 0) { // Complexity: O(n*log(n))
-    oss os; // Initialize output stream
+inline vector<uint32_t> stdCentroidDecomposition(vector<uint32_t> &t, const uint32_t root = 0) { // Complexity: O(n*log(n))
+    uint32_t N = (t.size()+3)/4;
+    vector<uint32_t> out = vector<uint32_t>(3*N, 0);
+    uint32_t pos = 0;
     stack<uint32_t> s, noc; s.push(root); // Stack with roots of subtrees yet to process
     while (!s.empty()) { // While there are still subtrees to process
         uint32_t r = s.top(); s.pop(); // Get root of subtree
@@ -320,15 +322,18 @@ inline string stdCentroidDecomposition(vector<uint32_t> &t, const uint32_t root 
             c++; // Increment counter
         }
         // Print the current node to the output stream
-        os << "(" << centroid; // Print current node ID
-        if (!noc.empty()) noc.top()--; // Decrement its parent's number of children
-        noc.push(c); // Push its number of chidren to 'noc'
-        while (!noc.empty() && noc.top() == 0) { // While there are nodes with no more children
-            noc.pop(); // Delete them from 'noc'
-            os << ")"; // And print the closed bracket
+        out[pos] = 0; // "("
+        out[pos+1] = centroid + 2; // Centroid ID
+        pos += 2;
+        if (!noc.empty()) noc.top()--;
+        noc.push(c);
+        while (!noc.empty() && noc.top() == 0) {
+            noc.pop();
+            out[pos] = 1; // "("
+            pos++;
         }
     }
-    return os.str(); // Return the BP representation of the centroid tree
+    return out;
 }
 
 /*
@@ -413,7 +418,7 @@ inline pair<uint32_t,uint32_t> findCentroid(const vector<uint32_t> &t, const vec
 // @param _t: '_t' tree structure
 // @param B: maximum size when to apply standard centroid decomposition - (log(n))^3 if not given
 // @return string representation of the centroid tree
-string centroidDecomposition(vector<uint32_t> &t, const uint32_t _t_root, vector<uint32_t> &_t, uint32_t B = 0) { // Complexity: O(n)
+/*string centroidDecomposition(vector<uint32_t> &t, const uint32_t _t_root, vector<uint32_t> &_t, uint32_t B = 0) { // Complexity: O(n)
     uint32_t N = (t.size()+2)/4; // Nuber of nodes
     if (!B) B = pow(floor(log2(N)), 3); // If 'B' is not given
     oss os; // Initialize output stream
@@ -506,7 +511,7 @@ string centroidDecomposition(vector<uint32_t> &t, const uint32_t _t_root, vector
         }
     }
     return os.str(); // Return the BP representation of the centroid tree
-}
+}*/
 
 /*
  * CORRECTNESS CHECK
@@ -516,19 +521,13 @@ string centroidDecomposition(vector<uint32_t> &t, const uint32_t _t_root, vector
 // @param t: tree structure
 // @param ctree: string representation of computed centroid tree
 // @return true if centroid tree is correct, false otherwise
-bool checkCorrectness(vector<uint32_t> &t, const string &ctree) { // Complexity: unknown and not relevant
+bool checkCorrectness(vector<uint32_t> &t, const vector<uint32_t> &ct) { // Complexity: unknown and not relevant
     vector<uint32_t> roots; roots.pb(0); // Vector holding all the subtrees' roots
     stack<uint32_t> noc; noc.push(1); // Stack to store number of children of each node
-    uint32_t i = 0; // 'ctree' string pointer
-    while (i < ctree.length()) { // While the pointer is valid
-        if (ctree[i] == '(') { // If the current charcter means there is a new node
-            // Retrieve node ID
-            string buf = ""; uint32_t id; // Initialize string to hold node ID
-            while (ctree[i+1] != '(' && ctree[i+1] != ')') { // While there are still digits in the ID
-                buf += ctree[i+1]; // Store them in buffer
-                i++; // And increment pointer
-            }
-            iss is (buf); is >> id; // Then convert the ID in the string to an integer
+    uint32_t i = 0; // 'ct' vector pointer
+    for (uint32_t el : ct) {
+        if (el == 0) { // If there is a new node
+            uint32_t id = ct[i+1] - 2; // ID of the node
             // Check correctness
             bool found = false; // Initialize 'found' to false
             for (uint32_t j = roots.size()-noc.top(); j < roots.size(); j++) { // For each of the lastly added roots
@@ -552,7 +551,7 @@ bool checkCorrectness(vector<uint32_t> &t, const string &ctree) { // Complexity:
                 }
             }
             if (!found) return false; // If the centroid doesn't match, the whole centroid tree is incorrect
-        } else if (ctree[i] == ')') { // Otherwise, if the current character means the current node is closed (i.e. has no more children)
+        } else if (el == 1) { // Otherwise, if the current node is closed (i.e. has no more children)
             noc.pop(); // Pop last element from 'noc'
         }
         i++; // Eventually increment pointer
@@ -602,6 +601,27 @@ inline string print(const vector<uint32_t> &t) { // Complexity: O(n)
     }
     os << ")";
     return os.str(); // Return stream content as a string
+}
+
+// Conver the representation of centroid tree from vector<uint32_t> to string
+// @param ct: centroid tree
+// @return string representation of centroid tree
+inline string ctToString(const vector<uint32_t> &ct) { // Complexity: O(n)
+    oss os; // New output stream
+    for (uint32_t el : ct) { // For each element in the vector
+        switch (el) {
+            case 0: // If it is 0
+                os << "("; // Then print "("
+                break;
+            case 1: // If it is 1
+                os << ")"; // Then print ")"
+                break;
+            default: // Otherwise
+                os << el - 2; // Print node ID
+                break;
+        }
+    }
+    return os.str(); // Return string representation of centroid tree
 }
 
 #endif
