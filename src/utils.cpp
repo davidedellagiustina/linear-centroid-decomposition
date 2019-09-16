@@ -178,7 +178,7 @@ pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, const vector<bool> &i
         i--; // Decrement pointer
     }
     // Step 2 - build '_t' base structure: O(n)
-    uint32_t M = q.size()/2, pos = M-4, j = 0; // Pointers
+    uint32_t M = q.size()/2, pos = q.size()-4, j = 0; // Pointers
     vector<uint32_t> _t = vector<uint32_t>(M); // Initialize '_t'
     i = t.size() - 2; p = t.size(); nc = 0; // Reinizialize pointers
     while (i >= 0) { // Navigate 't'
