@@ -154,11 +154,12 @@ pair<uint32_t,vector<uint32_t>> cover_old(vector<uint32_t> &t, uint32_t A = 0) {
 // @param A: minimum size of cover elements - log(n) if not given
 // @return '_t' and its root ID
 pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, const vector<bool> &id_ref, uint32_t A = 0) { // Complexity: O(n)
-    vector<uint32_t> _t; // Initialize '_t'
+    vector<uint32_t> q; // Initialize support vector
     uint32_t root = 0; // Initialize root
-    uint32_t n = (t.size()+2)/4; // Number of nodes
+    uint32_t n = (t.size()+2)/4; // Number of nodes of 't'
     if (!A) A = floor(log2(n)); // If 'A' is not given
-    int64_t i = t.size() - 2; // Initialize vector pointer
+    // Step 1 - cover 't': O(n)
+    int64_t i = t.size() - 1; // Initialize vector pointer
     uint32_t p = t.size(), nc = 0;
     while (i >= 0) { // While pointer is valid
         if (id_ref[i]) { // If the current element on 'id_ref' equals 1 (i.e. there is a node with this ID on 't')
@@ -170,15 +171,30 @@ pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, const vector<bool> &i
             }
             if (size >= A || i == 0) { // If PCS is big enough
                 t[i] |= cov_el; // Mark it as cover element
-                uint32_t id = _t.size(); // ID of the new node
-                _t.pb(0); // Number of children // NO IDEA HOW TO KNOW CHILDREN NUMBER AND IDS
-                _t.pb(id); // Parent ID
-                _t.pb(size); // Size of treelet
-                _t.pb(i); // Treelet root ID reference on 't' (i.e. alpha function)
-                // for (uint32_t j = 0; j < C; j++) { // For each of its children
-                    //
-                // }
-            } else t[p+3+nc*2] = size; // Set size
+                q.pb(size); // Size of treelet
+                q.pb(i); // Treelet root ID reference on 't' (i.e. alpha function)
+            } else t[p+2*nc+3] = size; // Set size
+        }
+        i--; // Decrement pointer
+    }
+    // Step 2 - build '_t' base structure: O(n)
+    uint32_t M = q.size()/2, pos = M-4, j = 0; // Pointers
+    vector<uint32_t> _t = vector<uint32_t>(M); // Initialize '_t'
+    i = t.size() - 2; p = t.size(); nc = 0; // Reinizialize pointers
+    while (i >= 0) { // Navigate 't'
+        if (id_ref[i]) {
+            nc = ((t[i+1] != p)? (t[t[i+1]]&num_c)-1 : nc-1); // Child's number
+            p = t[i+1]; // Parent
+            uint32_t c = 0;
+            for (uint32_t k = 0; k < (t[i]&num_c); k++) c += t[i+2*k+3];
+            if (t[i]&cov_el) { // If there is a cover element
+                pos -= 3*c;
+                _t[pos] = c;
+                _t[pos+2] = q[j];
+                _t[pos+3] = q[j+1];
+                pos -= 4; j += 2;
+                t[p+2*nc+3] = 1;
+            } else t[p+2*nc+3] = c;
         }
         i--; // Decrement pointer
     }
