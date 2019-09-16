@@ -604,7 +604,7 @@ inline string print(const vector<uint32_t> &t) { // Complexity: O(n)
     return os.str(); // Return stream content as a string
 }
 
-// Conver the representation of centroid tree from vector<uint32_t> to string
+// Convert the representation of centroid tree from vector<uint32_t> to string
 // @param ct: centroid tree
 // @return string representation of centroid tree
 inline string ctToString(const vector<uint32_t> &ct) { // Complexity: O(n)

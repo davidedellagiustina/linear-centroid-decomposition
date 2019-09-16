@@ -2,7 +2,7 @@
 using namespace std;
 
 /*
- * PERFORM CENTROID DECOMPOSITION IN LINEAR TIME
+ * PERFORM CENTROID DECOMPOSITION IN O(n) TIME
  */
 
 // Settings

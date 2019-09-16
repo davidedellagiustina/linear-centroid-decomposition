@@ -20,47 +20,35 @@ inline string printDuration(const uint64_t duration) {
 }
 
 // Perform standard centroid decomposition
-inline uint32_t nlognCD(const string &tree, const bool &check) { // Complexity: O(n*log(n))
+inline uint32_t nlognCD(vector<uint32_t> &t, const bool &check) { // Complexity: O(n*log(n))
     chrono::high_resolution_clock::time_point t1 = getTime();
-    uint32_t n = tree.length() / 2;
-    vector<uint32_t> t, t_copy;
+    uint32_t n = (t.size() + 2) / 4;
+    vector<uint32_t> t_copy, ct;
     vector<bool> id_ref;
-    try {
-        t = buildTree(tree);
-    } catch (const char* err) {
-        cout << err << nl;
-        return 0;
-    }
     id_ref = buildIdRef(t);
     computeSizes(t, id_ref);
     if (check) t_copy = t;
-    string ctree = stdCentroidDecomposition(t);
+    ct = stdCentroidDecomposition(t);
     uint32_t time = chrono::duration_cast<chrono::microseconds>(getTime()-t1).count();
-    if (check) cerr << "O(n*log(n)) - " << n << " nodes - correct: " << ((checkCorrectness(t_copy, ctree))? "true" : "false") << nl;
+    if (check) cerr << "O(n*log(n)) - " << n << " nodes - correct: " << ((checkCorrectness(t_copy, ct))? "true" : "false") << nl;
     return time;
 }
 
 // Perform linear centroid decomposition
-inline uint32_t nCD(const string &tree, const bool &check, const uint32_t &A, const uint32_t &B) { // Complexity: O(n)
+inline uint32_t nCD(vector<uint32_t> &t, const bool &check, const uint32_t &A, const uint32_t &B) { // Complexity: O(n)
     chrono::high_resolution_clock::time_point t1 = getTime();
-    uint32_t n = tree.length() / 2;
-    vector<uint32_t> t, t_copy, _t;
+    uint32_t n = (t.size() + 2) / 4;
+    vector<uint32_t> t_copy, _t, ct;
     vector<bool> id_ref;
     uint32_t _t_root;
-    try {
-        t = buildTree(tree);
-    } catch (const char* err) {
-        cout << err << nl;
-        return 0;
-    }
     id_ref = buildIdRef(t);
     computeSizes(t, id_ref);
     if (check) t_copy = t;
     pair<uint32_t,vector<uint32_t>> tmp = cover_old(t, A);
     _t_root = tmp.first; _t = tmp.second;
-    string ctree = centroidDecomposition(t, _t_root, _t, B);
+    ct = centroidDecomposition(t, _t_root, _t, B);
     uint32_t time = chrono::duration_cast<chrono::microseconds>(getTime()-t1).count();
-    if (check) cerr << "O(n) - " << n << " nodes - correct: " << ((checkCorrectness(t_copy, ctree))? "true" : "false") << nl;
+    if (check) cerr << "O(n) - " << n << " nodes - correct: " << ((checkCorrectness(t_copy, ct))? "true" : "false") << nl;
     return time;
 }
 
@@ -74,6 +62,7 @@ uint32_t B = 0; // 'B' parameter
 
 // Global variables
 string tree;
+vector<uint32_t> t;
 
 // Main function
 int main() {
@@ -83,8 +72,14 @@ int main() {
             // Generate random tree
             system(("tree_gen/random " + to_string(n) + " > tree.txt").c_str()); // Generate random tree
             ifstream in("tree.txt"); in >> tree; in.close(); // Load generated tree
-            time_1 += nlognCD(tree, check); // Perform O(n*log(n)) centroid decomposition
-            time_2 += nCD(tree, check, A, B); // Perform O(n) centroid decomposition
+            try {
+                t = buildTree(tree); // Build tree (minimal representation)
+            } catch (const char* err) {
+                cout << err << nl;
+                return 0;
+            }
+            time_1 += nlognCD(t, check); // Perform O(n*log(n)) centroid decomposition
+            time_2 += nCD(t, check, A, B); // Perform O(n) centroid decomposition
         }
         time_1 /= 5; time_2 /= 5; // Compute average of 5 times (1 and 2)
         cout << "O(n*log(n)) - " << n << " nodes - time: " << time_1 << " -  formatted: " << printDuration(time_1) << nl; // Output average duration for O(n*log(n)) algorithm
