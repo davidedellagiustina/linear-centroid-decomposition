@@ -71,8 +71,8 @@ int main(int argc, char* argv[]) { // Complexity: O(n)
 	// Tree covering
 	chrono::high_resolution_clock::time_point t2 = getTime();
 	// pair<uint32_t,vector<uint32_t>> tmp = cover_old(t, A);
-	pair<uint32_t,vector<uint32_t>> tmp = cover(t, id_ref, A); // FUTURE FASTER VERSION
-	_t_root = tmp.first; _t = tmp.second;
+	// _t_root = tmp.first; _t = tmp.second;
+	_t = cover(t, id_ref, A);
 	cout << print(_t) << nl;
 	// cout << printTime(" - Tree covering", t2, getTime()) << nl;
 	// // Compute partial sizes on't'

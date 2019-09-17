@@ -148,57 +148,108 @@ pair<uint32_t,vector<uint32_t>> cover_old(vector<uint32_t> &t, uint32_t A = 0) {
 }
 
 // Cover 't' and build '_t'
-// Note: 'computeSizes()' must be called after 'cover()'
+// Note: 'computeSizes()' souldn't be called: this procedure already computes those sizes
 // @param t: tree structure
 // @param id_ref: reference bitvector
 // @param A: minimum size of cover elements - log(n) if not given
-// @return '_t' and its root ID
-pair<uint32_t,vector<uint32_t>> cover(vector<uint32_t> &t, const vector<bool> &id_ref, uint32_t A = 0) { // Complexity: O(n)
-    vector<uint32_t> q; // Initialize support vector
-    uint32_t root = 0; // Initialize root
+// @return '_t'
+vector<uint32_t> cover(vector<uint32_t> &t, const vector<bool> &id_ref, uint32_t A = 0) { // Complexity: O(n)
     uint32_t n = (t.size()+2)/4; // Number of nodes of 't'
     if (!A) A = floor(log2(n)); // If 'A' is not given
-    // Step 1 - cover 't': O(n)
-    int64_t i = t.size() - 1; // Initialize vector pointer
+    uint32_t k = ceil(n/A)+1; // Upper-bound of '_t' nodes
+    vector<uint32_t> X = vector<uint32_t>(n);
+    vector<tuple<uint32_t,uint32_t,uint32_t,uint32_t>> q = vector<tuple<uint32_t,uint32_t,uint32_t,uint32_t>>(k); // Fields: depth, pre_ord, size, t_node
+    uint32_t q_ptr = q.size()-1;
+    // Step 1 - bottom-up visit: O(n)
+    int64_t i = t.size() - 1;
     uint32_t p = t.size(), nc = 0;
-    while (i >= 0) { // While pointer is valid
-        if (id_ref[i]) { // If the current element on 'id_ref' equals 1 (i.e. there is a node with this ID on 't')
-            nc = ((t[i+1] != p)? (t[t[i+1]]&num_c)-1 : nc-1); // Update child's number
-            p = t[i+1]; // Update parent
-            uint32_t size = 1; // Size of subtree rooted at 'i'
-            for (uint32_t j = 0; j < (t[i]&num_c); j++) { // For each of its children
-                if (!(t[t[i+2*j+2]]&cov_el)) size += t[i+2*j+3]; // Size of the child
+    auto x = (uint8_t*)X.data();
+    uint32_t x1_ptr = 0, x2_ptr = 0; // 'x1_ptr' is at level L, 'x2_ptr' is at level L+1
+    while (i >= 0) {
+        if (id_ref[i]) { 
+            nc = ((t[i+1] != p)? (t[t[i+1]]&num_c)-1 : nc-1);
+            p = t[i+1];
+            // Compute total and partial sizes
+            if (i != 0) t[p+2*nc+3] = 1;
+            uint32_t size = 1;
+            for (uint32_t j = 0; j < (t[i]&num_c); j++) {
+                if (i != 0) t[p+2*nc+3] += t[i+2*j+3];
+                size += x[x2_ptr];
+                x2_ptr++;
             }
-            if (size >= A || i == 0) { // If PCS is big enough
-                t[i] |= cov_el; // Mark it as cover element
-                q.pb(size); // Size of treelet
-                q.pb(i); // Treelet root ID reference on 't' (i.e. alpha function)
-            } else t[p+2*nc+3] = size; // Set size
+            // Create cover element
+            if (size >= A || i == 0) {
+                t[i] |= cov_el;
+                std::get<2>(q[q_ptr]) = size;
+                std::get<3>(q[q_ptr]) = i;
+                q_ptr--;
+            } else x[x1_ptr] = size;
+            // Increment pointers
+            x1_ptr++;
         }
-        i--; // Decrement pointer
+        i--;
     }
-    // Step 2 - build '_t' base structure: O(n)
-    uint32_t m = q.size()/2, M = (7*m)-3, pos = M-4, j = 0; // Pointers
-    vector<uint32_t> _t = vector<uint32_t>(M); // Initialize '_t'
-    i = t.size() - 2; p = t.size(); nc = 0; // Reinizialize pointers
-    while (i >= 0) { // Navigate 't'
-        if (id_ref[i]) {
-            nc = ((t[i+1] != p)? (t[t[i+1]]&num_c)-1 : nc-1); // Child's number
-            p = t[i+1]; // Parent
-            uint32_t c = 0;
-            for (uint32_t k = 0; k < (t[i]&num_c); k++) c += t[i+2*k+3];
-            if (t[i]&cov_el) { // If there is a cover element
-                pos -= 3*c;
-                _t[pos] = c;
-                _t[pos+2] = q[j];
-                _t[pos+3] = q[j+1];
-                pos -= 4; j += 2;
-                t[p+2*nc+3] = 1;
-            } else t[p+2*nc+3] = c;
+    // Step 2 - top-down visit: O(n)
+    i = 0; p = 0; q_ptr++;
+    X[0] = 0;
+    uint32_t p_depth, pre_ord, X0_ptr = 0, X1_ptr = 0, X2_ptr = 1;
+    while (i < t.size()) {
+        if (t[i+1] != p) X0_ptr++;
+        p_depth = X[X0_ptr];
+        p = t[i+1];
+        pre_ord = X[X1_ptr];
+        // Save 'pre_ord' for node 'i' if it is marked as cover element
+        uint32_t z = 0;
+        if (t[i]&cov_el) {
+            z = 1;
+            std::get<1>(q[q_ptr]) = pre_ord;
         }
-        i--; // Decrement pointer
+        // Compute and save 'pre_ord' for i's chilren
+        uint32_t s = 1 + pre_ord;
+        for (uint32_t j = 0; j < (t[i]&num_c); j++) {
+            X[X2_ptr] = s;
+            s += t[i+2*j+3];
+            X2_ptr++;
+        }
+        // Compute and save 'depth' for node 'i'
+        X[X1_ptr] = p_depth + z;
+        if (t[i]&cov_el) {
+             std::get<0>(q[q_ptr]) = X[X1_ptr];
+             q_ptr++;
+        }
+        // Update variables
+        X1_ptr++;
+        i += 2*(t[i]&num_c)+2;
     }
-    return make_pair(root, _t); // Return both 'root' and '_t'
+    // Step 3 - build T'': O(n/log(n))
+    std::sort(q.begin(), q.end());
+    uint32_t q1_ptr = 0, q2_ptr; while (std::get<2>(q[q1_ptr]) == 0) q1_ptr++; q2_ptr = q1_ptr + 1;
+    uint32_t m = q.size() - q1_ptr; // Number of nodes of '_t'
+    vector<uint32_t> _t = vector<uint32_t>(7*m-3);
+    i = 0;
+    while (i < _t.size()) {
+        _t[i+2] = std::get<2>(q[q1_ptr]);
+        _t[i+3] = std::get<3>(q[q1_ptr]);
+        i += 4;
+        nc = 0;
+        if (q1_ptr+1 < q.size()) {
+            if (std::get<0>(q[q1_ptr+1]) > std::get<0>(q[q1_ptr])) {
+                uint32_t l = std::get<0>(q[q2_ptr]);
+                while (std::get<0>(q[q2_ptr]) == l) {
+                    nc++; q2_ptr++;
+                    i += 3;
+                }
+            } else {
+                while (std::get<1>(q[q2_ptr]) < std::get<1>(q[q1_ptr+1])) {
+                    nc++; q2_ptr++;
+                    i += 3;
+                }
+            }
+        }
+        _t[i-3*nc-4] = nc;
+        q1_ptr++;
+    }
+    return _t;
 }
 
 /*

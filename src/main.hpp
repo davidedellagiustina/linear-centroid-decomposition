@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <tuple>
 #include <vector>
 #include <stack>
 #include <chrono>
