@@ -195,7 +195,7 @@ vector<uint32_t> cover(vector<uint32_t> &t, const vector<bool> &id_ref, uint32_t
     uint32_t p_depth = 0, pre_ord, X0_ptr = 0, X1_ptr = 0, X2_ptr = 1;
     while (i < t.size()) {
         k = p + 2*(t[p]&num_c) + 2;
-        X0_ptr += ((t[i+1] != p)? ((t[i+1] == k)? 1 : ((t[i+1]-k)/2)+1) : 0);
+        X0_ptr += ((t[i+1] != p)? (t[i+1]-k+2)/2 : 0);
         p_depth = ((t[i+1] != p || t[i+1] == 0)? X[X0_ptr] : p_depth);
         p = t[i+1];
         pre_ord = X[X1_ptr];
@@ -260,7 +260,7 @@ vector<uint32_t> cover(vector<uint32_t> &t, const vector<bool> &id_ref, uint32_t
         }
         i += 3*_t[i]+4;
     }
-    for (auto el : _t) cout << el << " "; cout << nl;
+    // for (auto el : _t) cout << el << " "; cout << nl;
     return _t;
 }
 
