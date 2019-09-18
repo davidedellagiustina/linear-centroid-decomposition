@@ -70,23 +70,17 @@ int main(int argc, char* argv[]) { // Complexity: O(n)
 	cout << printTime(" - T reference bitvector building", t1, getTime()) << nl;
 	// Tree covering
 	chrono::high_resolution_clock::time_point t2 = getTime();
-	// pair<uint32_t,vector<uint32_t>> tmp = cover_old(t, A);
-	// _t_root = tmp.first; _t = tmp.second;
 	_t = cover(t, id_ref, A);
-	cout << print(_t) << nl;
-	// cout << printTime(" - Tree covering", t2, getTime()) << nl;
-	// // Compute partial sizes on't'
-    // chrono::high_resolution_clock::time_point t3 = getTime();
-    // computeSizes(t, id_ref);
-    // cout << printTime(" - Computing partial sizes", t3, getTime()) << nl;
-	// cout << printTime(" - Total structure building", t1, getTime()) << nl; // Total time
-	// // Copy structures
-	// if (check) t_copy = t;
-    // // Perform centroid decomposition: O(n)
-    // t1 = getTime();
-    // ct = centroidDecomposition(t, _t_root, _t, B);
-    // cout << printTime(" - Linear centroid decomposition", t1, getTime()) << nl;
-    // if(check) cout << "Correct: " << ((checkCorrectness(t_copy, ct))? "true" : "false") << nl; // Correctness check
-    // if (print_output) cout << "Output: " << ctToString(ct) << nl; // Print output
+	// cout << print(_t) << nl;
+	cout << printTime(" - Tree covering and partial sizes", t2, getTime()) << nl;
+	cout << printTime(" - Total structure building", t1, getTime()) << nl; // Total time
+	// Copy structures
+	if (check) t_copy = t;
+    // Perform centroid decomposition: O(n)
+    t1 = getTime();
+    ct = centroidDecomposition(t, _t, B);
+    cout << printTime(" - Linear centroid decomposition", t1, getTime()) << nl;
+    if(check) cout << "Correct: " << ((checkCorrectness(t_copy, ct))? "true" : "false") << nl; // Correctness check
+    if (print_output) cout << "Output: " << ctToString(ct) << nl; // Print output
     return 0;
 }

@@ -166,14 +166,14 @@ vector<uint32_t> cover(vector<uint32_t> &t, const vector<bool> &id_ref, uint32_t
     auto x = (uint8_t*)X.data();
     uint32_t x1_ptr = 0, x2_ptr = 0; // 'x1_ptr' is at level L, 'x2_ptr' is at level L+1
     while (i >= 0) {
-        if (id_ref[i]) { 
+        if (id_ref[i]) {
             nc = ((t[i+1] != p)? (t[t[i+1]]&num_c)-1 : nc-1);
             p = t[i+1];
             // Compute total and partial sizes
-            if (i != 0) t[p+2*nc+3] = 1;
+            t[p+2*nc+3] = ((i != 0)? 1 : t[p+2*nc+3]);
             uint32_t size = 1;
             for (uint32_t j = 0; j < (t[i]&num_c); j++) {
-                if (i != 0) t[p+2*nc+3] += t[i+2*j+3];
+                t[p+2*nc+3] += ((i != 0)? t[i+2*j+3] : 0);
                 size += x[x2_ptr];
                 x2_ptr++;
             }
@@ -192,10 +192,11 @@ vector<uint32_t> cover(vector<uint32_t> &t, const vector<bool> &id_ref, uint32_t
     // Step 2 - top-down visit: O(n)
     i = 0; p = 0; q_ptr++;
     X[0] = 0;
-    uint32_t p_depth, pre_ord, X0_ptr = 0, X1_ptr = 0, X2_ptr = 1;
+    uint32_t p_depth = 0, pre_ord, X0_ptr = 0, X1_ptr = 0, X2_ptr = 1;
     while (i < t.size()) {
-        if (t[i+1] != p) X0_ptr++;
-        p_depth = X[X0_ptr];
+        k = p + 2*(t[p]&num_c) + 2;
+        X0_ptr += ((t[i+1] != p)? ((t[i+1] == k)? 1 : ((t[i+1]-k)/2)+1) : 0);
+        p_depth = ((t[i+1] != p || t[i+1] == 0)? X[X0_ptr] : p_depth);
         p = t[i+1];
         pre_ord = X[X1_ptr];
         // Save 'pre_ord' for node 'i' if it is marked as cover element
@@ -204,7 +205,7 @@ vector<uint32_t> cover(vector<uint32_t> &t, const vector<bool> &id_ref, uint32_t
             z = 1;
             std::get<1>(q[q_ptr]) = pre_ord;
         }
-        // Compute and save 'pre_ord' for i's chilren
+        // Compute and save 'pre_ord' for i's children
         uint32_t s = 1 + pre_ord;
         for (uint32_t j = 0; j < (t[i]&num_c); j++) {
             X[X2_ptr] = s;
@@ -221,7 +222,7 @@ vector<uint32_t> cover(vector<uint32_t> &t, const vector<bool> &id_ref, uint32_t
         X1_ptr++;
         i += 2*(t[i]&num_c)+2;
     }
-    // Step 3 - build T'': O(n/log(n))
+    // Step 3 - build basic T'': O(n/log(n))
     std::sort(q.begin(), q.end());
     uint32_t q1_ptr = 0, q2_ptr; while (std::get<2>(q[q1_ptr]) == 0) q1_ptr++; q2_ptr = q1_ptr + 1;
     uint32_t m = q.size() - q1_ptr; // Number of nodes of '_t'
@@ -234,8 +235,8 @@ vector<uint32_t> cover(vector<uint32_t> &t, const vector<bool> &id_ref, uint32_t
         nc = 0;
         if (q1_ptr+1 < q.size()) {
             if (std::get<0>(q[q1_ptr+1]) > std::get<0>(q[q1_ptr])) {
-                uint32_t l = std::get<0>(q[q2_ptr]);
-                while (std::get<0>(q[q2_ptr]) == l) {
+                uint32_t l = std::get<0>(q[q1_ptr+1]);
+                while (q2_ptr < q.size() && std::get<0>(q[q2_ptr]) == l) {
                     nc++; q2_ptr++;
                     i += 3;
                 }
@@ -249,6 +250,17 @@ vector<uint32_t> cover(vector<uint32_t> &t, const vector<bool> &id_ref, uint32_t
         _t[i-3*nc-4] = nc;
         q1_ptr++;
     }
+    // Step 4 - compute parent-children pointers: O(n/log(n))
+    i = 0;
+    uint32_t j = 3*_t[i]+4;
+    while (i < _t.size()) {
+        for (uint32_t k = 0; k < _t[i]; k++) {
+            _t[i+3*k+4] = j; _t[j+1] = i;
+            j += 3*_t[j]+4;
+        }
+        i += 3*_t[i]+4;
+    }
+    for (auto el : _t) cout << el << " "; cout << nl;
     return _t;
 }
 
@@ -475,21 +487,21 @@ inline pair<uint32_t,uint32_t> findCentroid(const vector<uint32_t> &t, const vec
 
 // New centroid decomposition algorithm
 // @param t: tree structure
-// @param _t_root: ID of the root of '_t'
 // @param _t: '_t' tree structure
 // @param B: maximum size when to apply standard centroid decomposition - (log(n))^3 if not given
 // @return vector representation of the centroid tree
-vector<uint32_t> centroidDecomposition(vector<uint32_t> &t, const uint32_t _t_root, vector<uint32_t> &_t, uint32_t B = 0) { // Complexity: O(n)
+vector<uint32_t> centroidDecomposition(vector<uint32_t> &t, vector<uint32_t> &_t, uint32_t B = 0) { // Complexity: O(n)
     uint32_t N = (t.size()+2)/4; // Nuber of nodes
     if (!B) B = pow(floor(log2(N)), 3); // If 'B' is not given
     vector<uint32_t> out = vector<uint32_t>(3*N, 0); // Initialize output vector
     uint32_t pos = 0; // Output vector pointer
-    stack<uint32_t> s, noc; s.push(_t_root); // Stack with roots of subtrees yet to process
+    stack<uint32_t> s, noc; s.push(0); // Stack with roots of subtrees yet to process
     while (!s.empty()) { // While stack is not empty
         uint32_t root = s.top(); s.pop(); // Get root from stack
         uint32_t dimens = 1; // Initialize 'dimens'
         for (uint32_t i = 0; i < (t[_t[root+3]]&num_c); i++) dimens += t[_t[root+3]+2*i+3]; // Compute 'dimens'
         if (dimens > B) { // If 'dimens' is bigger than 'B'
+            computeDeltas(t, _t, root); // COmpute deltas of connected component
             pair<uint32_t,uint32_t> centroid = findCentroid(t, _t, root); // Find centroid of subtree with root 'root'
             uint32_t _tc = centroid.first, tc = centroid.second; // Parse centroid nodes on 't' and '_t'
             rmNodeOnT(t, tc); // Remove node 'tc' from 't'
@@ -535,7 +547,6 @@ vector<uint32_t> centroidDecomposition(vector<uint32_t> &t, const uint32_t _t_ro
                         }
                     }
                 }
-                computeDeltas(t, _t, new_node); // Then compute the deltas of the newly created connected component
                 s.push(new_node); // Eventually push the root of the new connected component to the stack
             }
             // If necessary, update nodes on '_t' for 'tc's parent
@@ -555,7 +566,6 @@ vector<uint32_t> centroidDecomposition(vector<uint32_t> &t, const uint32_t _t_ro
                 }
             }
             if (t[tc+1] != tc) { // If centroid on 't' has a parent
-                computeDeltas(t, _t, root); // Then compute deltas of the generated connected component
                 s.push(root); // And push it to stack
                 nc++; // Eventually increment 'nc'
             }
