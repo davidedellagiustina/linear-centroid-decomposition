@@ -71,7 +71,6 @@ int main(int argc, char* argv[]) { // Complexity: O(n)
 	// Tree covering
 	chrono::high_resolution_clock::time_point t2 = getTime();
 	_t = cover(t, id_ref, A);
-	// cout << print(_t) << nl;
 	cout << printTime(" - Tree covering and partial sizes", t2, getTime()) << nl;
 	cout << printTime(" - Total structure building", t1, getTime()) << nl; // Total time
 	// Copy structures

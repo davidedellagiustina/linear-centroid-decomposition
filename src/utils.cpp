@@ -155,8 +155,8 @@ pair<uint32_t,vector<uint32_t>> cover_old(vector<uint32_t> &t, uint32_t A = 0) {
 // @return '_t'
 vector<uint32_t> cover(vector<uint32_t> &t, const vector<bool> &id_ref, uint32_t A = 0) { // Complexity: O(n)
     uint32_t n = (t.size()+2)/4; // Number of nodes of 't'
-    if (!A) A = floor(log2(n)); // If 'A' is not given
-    uint32_t k = ceil(n/A)+1; // Upper-bound of '_t' nodes
+    if (!A) A = floor(log2(n))+1; // If 'A' is not given
+    uint32_t k = n/A+(n%A==0?0:1)+1; // Upper-bound of '_t' nodes
     vector<uint32_t> X = vector<uint32_t>(n);
     vector<tuple<uint32_t,uint32_t,uint32_t,uint32_t>> q = vector<tuple<uint32_t,uint32_t,uint32_t,uint32_t>>(k); // Fields: depth, pre_ord, size, t_node
     uint32_t q_ptr = q.size()-1;
@@ -241,7 +241,7 @@ vector<uint32_t> cover(vector<uint32_t> &t, const vector<bool> &id_ref, uint32_t
                     i += 3;
                 }
             } else {
-                while (std::get<1>(q[q2_ptr]) < std::get<1>(q[q1_ptr+1])) {
+                while (q2_ptr < q.size() && std::get<1>(q[q2_ptr]) < std::get<1>(q[q1_ptr+1])) {
                     nc++; q2_ptr++;
                     i += 3;
                 }
