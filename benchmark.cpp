@@ -40,13 +40,10 @@ inline uint32_t nCD(vector<uint32_t> &t, const bool &check, const uint32_t &A, c
     uint32_t n = (t.size() + 2) / 4;
     vector<uint32_t> t_copy, _t, ct;
     vector<bool> id_ref;
-    uint32_t _t_root;
     id_ref = buildIdRef(t);
-    computeSizes(t, id_ref);
+	_t = cover(t, id_ref, A);
     if (check) t_copy = t;
-    pair<uint32_t,vector<uint32_t>> tmp = cover_old(t, A);
-    _t_root = tmp.first; _t = tmp.second;
-    ct = centroidDecomposition(t, _t_root, _t, B);
+    ct = centroidDecomposition(t, _t, B);
     uint32_t time = chrono::duration_cast<chrono::microseconds>(getTime()-t1).count();
     if (check) cerr << "O(n) - " << n << " nodes - correct: " << ((checkCorrectness(t_copy, ct))? "true" : "false") << nl;
     return time;
