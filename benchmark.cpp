@@ -20,7 +20,7 @@ inline string printDuration(const uint64_t duration) {
 }
 
 // Perform standard centroid decomposition
-inline uint32_t nlognCD(vector<uint32_t> &t, const bool &check) { // Complexity: O(n*log(n))
+inline uint32_t nlognCD(vector<uint32_t> t, const bool &check) { // Complexity: O(n*log(n))
     chrono::high_resolution_clock::time_point t1 = getTime();
     uint32_t n = (t.size() + 2) / 4;
     vector<uint32_t> t_copy, ct;
@@ -35,7 +35,7 @@ inline uint32_t nlognCD(vector<uint32_t> &t, const bool &check) { // Complexity:
 }
 
 // Perform linear centroid decomposition
-inline uint32_t nCD(vector<uint32_t> &t, const bool &check, const uint32_t &A, const uint32_t &B) { // Complexity: O(n)
+inline uint32_t nCD(vector<uint32_t> t, const bool &check, const uint32_t &A, const uint32_t &B) { // Complexity: O(n)
     chrono::high_resolution_clock::time_point t1 = getTime();
     uint32_t n = (t.size() + 2) / 4;
     vector<uint32_t> t_copy, _t, ct;
@@ -61,7 +61,7 @@ uint32_t B = 0; // 'B' parameter
 string tree;
 vector<uint32_t> t;
 
-// Main function
+// Main
 int main() {
     for (uint32_t n = start; n <= stop; n += step) {
         uint32_t time_1 = 0, time_2 = 0;
@@ -77,6 +77,7 @@ int main() {
             }
             time_1 += nlognCD(t, check); // Perform O(n*log(n)) centroid decomposition
             time_2 += nCD(t, check, A, B); // Perform O(n) centroid decomposition
+            cout << "si" << nl;
         }
         time_1 /= 5; time_2 /= 5; // Compute average of 5 times (1 and 2)
         cout << "O(n*log(n)) - " << n << " nodes - time: " << time_1 << " -  formatted: " << printDuration(time_1) << nl; // Output average duration for O(n*log(n)) algorithm
