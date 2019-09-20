@@ -82,7 +82,7 @@ vector<bool> buildIdRef(const vector<uint32_t> &t) { // Complexity: O(n)
 // Compute the initial sizes of the tree
 // @param t: tree structure
 // @param id_ref: reference bitvector
-void computeSizes(vector<uint32_t> &t, vector<bool> &id_ref) { // Complexity: O(n)
+void computeSizes(vector<uint32_t> &t, const vector<bool> &id_ref) { // Complexity: O(n)
     uint32_t i = t.size() - 2; // Initialize vector pointer (last node has ID 't.size()-2')
     uint32_t p = t.size(); // Parent of current node (invalid at the beginning)
     uint32_t nc = 0; // Current node is the 'nc'-th child of its parent
@@ -95,56 +95,10 @@ void computeSizes(vector<uint32_t> &t, vector<bool> &id_ref) { // Complexity: O(
             uint32_t size = 1; // Size of subtree rooted at 'i'
             for (uint32_t j = 0; j < (t[i]&num_c); j++) // For each of its children
                 size += t[i+2*j+3]; // Size of the child
-            t[p+3+nc*2] = size; // Set size
+            t[p+2*nc+3] = size; // Set size
         }
         i--; // Decrement pointer
     }
-}
-
-// Cover 't' and build '_t'
-// @param t: tree structure
-// @param A: minimum size of cover elements - log(n) if not given
-// @return '_t' and its root ID
-pair<uint32_t,vector<uint32_t>> cover_old(vector<uint32_t> &t, uint32_t A = 0) { // Complexity: O(n)
-    uint32_t n = (t.size()+2)/4; // Number of nodes
-    vector<uint32_t> _t; // Initialize '_t'
-    if (!A) A = floor(log2(n)); // If 'A' is not given
-    uint32_t i = 0, p = t[i+1], root;
-    stack<uint32_t> nc, sizes, pcs_c, noc;
-    nc.push(t[i]&num_c); sizes.push(0); noc.push(0);
-    while (i != 0 || !nc.empty()) {
-        if (nc.top() > 0) { // If node 'i' has still children to visit
-            i = t[i+2*nc.top()]; p = t[i+1]; // Visit 'nc.top()'-th children of 'i'
-            nc.top()--; // Decrement number of children yet to visit
-            nc.push(t[i]&num_c); sizes.push(0); noc.push(0);
-        } else { // If all 'i' children have been visited
-            nc.pop();
-            uint32_t size = sizes.top() + 1; sizes.pop(); // Size of PCS
-            uint32_t c = noc.top(); noc.pop(); // Number of children on '_t'
-            if (size >= A || i == 0) {  // If PCS is big enough or it is the root of the tree (i.e. node 0)
-                t[i] |= cov_el; // Mark it as cover element
-                uint32_t id = _t.size(); // ID on '_t'
-                _t.pb(c); // Number of children
-                _t.pb(id); // Parent ID
-                _t.pb(size); // Size of treelet
-                _t.pb(i); // Treelet root ID reference on 't'
-                for (uint32_t j = 0; j < c; j++) { // For each of its children
-                    _t[pcs_c.top()+1] = id; // Update child's parent
-                    _t.pb(pcs_c.top()); // Child ID
-                    _t.pb(_t[pcs_c.top()+2]); // Initialize delta_1
-                    for (uint32_t k = 0; k < _t[pcs_c.top()]; k++) _t.back() += _t[pcs_c.top()+3*k+5]; // Compute delta_1
-                    _t.pb(n-_t.back()); // Delta_2
-                    pcs_c.pop();
-                }
-                root = id; pcs_c.push(id); // Last node added on '_t' is its root
-                if (!noc.empty()) noc.top()++;
-            } else { // If PCS is smaller than 'A'
-                sizes.top() += size; noc.top() += c;
-            }
-            i = p; p = t[i+1]; // Navigate to parent
-        }
-    }
-    return make_pair(root, _t); // Return both '_t' and its root ID
 }
 
 // Cover 't' and build '_t'
@@ -154,12 +108,12 @@ pair<uint32_t,vector<uint32_t>> cover_old(vector<uint32_t> &t, uint32_t A = 0) {
 // @param A: minimum size of cover elements - log(n) if not given
 // @return '_t'
 vector<uint32_t> cover(vector<uint32_t> &t, const vector<bool> &id_ref, uint32_t A = 0) { // Complexity: O(n)
-    uint32_t n = (t.size()+2)/4; // Number of nodes of 't'
-    if (!A) A = floor(log2(n))+1; // If 'A' is not given
-    uint32_t k = n/A+(n%A==0?0:1)+1; // Upper-bound of '_t' nodes
+    uint32_t n = (t.size() + 2) / 4; // Number of nodes of 't'
+    A = ((!A)? ((n <= 1)? 1 : floor(log2(n))) : A); // If A is not given
+    uint32_t k = n/A + ((n%A == 0)? 0 : 1) + 1; // Upper-bound of '_t' nodes
     vector<uint32_t> X = vector<uint32_t>(n);
     vector<tuple<uint32_t,uint32_t,uint32_t,uint32_t>> q = vector<tuple<uint32_t,uint32_t,uint32_t,uint32_t>>(k); // Fields: depth, pre_ord, size, t_node
-    uint32_t q_ptr = q.size()-1;
+    uint32_t q_ptr = q.size() - 1;
     // Step 1 - bottom-up visit: O(n)
     int64_t i = t.size() - 1;
     uint32_t p = t.size(), nc = 0;
@@ -172,8 +126,8 @@ vector<uint32_t> cover(vector<uint32_t> &t, const vector<bool> &id_ref, uint32_t
             // Compute total and partial sizes
             t[p+2*nc+3] = ((i != 0)? 1 : t[p+2*nc+3]);
             uint32_t size = 1;
-            for (uint32_t j = 0; j < (t[i]&num_c); j++) {
-                t[p+2*nc+3] += ((i != 0)? t[i+2*j+3] : 0);
+            for (uint32_t j = (t[i]&num_c); j > 0; j--) {
+                t[p+2*nc+3] += ((i != 0)? t[i+2*j+1] : 0);
                 size += x[x2_ptr];
                 x2_ptr++;
             }
@@ -183,6 +137,7 @@ vector<uint32_t> cover(vector<uint32_t> &t, const vector<bool> &id_ref, uint32_t
                 std::get<2>(q[q_ptr]) = size;
                 std::get<3>(q[q_ptr]) = i;
                 q_ptr--;
+                x[x1_ptr] = 0;
             } else x[x1_ptr] = size;
             // Increment pointers
             x1_ptr++;
@@ -199,12 +154,6 @@ vector<uint32_t> cover(vector<uint32_t> &t, const vector<bool> &id_ref, uint32_t
         p_depth = ((t[i+1] != p || t[i+1] == 0)? X[X0_ptr] : p_depth);
         p = t[i+1];
         pre_ord = X[X1_ptr];
-        // Save 'pre_ord' for node 'i' if it is marked as cover element
-        uint32_t z = 0;
-        if (t[i]&cov_el) {
-            z = 1;
-            std::get<1>(q[q_ptr]) = pre_ord;
-        }
         // Compute and save 'pre_ord' for i's children
         uint32_t s = 1 + pre_ord;
         for (uint32_t j = 0; j < (t[i]&num_c); j++) {
@@ -212,12 +161,16 @@ vector<uint32_t> cover(vector<uint32_t> &t, const vector<bool> &id_ref, uint32_t
             s += t[i+2*j+3];
             X2_ptr++;
         }
-        // Compute and save 'depth' for node 'i'
-        X[X1_ptr] = p_depth + z;
+        // Save 'pre_ord' for node 'i' if it is marked as cover element
+        // Then compute and save 'depth' for node 'i'
+        uint32_t z = 0;
         if (t[i]&cov_el) {
-             std::get<0>(q[q_ptr]) = X[X1_ptr];
-             q_ptr++;
+            z = 1;
+            std::get<1>(q[q_ptr]) = pre_ord;
+            std::get<0>(q[q_ptr]) = p_depth + z;
+            q_ptr++;
         }
+        X[X1_ptr] = p_depth + z;
         // Update variables
         X1_ptr++;
         i += 2*(t[i]&num_c)+2;
@@ -235,13 +188,14 @@ vector<uint32_t> cover(vector<uint32_t> &t, const vector<bool> &id_ref, uint32_t
         nc = 0;
         if (q1_ptr+1 < q.size()) {
             if (std::get<0>(q[q1_ptr+1]) > std::get<0>(q[q1_ptr])) {
-                uint32_t l = std::get<0>(q[q1_ptr+1]);
+                uint32_t l = std::get<0>(q[q1_ptr]) + 1;
                 while (q2_ptr < q.size() && std::get<0>(q[q2_ptr]) == l) {
                     nc++; q2_ptr++;
                     i += 3;
                 }
             } else {
-                while (q2_ptr < q.size() && std::get<1>(q[q2_ptr]) < std::get<1>(q[q1_ptr+1])) {
+                uint32_t l = std::get<0>(q[q1_ptr]) + 1;
+                while (q2_ptr < q.size() && std::get<0>(q[q2_ptr]) == l && std::get<1>(q[q2_ptr]) < std::get<1>(q[q1_ptr+1])) {
                     nc++; q2_ptr++;
                     i += 3;
                 }
@@ -260,7 +214,6 @@ vector<uint32_t> cover(vector<uint32_t> &t, const vector<bool> &id_ref, uint32_t
         }
         i += 3*_t[i]+4;
     }
-    // for (auto el : _t) cout << el << " "; cout << nl;
     return _t;
 }
 
@@ -457,7 +410,7 @@ inline pair<uint32_t,uint32_t> findCentroid(const vector<uint32_t> &t, const vec
         if (_t[centroid_treelet] > 0) { // If 'centroid_treelet' has any children
             for (uint32_t i = 0; i < _t[centroid_treelet]; i++) { // Navigate the children of the current node
                 if (_t[centroid_treelet+3*i+5] > size) { // If it is the heavy child
-                    centroid_treelet =_t[centroid_treelet+3*i+4]; // Move towards it
+                    centroid_treelet = _t[centroid_treelet+3*i+4]; // Move towards it
                     found = false; // And set 'found' to false
                     break; // Then stop navigating children
                 } else { // Else
@@ -490,6 +443,7 @@ inline pair<uint32_t,uint32_t> findCentroid(const vector<uint32_t> &t, const vec
 // @param _t: '_t' tree structure
 // @param B: maximum size when to apply standard centroid decomposition - (log(n))^3 if not given
 // @return vector representation of the centroid tree
+// vector<uint32_t> centroidDecomposition(vector<uint32_t> &t, vector<uint32_t> &_t, uint32_t B = 0) { // Complexity: O(n)
 vector<uint32_t> centroidDecomposition(vector<uint32_t> &t, vector<uint32_t> &_t, uint32_t B = 0) { // Complexity: O(n)
     uint32_t N = (t.size()+2)/4; // Nuber of nodes
     if (!B) B = pow(floor(log2(N)), 3); // If 'B' is not given
@@ -501,7 +455,7 @@ vector<uint32_t> centroidDecomposition(vector<uint32_t> &t, vector<uint32_t> &_t
         uint32_t dimens = 1; // Initialize 'dimens'
         for (uint32_t i = 0; i < (t[_t[root+3]]&num_c); i++) dimens += t[_t[root+3]+2*i+3]; // Compute 'dimens'
         if (dimens > B) { // If 'dimens' is bigger than 'B'
-            computeDeltas(t, _t, root); // COmpute deltas of connected component
+            computeDeltas(t, _t, root); // Compute deltas of connected component
             pair<uint32_t,uint32_t> centroid = findCentroid(t, _t, root); // Find centroid of subtree with root 'root'
             uint32_t _tc = centroid.first, tc = centroid.second; // Parse centroid nodes on 't' and '_t'
             rmNodeOnT(t, tc); // Remove node 'tc' from 't'

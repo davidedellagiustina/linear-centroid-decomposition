@@ -12,7 +12,7 @@ uint32_t B = 0;
 // Global variables
 bool print_output = false, check = false;
 string input_path, tree;
-uint32_t n, _t_root;
+uint32_t n;
 vector<uint32_t> t, t_copy, _t, ct;
 vector<bool> id_ref;
 
@@ -77,7 +77,8 @@ int main(int argc, char* argv[]) { // Complexity: O(n)
 	if (check) t_copy = t;
     // Perform centroid decomposition: O(n)
     t1 = getTime();
-    ct = centroidDecomposition(t, _t, B);
+    // ct = centroidDecomposition(t, _t, B);
+	ct = centroidDecomposition(t, _t, B);
     cout << printTime(" - Linear centroid decomposition", t1, getTime()) << nl;
     if(check) cout << "Correct: " << ((checkCorrectness(t_copy, ct))? "true" : "false") << nl; // Correctness check
     if (print_output) cout << "Output: " << ctToString(ct) << nl; // Print output
