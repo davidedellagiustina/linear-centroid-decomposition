@@ -2,29 +2,29 @@
 #include <time.h>
 using namespace std;
 
-// Global variables
-uint32_t n, layer = 0;
+// Generate completely random tree
 
-// Main
-int main(int argc, char* argv[]) {
-	if (argc < 2) return 0;
-	else {
-		iss is(argv[1]);
-		is >> n;
-	}
-    oss os; // Initialize output stream
-    srand((unsigned int)time(0)); // Set seed for 'rand()'
-    while (n > 0) { // While there are still nodes to add
-        int p = rand() % 2; // Random number between 0 and 1
-        if (p == 0 && layer > 1) { // If 0 and you are above layer 1
-            os << ")"; // Close opened node
-            layer--; // Decrement 'layer'
-        } else { // Else
-            os << "("; // Create new node
-            layer++; n--; // Increment 'layer' and decrement 'n'
+int main(int argc, char* argv[]) { // Args: 1 => number of nodes
+    uint32_t n;
+    if (argc < 2) return 1;
+    else {
+        iss is(argv[1]);
+        is >> n; // Get number of nodes
+    }
+    oss os;
+    srand((unsigned int)time(0)); // Set random seed
+    uint32_t layer = 0;
+    while (n > 0) {
+        int c = rand() % 2; // Random: 0 => close node, 1 => new node
+        if (c == 0 && layer > 1) { // Layer check before closing node
+            os << ")";
+            layer--;
+        } else {
+            os << "(";
+            layer++; n--;
         }
     }
-    for (; layer > 0; layer--) os << ")"; // Close each node remained open
-    cout << os.str(); // Print content of output stream
+    for (; layer > 0; layer--) os << ")"; // Close each "unclosed" node
+    cout << os.str();
     return 0;
 }

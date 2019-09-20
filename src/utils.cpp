@@ -8,9 +8,9 @@ using namespace std;
  * STRUCTURE BUILDING FUNCTIONS
  */
 
-// Build tree structure from balanced parenthesis representation, level-wise, in-place
-// @param tree: BP representation of tree
-// @return tree structure
+// Build minimal T structure from balanced parenthesis representation [level-wise, in-place]
+// @param tree      BP representation of tree
+// @return          minimal T representation (no partial sizes)
 vector<uint32_t> buildTree(const string &tree) { // Complexity: O(n)
     uint32_t n = tree.length() / 2; // Number of nodes
     uint32_t N = 4*n - 2; // Size of 't'
@@ -63,301 +63,280 @@ vector<uint32_t> buildTree(const string &tree) { // Complexity: O(n)
             j += 2*t[j]+2; // Jump to next child's area
         }
     }
-    return t; // Return 't'
+    return t;
 }
 
-// Build a reference bitvector to identify the positions of the nodes n 't'
-// @param t: tree structure
-// @return reference bitvector
+// Build a reference bitvector to identify the positions of the nodes in T
+// @param t     minimal T representation
+// @return      nodes reference bitvector
 vector<bool> buildIdRef(const vector<uint32_t> &t) { // Complexity: O(n)
-    vector<bool> id_ref = vector<bool>(t.size(), 0); // Initialize an empty bitvector
-    uint32_t i = 0; // Initialize vector pointer
-    while (i < t.size()) { // While pointer is valid
-        id_ref[i] = 1; // Set 'i'-th bit to 1
-        i += 2*(t[i]&num_c)+2; // And increment pointer
+    vector<bool> id_ref = vector<bool>(t.size(), 0);
+    uint32_t i = 0;
+    while (i < t.size()) {
+        id_ref[i] = 1;
+        i += 2*(t[i]&num_c)+2;
     }
-    return id_ref; // Return 'id_ref'
+    return id_ref;
 }
 
-// Compute the initial sizes of the tree
-// @param t: tree structure
-// @param id_ref: reference bitvector
+// Compute the initial partial sizes on T
+// @param t         minimal T representation
+// @param id_ref    nodes reference bitvector
 void computeSizes(vector<uint32_t> &t, const vector<bool> &id_ref) { // Complexity: O(n)
-    uint32_t i = t.size() - 2; // Initialize vector pointer (last node has ID 't.size()-2')
-    uint32_t p = t.size(); // Parent of current node (invalid at the beginning)
-    uint32_t nc = 0; // Current node is the 'nc'-th child of its parent
-    while (i > 0) { // While pointer is valid
-        if (id_ref[i]) { // If the current element on 'id_ref' equals 1 (i.e. there is a node with this ID on 't')
-            // assert(t[i+1] != p or nc > 0);
-            // assert((t[t[i+1]]&num_c) > 0);
-            nc = ((t[i+1] != p)? (t[t[i+1]]&num_c)-1 : nc-1); // Update child's number
-            p = t[i+1]; // Update parent
+    uint32_t i = t.size() - 2; // ID of the last node
+    uint32_t p = t.size(); // Parent (invalid at beginning)
+    uint32_t nc = 0; // 'i' is the 'nc'-th child of 'p'
+    while (i > 0) {
+        if (id_ref[i]) { // If there is a node with this ID on T
+            nc = ((t[i+1] != p)? (t[t[i+1]]&num_c)-1 : nc-1);
+            p = t[i+1];
             uint32_t size = 1; // Size of subtree rooted at 'i'
-            for (uint32_t j = 0; j < (t[i]&num_c); j++) // For each of its children
-                size += t[i+2*j+3]; // Size of the child
-            t[p+2*nc+3] = size; // Set size
+            for (uint32_t j = 0; j < (t[i]&num_c); j++) size += t[i+2*j+3];
+            t[p+2*nc+3] = size;
         }
-        i--; // Decrement pointer
+        i--;
     }
 }
 
-// Cover 't' and build '_t'
-// Note: 'computeSizes()' souldn't be called: this procedure already computes those sizes
-// @param t: tree structure
-// @param id_ref: reference bitvector
-// @param A: minimum size of cover elements - log(n) if not given
-// @return '_t'
+// Cover T and build T2, then compute partial sizes on T
+// Note: 'computeSizes()' shouldn't be called: this procedure already computes those sizes
+// @param t         minimal T representation
+// @param id_ref    nodes reference bitvector
+// @param A         minimum size of cover elements - log(n) if not given
+// @return          T2 minimal representation (no weights)
 vector<uint32_t> cover(vector<uint32_t> &t, const vector<bool> &id_ref, uint32_t A = 0) { // Complexity: O(n)
-    uint32_t n = (t.size() + 2) / 4; // Number of nodes of 't'
+    uint32_t n = (t.size() + 2) / 4; // Number of nodes of T
     A = ((!A)? ((n <= 1)? 1 : floor(log2(n))) : A); // If A is not given
-    uint32_t k = n/A + ((n%A == 0)? 0 : 1) + 1; // Upper-bound of '_t' nodes
+    uint32_t k = n/A + ((n%A == 0)? 0 : 1) + 1; // Upper-bound for number of nodes of T2
     vector<uint32_t> X = vector<uint32_t>(n);
     vector<tuple<uint32_t,uint32_t,uint32_t,uint32_t>> q = vector<tuple<uint32_t,uint32_t,uint32_t,uint32_t>>(k); // Fields: depth, pre_ord, size, t_node
-    uint32_t q_ptr = q.size() - 1;
-    // Step 1 - bottom-up visit: O(n)
-    int64_t i = t.size() - 1;
-    uint32_t p = t.size(), nc = 0;
-    auto x = (uint8_t*)X.data();
+    uint32_t q_ptr = q.size() - 1; // Pointer on 'q'
+    // Step 1 - bottom-up visit [compute partial sizes on T and perform covering]: O(n)
+    int64_t i = t.size() - 1, p = t.size(), nc = 0;
+    auto x = (uint8_t*)X.data(); // Here we use the first n bytes of 'X'
     uint32_t x1_ptr = 0, x2_ptr = 0; // 'x1_ptr' is at level L, 'x2_ptr' is at level L+1
     while (i >= 0) {
         if (id_ref[i]) {
-            nc = ((t[i+1] != p)? (t[t[i+1]]&num_c)-1 : nc-1);
-            p = t[i+1];
-            // Compute total and partial sizes
+            nc = ((t[i+1] != p)? (t[t[i+1]]&num_c)-1 : nc-1); p = t[i+1];
+            // Compute partial and cover elements sizes
             t[p+2*nc+3] = ((i != 0)? 1 : t[p+2*nc+3]);
             uint32_t size = 1;
-            for (uint32_t j = (t[i]&num_c); j > 0; j--) {
+            for (uint32_t j = (t[i]&num_c); j > 0; j--, x2_ptr++) {
                 t[p+2*nc+3] += ((i != 0)? t[i+2*j+1] : 0);
                 size += x[x2_ptr];
-                x2_ptr++;
             }
             // Create cover element
             if (size >= A || i == 0) {
-                t[i] |= cov_el;
-                std::get<2>(q[q_ptr]) = size;
-                std::get<3>(q[q_ptr]) = i;
+                t[i] |= cov_el; // Mark node on T as cover element
+                std::get<2>(q[q_ptr]) = size; // Write 'size' on 'q'
+                std::get<3>(q[q_ptr]) = i; // Write 't_node' on 'q'
                 q_ptr--;
                 x[x1_ptr] = 0;
-            } else x[x1_ptr] = size;
-            // Increment pointers
+            } else x[x1_ptr] = size; // Save cover element size on 'x'
             x1_ptr++;
         }
         i--;
     }
-    // Step 2 - top-down visit: O(n)
-    i = 0; p = 0; q_ptr++;
-    X[0] = 0;
-    uint32_t p_depth = 0, pre_ord, X0_ptr = 0, X1_ptr = 0, X2_ptr = 1;
+    // Step 2 - top-down visit [compute 'depth' and 'pre-ord' fields for each node on T2]: O(n)
+    i = 0; p = 0; q_ptr++; X[0] = 0;
+    uint32_t p_depth = 0, pre_ord, X0_ptr = 0, X1_ptr = 0, X2_ptr = 1; // 'X0_ptr' is at level L-1, 'X1_ptr' is at level L and 'X2_ptr' is at level L+1
     while (i < t.size()) {
-        k = p + 2*(t[p]&num_c) + 2;
+        k = p + 2*(t[p]&num_c) + 2; // Next node on T (in BFS visit)
         X0_ptr += ((t[i+1] != p)? (t[i+1]-k+2)/2 : 0);
         p_depth = ((t[i+1] != p || t[i+1] == 0)? X[X0_ptr] : p_depth);
         p = t[i+1];
         pre_ord = X[X1_ptr];
-        // Compute and save 'pre_ord' for i's children
+        // Compute and save 'pre_ord' field for 'i''s children
         uint32_t s = 1 + pre_ord;
-        for (uint32_t j = 0; j < (t[i]&num_c); j++) {
+        for (uint32_t j = 0; j < (t[i]&num_c); j++, X2_ptr++) {
             X[X2_ptr] = s;
             s += t[i+2*j+3];
-            X2_ptr++;
         }
-        // Save 'pre_ord' for node 'i' if it is marked as cover element
+        // Save 'pre_ord' on 'q' for node 'i' if it is marked as cover element
         // Then compute and save 'depth' for node 'i'
         uint32_t z = 0;
         if (t[i]&cov_el) {
             z = 1;
-            std::get<1>(q[q_ptr]) = pre_ord;
-            std::get<0>(q[q_ptr]) = p_depth + z;
+            std::get<1>(q[q_ptr]) = pre_ord; // Save 'pre_ord'
+            std::get<0>(q[q_ptr]) = p_depth + z; // Save 'depth'
             q_ptr++;
         }
         X[X1_ptr] = p_depth + z;
-        // Update variables
         X1_ptr++;
         i += 2*(t[i]&num_c)+2;
     }
-    // Step 3 - build basic T'': O(n/log(n))
-    std::sort(q.begin(), q.end());
-    uint32_t q1_ptr = 0, q2_ptr; while (std::get<2>(q[q1_ptr]) == 0) q1_ptr++; q2_ptr = q1_ptr + 1;
-    uint32_t m = q.size() - q1_ptr; // Number of nodes of '_t'
-    vector<uint32_t> _t = vector<uint32_t>(7*m-3);
+    // Step 3 - build minimal T2 [no parent-children pointers]: O(n/log(n))
+    std::sort(q.begin(), q.end()); // Sort 'q' lexicographically (first 'depth', then 'pre_ord')
+    uint32_t q1_ptr = 0, q2_ptr; while (std::get<2>(q[q1_ptr]) == 0) q1_ptr++; q2_ptr = q1_ptr + 1; // Position 'q1_ptr' at first tuple, 'q2_ptr' at the next one
+    uint32_t m = q.size() - q1_ptr; // Number of nodes of T2
+    vector<uint32_t> t2 = vector<uint32_t>(7*m-3);
     i = 0;
-    while (i < _t.size()) {
-        _t[i+2] = std::get<2>(q[q1_ptr]);
-        _t[i+3] = std::get<3>(q[q1_ptr]);
-        i += 4;
-        nc = 0;
-        if (q1_ptr+1 < q.size()) {
-            if (std::get<0>(q[q1_ptr+1]) > std::get<0>(q[q1_ptr])) {
-                uint32_t l = std::get<0>(q[q1_ptr]) + 1;
+    while (i < t2.size()) {
+        t2[i+2] = std::get<2>(q[q1_ptr]); // Size of subtree
+        t2[i+3] = std::get<3>(q[q1_ptr]); // ID reference on T
+        i += 4; nc = 0;
+        if (q1_ptr+1 < q.size()) { // If this isn't the last tuple
+            if (std::get<0>(q[q1_ptr+1]) > std::get<0>(q[q1_ptr])) { // If next node is at level L+1, then all nodes at L+1, starting from 'q2_ptr', are 'i''s children
+                uint32_t l = std::get<0>(q[q1_ptr]) + 1; // Level L+1
                 while (q2_ptr < q.size() && std::get<0>(q[q2_ptr]) == l) {
                     nc++; q2_ptr++;
                     i += 3;
                 }
-            } else {
-                uint32_t l = std::get<0>(q[q1_ptr]) + 1;
-                while (q2_ptr < q.size() && std::get<0>(q[q2_ptr]) == l && std::get<1>(q[q2_ptr]) < std::get<1>(q[q1_ptr+1])) {
+            } else { // Otherwise
+                uint32_t l = std::get<0>(q[q1_ptr]) + 1; // Level L+1
+                while (q2_ptr < q.size() && std::get<0>(q[q2_ptr]) == l && std::get<1>(q[q2_ptr]) < std::get<1>(q[q1_ptr+1])) { // Count 'i''s children at L+1 using 'pre_ord'
                     nc++; q2_ptr++;
                     i += 3;
                 }
             }
         }
-        _t[i-3*nc-4] = nc;
+        t2[i-3*nc-4] = nc; // Write number of children
         q1_ptr++;
     }
     // Step 4 - compute parent-children pointers: O(n/log(n))
     i = 0;
-    uint32_t j = 3*_t[i]+4;
-    while (i < _t.size()) {
-        for (uint32_t k = 0; k < _t[i]; k++) {
-            _t[i+3*k+4] = j; _t[j+1] = i;
-            j += 3*_t[j]+4;
+    uint32_t j = 3*t2[i]+4; // Second node in BFS
+    while (i < t2.size()) {
+        for (uint32_t k = 0; k < t2[i]; k++) {
+            t2[i+3*k+4] = j; t2[j+1] = i;
+            j += 3*t2[j]+4; // Next child
         }
-        i += 3*_t[i]+4;
+        i += 3*t2[i]+4; // Next node
     }
-    return _t;
+    return t2;
 }
 
 /*
  * STANDARD O(n*log(n)) CENTROID DECOMPOSITION IMPLEMENTATION
  */
 
-// Remove a node 'n' from 't'
-// @param t: tree structure
-// @param n: ID of note to be removed
+// Remove a node 'n' from T
+// @param t     T representation
+// @param n     ID of the note to be removed
 inline void rmNodeOnT(vector<uint32_t> &t, const uint32_t n) { // Complexity: O(k) where k = t[t[n+1]]
-    // Remove node from 't'
-    uint32_t parent = t[n+1]; // Parent of the node ID
-    uint32_t size; // Initialize size of the node
-    for (uint32_t i = 0; i < (t[parent]&num_c); i++) if (t[parent+2*i+2] == n) size = t[parent+2*i+3]; // Compute size of the node
-    // Delete references inside n's parent
-    if (parent != n) { // If 'n' has a parent
-        for (uint32_t i = 0; i < (t[parent]&num_c); i++) { // Then search among its parent's children
-            if (t[parent+2*i+2] == n) {
-                uint32_t aux_id = t[parent+2*i+2], aux_size = t[parent+2*i+3]; // And delete the reference to 'n'
-                t[parent+2*i+2] = t[parent+2*(t[parent]&num_c)]; t[parent+2*i+3] = t[parent+2*(t[parent]&num_c)+1]; // (i.e. swap its ID and size with the last valid child's ID and size)
-                t[parent+2*(t[parent]&num_c)] = aux_id; t[parent+2*(t[parent]&num_c)+1] = aux_size;
+    uint32_t p = t[n+1];
+    uint32_t size; for (uint32_t i = 0; i < (t[p]&num_c); i++) if (t[p+2*i+2] == n) size = t[p+2*i+3]; // Size of 'n'
+    // Delete references inside 'n''s parent
+    if (p != n) { // If 'n' has a parent
+        for (uint32_t i = 0; i < (t[p]&num_c); i++) { // Search among its 'p''s children
+            if (t[p+2*i+2] == n) { // Node found
+                // Swap its ID and size with the last valid child's ID and size
+                uint32_t aux_id = t[p+2*i+2], aux_size = t[p+2*i+3];
+                t[p+2*i+2] = t[p+2*(t[p]&num_c)]; t[p+2*i+3] = t[p+2*(t[p]&num_c)+1];
+                t[p+2*(t[p]&num_c)] = aux_id; t[p+2*(t[p]&num_c)+1] = aux_size;
                 break; // Stop searching
             }
         }
-        t[parent]--; // Decrement parent's number of children
-        // Update subtree sizes
-        uint32_t m = parent; parent = t[m+1]; // Starting from n's parent
-        while (m != parent) { // Navigate up the tree
-            for (uint32_t i = 0; i < (t[parent]&num_c); i++) if (t[parent+2*i+2] == m) t[parent+2*i+3] -= size; // And update each node's size
-            m = parent; parent = t[m+1]; // Then step up
+        t[p]--; // Decrement 'p''s number of children
+        // Update partial sizes on T
+        uint32_t m = p; p = t[m+1]; // Starting from 'p'
+        while (m != p) { // Navigate up the tree
+            for (uint32_t i = 0; i < (t[p]&num_c); i++) if (t[p+2*i+2] == m) t[p+2*i+3] -= size;
+            m = p; p = t[m+1]; // Step up
         }
     }
-    // Delete references inside n's children
-    for (uint32_t i = 0; i < (t[n]&num_c); i++) { // Navigate the children
-        t[t[n+2*i+2]+1] = t[n+2*i+2]; // And make them new roots of subtrees
-    }
+    // Delete references inside 'n''s children
+    for (uint32_t i = 0; i < (t[n]&num_c); i++) t[t[n+2*i+2]+1] = t[n+2*i+2];
 }
 
-// Add a node on '_t'
+// Add a node on T2
 // Note: when this function is called, the newly added node is ALWAYS the root of a connected component. Therefore, we assume this condition to be true.
-// @param _t: '_t' tree structure
-// @param ref: reference ID on 't'
-// @param size: size of treelet
-// @param children: vector of the children of the new node
-// @return ID of the newly added node
-inline uint32_t addNodeOn_T(vector<uint32_t> &_t, const uint32_t ref, const uint32_t size, const vector<uint32_t> &children) { // Complexity: O(k) where k = children.size()
-    // Add node on '_t'
-    uint32_t id = _t.size(); // ID of the new node
-    _t.pb(children.size()); // Number of children
-    _t.pb(id); // Parent ID (i.e. itself, see assumption above)
-    _t.pb(size); // Size of treelet
-    _t.pb(ref); // Treelet root ID reference on 't'
-    for (uint32_t child : children) { // For each of its children
-        _t.pb(child); // Insert child ID
-        _t.pb(0); _t.pb(0); // Empty deltas (will be computed by the proper function)
-        _t[child+1] = id; // Update child's parent ID
+// @param t2            T2 representation
+// @param ref           reference ID on T
+// @param size          size of treelet
+// @param children      vector of the children of the new node
+// @return              ID of the newly added node
+inline uint32_t addNodeOnT2(vector<uint32_t> &t2, const uint32_t ref, const uint32_t size, const vector<uint32_t> &children) { // Complexity: O(k) where k = children.size()
+    uint32_t id = t2.size(); // ID of the new node
+    t2.pb(children.size()); // Number of children
+    t2.pb(id); // Parent ID (i.e. itself, see assumption above)
+    t2.pb(size); // Size of treelet
+    t2.pb(ref); // Treelet root ID reference on T
+    for (uint32_t child : children) {
+        t2.pb(child); // Child ID
+        t2.pb(0); t2.pb(0); // Empty deltas (will be computed by the proper function)
+        t2[child+1] = id; // Update child's parent ID
     }
-    return id; // Return the ID of the newly addd node
+    return id;
 }
 
-// Remove a node 'n' from '_t'
-// @param _t: '_t' tree structure
-// @param n: ID of the node to be removed
-// @return vector of the children of the removed node
-inline vector<uint32_t> rmNodeOn_T(vector<uint32_t> &_t, const uint32_t n) { // Complexity: O(k) where k = _t[_t[n+1]]
-    // Remove node from '_t'
-    uint32_t parent = _t[n+1]; // Parent of the node ID
-    // Delete references inside n's parent
-    if (parent != n) { // If 'n' has a parent
-        for (uint32_t i = 0; i < _t[parent]; i++) { // The search among its parent's children
-            if (_t[parent+3*i+4] == n) {
-                uint32_t aux_id = _t[parent+3*i+4], aux_delta_1 = _t[parent+3*i+5], aux_delta_2 = _t[parent+3*i+6]; // And delete the reference to 'n'
-                _t[parent+3*i+4] = _t[parent+3*_t[parent]+1]; _t[parent+3*i+5] = _t[parent+3*_t[parent]+2]; _t[parent+3*i+6] = _t[parent+3*_t[parent]+3]; // (i.e. swap its ID and deltas with the last valid child's ID and deltas)
-                _t[parent+3*_t[parent]+1] = aux_id; _t[parent+3*_t[parent]+2] = aux_delta_1; _t[parent+3*_t[parent]+3] = aux_delta_2;
+// Remove a node 'n' from T2
+// @param t2    T2 representation
+// @param n     ID of the node to be removed
+// @return      vector with the children of the removed node
+inline vector<uint32_t> rmNodeOnT2(vector<uint32_t> &t2, const uint32_t n) { // Complexity: O(k) where k = _t[_t[n+1]]
+    uint32_t p = t2[n+1]; // Parent of the node ID
+    // Delete references inside 'n''s parent
+    if (p != n) {
+        for (uint32_t i = 0; i < t2[p]; i++) { // Search among 'p' children
+            if (t2[p+3*i+4] == n) { // Node found
+                // Swap its ID and deltas with the last valid child's ID and deltas
+                uint32_t aux_id = t2[p+3*i+4], aux_delta_1 = t2[p+3*i+5], aux_delta_2 = t2[p+3*i+6];
+                t2[p+3*i+4] = t2[p+3*t2[p]+1]; t2[p+3*i+5] = t2[p+3*t2[p]+2]; t2[p+3*i+6] = t2[p+3*t2[p]+3];
+                t2[p+3*t2[p]+1] = aux_id; t2[p+3*t2[p]+2] = aux_delta_1; t2[p+3*t2[p]+3] = aux_delta_2;
                 break; // Stop searching
             }
         }
-        _t[parent]--; // Decrement parent's number of children
+        t2[p]--; // Decrement 'p''s number of children
     }
-    // Delete references inside n's children
-    vector<uint32_t> children; // Initialize children vector
-    for (uint32_t i = 0; i < _t[n]; i++) { // Navigate the children
-        _t[_t[n+3*i+4]+1] = _t[n+3*i+4]; // And make them new roots of subtrees
-        children.pb(_t[n+3*i+4]); // Then add their ID to 'children'
+    // Delete references inside 'n''s children
+    vector<uint32_t> children;
+    for (uint32_t i = 0; i < t2[n]; i++) { // Navigate the children
+        t2[t2[n+3*i+4]+1] = t2[n+3*i+4]; // And make them new roots of subtrees
+        children.pb(t2[n+3*i+4]);
     }
-    return children; // Return 'children'
+    return children;
 }
 
 // Standard centroid search algorithm
-// @param t: tree structure
-// @param root: root of the connected component
-// @return centroid of the connected component
+// @param t         T representation
+// @param root      root of the connected component
+// @return          centroid of the connected component
 inline uint32_t stdFindCentroid(const vector<uint32_t> &t, const uint32_t root) { // Complexity: O(n)
-    // Compute size of subtree: O(k) where k = (t[root]&num_c)
-    uint32_t size = 1; // Initialize size
-    for (uint32_t i = 0; i < (t[root]&num_c); i++) size += t[root+2*i+3]; // Compute size
-    size /= 2; // Half the size of the tree (but integer!)
-    // Search centroid: O(n)
+    // Compute half size of subtree: O(k) where k = (t[root]&num_c)
+    uint32_t half_size = 1; for (uint32_t i = 0; i < (t[root]&num_c); i++) half_size += t[root+2*i+3];
+    half_size /= 2;
+    // Centroid search: O(n)
     uint32_t centroid = root; // Start search from root
-    bool found = false; // Initialize 'found'
-    if ((t[centroid]&num_c) > 0) { // If the root of the subtree has any children
-        while (!found) { // Loop until the centroid is found
-            for (uint32_t i = 0 ; i < (t[centroid]&num_c); i++) { // For each children
-                if (t[centroid+2*i+3] > size) { // If the subtree rooted at this child is bigger than 'size'
-                    centroid = t[centroid+2*i+2]; // Then search centroid in that direction
-                    found = false;
-                    break; // And stop visiting children
-                } else {
-                    found = true;
-                }
+    bool found = false;
+    if ((t[centroid]&num_c) > 0) {
+        while (!found) {
+            for (uint32_t i = 0 ; i < (t[centroid]&num_c); i++) {
+                if (t[centroid+2*i+3] > half_size) { // Look for heavy child
+                    centroid = t[centroid+2*i+2];
+                    found = false; break;
+                } else found = true; // Centroid found
             }
         }
     }
-    return centroid; // Return the ID of the centroid
+    return centroid;
 }
 
 // Standard centroid decomposition algorithm
-// @param t: tree structure
-// @param root: root of the tree/connected component
-// @param N: number of nodes of the tree to elaborate
-// @return vector representation of the centroid tree
+// @param t         T representation
+// @param root      root of the tree (or connected component, used as subprocedure for linear centroid decomposition)
+// @param N         number of nodes of the tree to elaborate (require ONLY when called as subprocedure of linear centroid decomposition)
+// @return          vector representation of the centroid tree
 inline vector<uint32_t> stdCentroidDecomposition(vector<uint32_t> &t, const uint32_t root = 0, uint32_t N = 0) { // Complexity: O(n*log(n))
-    if (!N) N = (t.size()+2)/4; // Number of nodes
-    vector<uint32_t> out = vector<uint32_t>(3*N, 0); // Initialize output vector
-    uint32_t pos = 0; // Output vector pointer
-    stack<uint32_t> s; s.push(root); // Stack with roots of subtrees yet to process
-    while (!s.empty()) { // While there are still subtrees to process
-        uint32_t r = s.top(); s.pop(); // Get root of subtree
-        uint32_t centroid = stdFindCentroid(t, r); // Find centroid of subtree
-        uint32_t c = 0; for (uint32_t i = 0; i < (t[centroid]&num_c); i++) c += t[centroid+2*i+3]; // Total size of centroid subtrees
-        rmNodeOnT(t, centroid); // Remove the centroid from T
-        for(uint32_t i = (t[centroid]&num_c); i > 0; i--) // Navigate the children in reverse order
-            s.push(t[centroid+2*i]); // Then push them to 's'
+    N = ((!N)? (t.size()+2)/4 : N);
+    vector<uint32_t> out = vector<uint32_t>(3*N, 0); uint32_t ptr = 0;
+    stack<uint32_t> s; s.push(root); // Stack with roots of connected components yet to process
+    while (!s.empty()) {
+        uint32_t r = s.top(); s.pop();
+        uint32_t centroid = stdFindCentroid(t, r);
+        uint32_t c = 0; for (uint32_t i = 0; i < (t[centroid]&num_c); i++) c += t[centroid+2*i+3]; // Total size of centroid subtrees [needed for printing centroid tree]
+        rmNodeOnT(t, centroid);
+        for(uint32_t i = (t[centroid]&num_c); i > 0; i--) s.push(t[centroid+2*i]); // Push children to stack in reverse order
         if (centroid != r) { // If the root of the subtree is not its centroid
-            s.push(r); // Then it is the root of a new subtree
-            c++; for (uint32_t i = 0; i < (t[r]&num_c); i++) c += t[r+2*i+3]; // Size of root subtree
+            s.push(r);
+            c++; for (uint32_t i = 0; i < (t[r]&num_c); i++) c += t[r+2*i+3]; // Size of root subtree [needed for printing centroid tree]
         }
         // Print the current node to the output vector
-        while (out[pos] == 1) pos++;
-        out[pos] = 0; // Print "("
-        out[pos+1] = centroid + 2; // Print centroid ID
-        pos += 2; // Update 'pos'
-        out[pos+3*c] = 1; // Print "("
+        while (out[ptr] == 1) ptr++;
+        out[ptr] = 0; // Print "("
+        out[ptr+1] = centroid + 2; // Print centroid ID
+        ptr += 2;
+        out[ptr+3*c] = 1; // Print ")"
     }
     return out;
 }
@@ -366,76 +345,66 @@ inline vector<uint32_t> stdCentroidDecomposition(vector<uint32_t> &t, const uint
  * NEW O(n) CENTROID DECOMPOSITION IMPLEMENTATION
  */
 
-// Recompute the deltas on a treelet (i.e. a connected component of '_t')
-// @param t: tree structure
-// @param _t: '_t' tree structure
-// @param root: root of the connected component of which to compute deltas
-inline void computeDeltas(const vector<uint32_t> &t, vector<uint32_t> &_t, const uint32_t root) { // Complexity: O(log(n))
+// Recompute the deltas on a connected component of T2
+// @param t         T representation
+// @param t2        T2 representation
+// @param root      root of the connected component of which to compute deltas
+inline void computeDeltas(const vector<uint32_t> &t, vector<uint32_t> &t2, const uint32_t root) { // Complexity: O(log(n))
     // Compute total size of treelet
-    uint32_t size = 1; // Initialize size of connected component rooted at 'root'
-    for (uint32_t i = 0; i < (t[_t[root+3]]&num_c); i++) size += t[_t[root+3]+2*i+3]; // Compute size
+    uint32_t size = 1; for (uint32_t i = 0; i < (t[t2[root+3]]&num_c); i++) size += t[t2[root+3]+2*i+3];
     // Build stack for DFS
-    stack<uint32_t> s, dfs; s.push(root); // Initialize stack for DFS
-    while (!s.empty()) { // While stack is not empty
-        uint32_t node = s.top(); s.pop(); // ID of the node being visited
-        dfs.push(node); // Push node to DFS stack
-        for (uint32_t i = _t[node]; i > 0; i--) { // For each child
-            s.push(_t[node+3*i+1]); // Push its ID into the stack
-        }
+    stack<uint32_t> s, dfs; s.push(root);
+    while (!s.empty()) {
+        uint32_t node = s.top(); s.pop();
+        dfs.push(node);
+        for (uint32_t i = t2[node]; i > 0; i--) s.push(t2[node+3*i+1]); // Push children
     }
-    // DFS on '_t' and compute deltas
-    while (!dfs.empty()) { // While DFS stack is not empty
-        uint32_t node = dfs.top(); dfs.pop(); // ID of the node being visited
-        for (uint32_t i = 0; i < _t[node]; i++) { // For each of its children
-            _t[node+3*i+5] = _t[_t[node+3*i+4]+2]; // Initialize delta_1
-            for (uint32_t j = 0; j < _t[_t[node+3*i+4]]; j++) _t[node+3*i+5] += _t[_t[node+3*i+4]+3*j+5]; // Compute delta_1
-            _t[node+3*i+6] = size - _t[node+3*i+5]; // Compute delta_2
+    // DFS on T2 and compute deltas
+    while (!dfs.empty()) {
+        uint32_t node = dfs.top(); dfs.pop();
+        for (uint32_t i = 0; i < t2[node]; i++) {
+            t2[node+3*i+5] = t2[t2[node+3*i+4]+2]; for (uint32_t j = 0; j < t2[t2[node+3*i+4]]; j++) t2[node+3*i+5] += t2[t2[node+3*i+4]+3*j+5]; // Delta 1
+            t2[node+3*i+6] = size - t2[node+3*i+5]; // Delta 2
         }
     }
 }
 
 // New centroid search algorithm
-// @param t: tree structure
-// @param _t: '_t' tree structure
-// @param root: root of the connected component
-// return centroid of the connected component (both IDs on 't' and '_t')
-inline pair<uint32_t,uint32_t> findCentroid(const vector<uint32_t> &t, const vector<uint32_t> &_t, const uint32_t root) { // Complexity: O(n/log(n))
-    // Compute size of subtree (i.e. connected component): O(1)
-    uint32_t size = ((_t[root] == 0)? _t[root+2] : _t[root+5]+_t[root+6]); // Compute size
-    size /= 2; // Compute size
-    // Serach centroid treelet on '_t': O(n/log(n))
+// @param t         T representation
+// @param t2        T2 representation
+// @param root      root of the connected component
+// @return          centroid of the connected component (both IDs on T and T2)
+inline pair<uint32_t,uint32_t> findCentroid(const vector<uint32_t> &t, const vector<uint32_t> &t2, const uint32_t root) { // Complexity: O(n/log(n))
+    // Compute half size of connected component: O(1)
+    uint32_t half_size = ((t2[root] == 0)? t2[root+2] : t2[root+5]+t2[root+6]);
+    half_size /= 2; // Compute size
+    // Serach centroid treelet on T2: O(n/log(n))
     uint32_t centroid_treelet = root; // Start searching from root
-    bool found = false; // Initialize 'found'
-    while (!found) { // While the centroid treelet is not found
-        if (_t[centroid_treelet] > 0) { // If 'centroid_treelet' has any children
-            for (uint32_t i = 0; i < _t[centroid_treelet]; i++) { // Navigate the children of the current node
-                if (_t[centroid_treelet+3*i+5] > size) { // If it is the heavy child
-                    centroid_treelet = _t[centroid_treelet+3*i+4]; // Move towards it
-                    found = false; // And set 'found' to false
-                    break; // Then stop navigating children
-                } else { // Else
-                    found = true; // Set 'found' to true
-                }
+    bool found = false;
+    while (!found) {
+        if (t2[centroid_treelet] > 0) {
+            for (uint32_t i = 0; i < t2[centroid_treelet]; i++) { // Search heavy child
+                if (t2[centroid_treelet+3*i+5] > half_size) {
+                    centroid_treelet = t2[centroid_treelet+3*i+4];
+                    found = false; break;
+                } else found = true; // Centroid treelet found
             }
         } else found = true;
     }
-    // Search centroid node on 't': O(log(n))
-    uint32_t centroid_node = _t[centroid_treelet+3]; // Start searching from centroid_treelet's root
-    found = false; // Reset 'found'
-    if ((t[centroid_node]&num_c) > 0) { // if 'centroid_node' has any children
-        while (!found) { // While the centroid node is not found
-            for (uint32_t i = 0; i < (t[centroid_node]&num_c); i++) { // Navigate the children of the current node
-                if (t[centroid_node+2*i+3] > size) { // If it is the heavy child
-                    centroid_node = t[centroid_node+2*i+2]; // Move towards it
-                    found = false; // And set 'found' to false
-                    break; // Then stop navigating children
-                } else { // Else
-                    found = true; // Set 'found' to true
-                }
+    // Search centroid node on T [visit subtree]: O(log(n))
+    uint32_t centroid_node = t2[centroid_treelet+3];
+    found = false;
+    if ((t[centroid_node]&num_c) > 0) {
+        while (!found) {
+            for (uint32_t i = 0; i < (t[centroid_node]&num_c); i++) { // Search heavy child
+                if (t[centroid_node+2*i+3] > half_size) {
+                    centroid_node = t[centroid_node+2*i+2];
+                    found = false; break;
+                } else found = true;
             }
         }
     }
-    return make_pair(centroid_treelet, centroid_node); // Return the ID of the centroid node both on 't' and '_t'
+    return make_pair(centroid_treelet, centroid_node);
 }
 
 // New centroid decomposition algorithm
@@ -459,7 +428,7 @@ vector<uint32_t> centroidDecomposition(vector<uint32_t> &t, vector<uint32_t> &_t
             pair<uint32_t,uint32_t> centroid = findCentroid(t, _t, root); // Find centroid of subtree with root 'root'
             uint32_t _tc = centroid.first, tc = centroid.second; // Parse centroid nodes on 't' and '_t'
             rmNodeOnT(t, tc); // Remove node 'tc' from 't'
-            vector<uint32_t> children = rmNodeOn_T(_t, _tc); // Remove node '_tc' from '_t' and get its children on '_t'
+            vector<uint32_t> children = rmNodeOnT2(_t, _tc); // Remove node '_tc' from '_t' and get its children on '_t'
             // Build children reference vector
             vector<pair<uint32_t,uint32_t>> c_ref; // Initialize vector
             for (uint32_t child : children) { // For each child
@@ -491,7 +460,7 @@ vector<uint32_t> centroidDecomposition(vector<uint32_t> &t, vector<uint32_t> &_t
                             total_size -= size_dec; // And decrement 'total_size'
                         }
                     }
-                    new_node = addNodeOn_T(_t, child, size, c); // Create the new node on '_t'
+                    new_node = addNodeOnT2(_t, child, size, c); // Create the new node on '_t'
                 } else { // If child is already a cover element
                     for (pair<uint32_t,uint32_t> node : c_ref) { // For each node in 'c_ref'
                         if (child == node.first) { // If it corresponds to 'child'
@@ -596,64 +565,57 @@ bool checkCorrectness(vector<uint32_t> &t, const vector<uint32_t> &ct) { // Comp
  */
 
 // Get time
-// @return timestamp
+// @return      timestamp
 inline chrono::high_resolution_clock::time_point getTime() { // Complexity: O(1)
-    return chrono::high_resolution_clock::now(); // Get new time reference and return
+    return chrono::high_resolution_clock::now();
 }
 
 // Print elapsed time
-// @param t: short description of time count
-// @param t1: initial time
-// @patam t2: final time
-// @return string formatted representation of elapsed time
-inline string printTime(const string t, const chrono::high_resolution_clock::time_point t1, const chrono::high_resolution_clock::time_point t2) { // Complexity: O(1)
-    auto duration = chrono::duration_cast<chrono::microseconds>(t2-t1).count(); // Compute duration
+// @param t     short description of time count
+// @param t01   initial time
+// @patam t02   final time
+// @return      formatted string representation of elapsed time
+inline string printTime(const string t, const chrono::high_resolution_clock::time_point t01, const chrono::high_resolution_clock::time_point t02) { // Complexity: O(1)
+    auto duration = chrono::duration_cast<chrono::microseconds>(t02-t01).count(); // Compute duration
     int us = duration; // Microseconds
     int ms = us/1000; us %= 1000; // Milliseconds
     int s = ms / 1000; ms %= 1000; // Seconds
     int m = s/60; s %= 60; // Minutes
     int h = m/60; m %= 60; // Hours
-    oss os; // New output stream
-    os << t << ": " << h << "h " << m << "m " << s << "s " << ms << "ms " << us << "us"; // Print to 'os'
-    return os.str(); // Return stream content as a string
+    oss os; os << t << ": " << h << "h " << m << "m " << s << "s " << ms << "ms " << us << "us"; // Print to output stream
+    return os.str();
 }
 
-// Print a vector<uint32_t>
-// @param t: tree structure
-// @return string representation of 't'
+// Print a vector<uint32_t> [used for debugging purposes]
+// @param t     general tree representation
+// @return      string representation of tree
 inline string print(const vector<uint32_t> &t) { // Complexity: O(n)
-    oss os; // New output stream
+    oss os;
     os << "(";
     bool first = true; // Used for the first element
-    for (const uint32_t i : t) { // Print each node to 'os'
+    for (const uint32_t i : t) {
         if (first) {
             os << i;
             first = false;
         } else os << " " << i;
     }
     os << ")";
-    return os.str(); // Return stream content as a string
+    return os.str();
 }
 
 // Convert the representation of centroid tree from vector<uint32_t> to string
-// @param ct: centroid tree
-// @return string representation of centroid tree
+// @param ct    centroid tree vector representation
+// @return      centroid tree string representation
 inline string ctToString(const vector<uint32_t> &ct) { // Complexity: O(n)
-    oss os; // New output stream
-    for (uint32_t el : ct) { // For each element in the vector
+    oss os;
+    for (uint32_t el : ct) {
         switch (el) {
-            case 0: // If it is 0
-                os << "("; // Then print "("
-                break;
-            case 1: // If it is 1
-                os << ")"; // Then print ")"
-                break;
-            default: // Otherwise
-                os << el - 2; // Print node ID
-                break;
+            case 0: os << "("; break;
+            case 1: os << ")"; break;
+            default: os << el-2; break;
         }
     }
-    return os.str(); // Return string representation of centroid tree
+    return os.str();
 }
 
 #endif

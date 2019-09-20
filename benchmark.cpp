@@ -3,88 +3,87 @@
 #include <stdlib.h>
 using namespace std;
 
-/*
- * BENCHMARK TOOL
- */
-
-// Return the formatted string for the elapsed time (input in microseconds)
+// Return the formatted string for the elapsed time
+// @param duration  time in microseconds
+// @return          formatted string
 inline string printDuration(const uint64_t duration) {
     int us = duration; // Microseconds
     int ms = us/1000; us %= 1000; // Milliseconds
     int s = ms / 1000; ms %= 1000; // Seconds
     int m = s/60; s %= 60; // Minutes
     int h = m/60; m %= 60; // Hours
-    oss os; // New output stream
-    os << h << "h " << m << "m " << s << "s " << ms << "ms " << us << "us"; // Print to 'os'
-    return os.str(); // Return stream content as a string
+    oss os; os << h << "h " << m << "m " << s << "s " << ms << "ms " << us << "us"; // Format string
+    return os.str();
 }
 
 // Perform standard centroid decomposition
-inline uint32_t nlognCD(vector<uint32_t> t, const bool &check) { // Complexity: O(n*log(n))
-    chrono::high_resolution_clock::time_point t1 = getTime();
-    uint32_t n = (t.size() + 2) / 4;
-    vector<uint32_t> t_copy, ct;
-    vector<bool> id_ref;
-    id_ref = buildIdRef(t);
+// @param t         minimal representation of input tree
+// @param check     perform correctness check?
+// @return          execution time
+inline uint32_t nlognCD(vector<uint32_t> t, const bool check) { // Complexity: O(n*log(n))
+    chrono::high_resolution_clock::time_point t01 = getTime();
+    uint32_t n = (t.size() + 2) / 4; // Number of nodes
+    vector<bool> id_ref = buildIdRef(t);
     computeSizes(t, id_ref);
-    if (check) t_copy = t;
-    ct = stdCentroidDecomposition(t);
-    uint32_t time = chrono::duration_cast<chrono::microseconds>(getTime()-t1).count();
-    if (check) cerr << "O(n*log(n)) - " << n << " nodes - correct: " << ((checkCorrectness(t_copy, ct))? "true" : "false") << nl;
+    vector<uint32_t> t_cp;
+    if (check) t_cp = t; // Copy tree for correctness check
+    vector<uint32_t> ct = stdCentroidDecomposition(t);
+    uint32_t time = chrono::duration_cast<chrono::microseconds>(getTime()-t01).count();
+    if (check) cerr << "O(n*log(n)) - " << n << " nodes - correct: " << ((checkCorrectness(t_cp, ct))? "true" : "false") << nl;
     return time;
 }
 
 // Perform linear centroid decomposition
-inline uint32_t nCD(vector<uint32_t> t, const bool &check, const uint32_t &A, const uint32_t &B) { // Complexity: O(n)
-    chrono::high_resolution_clock::time_point t1 = getTime();
-    uint32_t n = (t.size() + 2) / 4;
-    vector<uint32_t> t_copy, _t, ct;
-    vector<bool> id_ref;
-    id_ref = buildIdRef(t);
-	_t = cover(t, id_ref, A);
-    if (check) t_copy = t;
-    ct = centroidDecomposition(t, _t, B);
-    uint32_t time = chrono::duration_cast<chrono::microseconds>(getTime()-t1).count();
-    if (check) cerr << "O(n) - " << n << " nodes - correct: " << ((checkCorrectness(t_copy, ct))? "true" : "false") << nl;
+// @param t         minimal representation of input tree
+// @param check     perform correctness check?
+// @param A         size of subtrees [log(n) if not given]
+// @param B         linear centroid decomposition threshold [log^3(n) if not given]
+// @return          execution time
+inline uint32_t nCD(vector<uint32_t> t, const bool check, const uint32_t A, const uint32_t B) { // Complexity: O(n)
+    chrono::high_resolution_clock::time_point t01 = getTime();
+    uint32_t n = (t.size() + 2) / 4; // Number of nodes
+    vector<bool> id_ref = buildIdRef(t);
+    vector<uint32_t> t2 = cover(t, id_ref, A);
+    vector<uint32_t> t_cp;
+    if (check) t_cp = t; // Copy tree for correctness check
+    vector<uint32_t> ct = centroidDecomposition(t, t2, B);
+    uint32_t time = chrono::duration_cast<chrono::microseconds>(getTime()-t01).count();
+    if (check) cerr << "O(n) - " << n << " nodes - correct: " << ((checkCorrectness(t_cp, ct))? "true" : "false") << nl;
     return time;
 }
 
-// Settings
-uint32_t start = (uint32_t)1e6; // Starting point of benchmark (size)
-uint32_t stop = (uint32_t)50e6; // Ending point of benchmark (size)
-uint32_t step = (uint32_t)1e6; // Step at every cycle
-bool check = false; // Check if every centroid decomposition was correct (very time-consuming!)
-uint32_t A = 0; // 'A' parameter
-uint32_t B = 0; // 'B' parameter
+// General options
+uint32_t start = (uint32_t)1e6; // Number of nodes of smallest tree
+uint32_t stop = (uint32_t)50e6; // Number of nodes of biggest tree
+uint32_t step = (uint32_t)1e6; // Number of nodes step (increment)
+bool check = false; // Perform correctness check?
+uint32_t A = 0;
+uint32_t B = 0;
 
-// Global variables
 string tree;
 vector<uint32_t> t;
 
-// Main
-int main() {
+int main() { // Args: none
     for (uint32_t n = start; n <= stop; n += step) {
-        uint32_t time_1 = 0, time_2 = 0;
+        uint32_t t01 = 0, t02 = 0;
         for (uint32_t i = 0; i < 5; i++) { // Loop 5 times
-            // Generate random tree
-            system(("tree_gen/random " + to_string(n) + " > tree.txt").c_str()); // Generate random tree
-            ifstream in("tree.txt"); in >> tree; in.close(); // Load generated tree
+            auto r = system(("tree_gen/random " + to_string(n) + " > tree.txt").c_str()); // Generate random tree
+            ifstream in("tree.txt"); in >> tree; in.close();
             try {
                 t = buildTree(tree); // Build tree (minimal representation)
             } catch (const char* err) {
                 cout << err << nl;
                 return 0;
             }
-            time_1 += nlognCD(t, check); // Perform O(n*log(n)) centroid decomposition
-            time_2 += nCD(t, check, A, B); // Perform O(n) centroid decomposition
-            cout << "si" << nl;
+            t01 += nlognCD(t, check); // Perform O(n*log(n)) centroid decomposition
+            t02 += nCD(t, check, A, B); // Perform O(n) centroid decomposition
         }
-        time_1 /= 5; time_2 /= 5; // Compute average of 5 times (1 and 2)
-        cout << "O(n*log(n)) - " << n << " nodes - time: " << time_1 << " -  formatted: " << printDuration(time_1) << nl; // Output average duration for O(n*log(n)) algorithm
-        cout << "O(n) - " << n << " nodes - time: " << time_2 << " - formatted: " << printDuration(time_2) << nl << nl; // Output average duration for O(n) algorithm
+        t01 /= 5; t02 /= 5; // Compute average of 5 decompositions (both)
+        cout << "O(n*log(n)) - " << n << " nodes - time: " << t01 << " -  formatted: " << printDuration(t01) << nl;
+        cout << "O(n) - " << n << " nodes - time: " << t02 << " - formatted: " << printDuration(t02) << nl << nl;
         if (!check) cerr << "Done for " << n << " nodes." << nl;
-        if (check) cerr << nl;
+        else cerr << nl;
     }
-    system("rm -rf tree.txt"); // Remove 'tree.txt' temporary file
+    auto r = system("rm -rf tree.txt"); // Delete 'tree.txt' temporary file
     return 0;
 }
