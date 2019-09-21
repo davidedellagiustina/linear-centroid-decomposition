@@ -18,6 +18,8 @@ void help() {
 	"Options:" << nl <<
 	" -h        Print this help." << nl <<
 	" -i <arg>  Input tree [REQUIRED]." << nl <<
+	" -A <arg>	Size of trelets for tree covering." << nl <<
+	" -B <arg>	Threshold for linear centroid decomposition." << nl <<
 	" -o        Print output centroid tree." << nl <<
 	" -c        Check correctness." << nl;
 	exit(0);
@@ -26,7 +28,7 @@ void help() {
 int main(int argc, char* argv[]) {
 	// Process command line options
 	int opt;
-	while ((opt = getopt(argc, argv, "hoci:")) != -1) {
+	while ((opt = getopt(argc, argv, "hoci:A:B:")) != -1) {
 		switch (opt) {
 			case 'h':
 				help();
@@ -39,6 +41,12 @@ int main(int argc, char* argv[]) {
 				break;
 			case 'i':
 				input_path = string(optarg);
+				break;
+			case 'A':
+				A = atoi(optarg);
+				break;
+			case 'B':
+				B = atoi(optarg);
 				break;
 			default:
 				help();
