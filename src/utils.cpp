@@ -12,25 +12,25 @@ using namespace std;
 // @param tree      BP representation of tree
 // @return          minimal T representation (no partial sizes)
 vector<uint32_t> buildTree(const string &tree) { // Complexity: O(n)
-    uint32_t n = tree.length() / 2; // Number of nodes
-    uint32_t N = 4*n - 2; // Size of 't'
-    vector<uint32_t> t = vector<uint32_t>(N); // Initialize empty 't'
+    uint32_t n = tree.length() / 2;
+    uint32_t N = (4 * n) - 2; // Size of T
+    vector<uint32_t> t = vector<uint32_t>(N); // Empty T
     uint32_t H = 0; // Max height
-    // Compute the number of nodes per level in t[0...H-1]
+    // Compute the number of nodes per level in T[0...H-1]
     int64_t h = 1; // Current height
     for (uint32_t i = 0; i < tree.length(); i++) {
         t[h-1] += (tree[i] == '(');
         h += ((tree[i] == '(')? 1 : -1);
         H = std::max(uint32_t(h), H); // Also compute max height
     }
-    // Compute the partial sums in t[0...H-1]
+    // Compute the partial sums in T[0...H-1]
     uint32_t psum = 0, tmp;
     for (uint32_t i = 0; i < H; i++) {
         tmp = t[i];
         t[i] = psum;
         psum += tmp;
     }
-    // Count the number of children for each node. We store this info in t[H...H+n-1]
+    // Count the number of children for each node. We store this info in T[H...H+n-1]
     h = 0;
     for (uint32_t i = 1; i < tree.length(); i++) {
         t[H+t[h]] += (tree[i] == '(');
@@ -38,28 +38,26 @@ vector<uint32_t> buildTree(const string &tree) { // Complexity: O(n)
         t[h] += (tree[i] == ')');
         h += ((tree[i] == '(')? 1 : -1);
     }
-    // Left-shift t[H...H+n-1] in t[0...n-1]
-    for (uint32_t i = 0; i < n; i++) t[i] = t[i+H];
-    uint32_t r = n; // t[r] = number of children of last allocated node
-    uint32_t R = N; // Start position (=ID) in t of last allocated node
-    for(uint32_t i = 0; i < n; i++) { // For all nodes
+    for (uint32_t i = 0; i < n; i++) t[i] = t[i+H]; // Left-shift T[H...H+n-1] to T[0...n-1]
+    // Build basic T representation (no parent-children pointers)
+    uint32_t r = n; // T[r] is the number of children of last allocated node
+    uint32_t R = N; // Start position (=ID) in T of last allocated node
+    for(uint32_t i = 0; i < n; i++) {
         r--; // Process next node (right to left)
-        R -= 2 + 2*t[r]; // Node ID
+        R -= (2 * t[r]) + 2; // Node ID
         t[R] = t[r]; // Number of children
-        // for (int j = 0; j < 1+2*t[r]; j++) t[R+1+j] = 0; // Set to 0 all values but number of children (not needed it seems)
     }
-    // Set parent/children pointers
-    uint32_t i = 0; // Pointer to current node X in current level
-    uint32_t j = t[0]*2 + 2; // Pointer to child of X in next level
+    // Set parent-children pointers
+    uint32_t i = 0, j = t[0]*2 + 2; // 'i' is at level L, 'j' is at level L+1
     t[1] = 0; // Parent of root = root
     while (j < N) {
         uint32_t x = i; // This node
-        uint32_t n_c = t[x]; // Number of children of this node
+        uint32_t nc = t[x]; // Number of children of this node
         i += 2; // Jump to children area
-        for (int k = 0; k < n_c; k++) {
+        for (int k = 0; k < nc; k++) {
             t[i] = j; // Write child's ID
             i += 2; // Jump to next child 
-            t[j+1] = x; // Store parent of j
+            t[j+1] = x; // Store parent of 'j'
             j += 2*t[j]+2; // Jump to next child's area
         }
     }
@@ -74,7 +72,7 @@ vector<bool> buildIdRef(const vector<uint32_t> &t) { // Complexity: O(n)
     uint32_t i = 0;
     while (i < t.size()) {
         id_ref[i] = 1;
-        i += 2*(t[i]&num_c)+2;
+        i += 2*(t[i]&num_c)+2; // Next node
     }
     return id_ref;
 }
