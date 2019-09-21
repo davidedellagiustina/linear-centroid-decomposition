@@ -52,10 +52,21 @@ inline uint32_t nCD(vector<uint32_t> t, const bool check, const uint32_t A, cons
     return time;
 }
 
+// Print help
+void help() {
+	cout << "Usage: benchmark [options]" << nl <<
+	"Options:" << nl <<
+	" -h        Print this help." << nl <<
+    " -b <arg>  Number of nodes of smallest tree [REQUIRED]." << nl <<
+    " -e <arg>  Number of nodes of biggest tree [REQUIRED]." << nl <<
+    " -s <arg>  Increment step [REQUIRED]." << nl <<
+    " -t <arg>  Number of tests for each tree [REQUIRED]." << nl <<
+	" -c        Check correctness." << nl;
+	exit(0);
+}
+
 // General options
-uint32_t start = (uint32_t)1e6; // Number of nodes of smallest tree
-uint32_t stop = (uint32_t)50e6; // Number of nodes of biggest tree
-uint32_t step = (uint32_t)1e6; // Number of nodes step (increment)
+uint32_t start = 0, stop = 0, step = 0, tests = 0;
 bool check = false; // Perform correctness check?
 uint32_t A = 0;
 uint32_t B = 0;
@@ -63,10 +74,39 @@ uint32_t B = 0;
 string tree;
 vector<uint32_t> t;
 
-int main() { // Args: none
+int main(int argc, char* argv[]) {
+    // Process command line options
+	int opt;
+	while ((opt = getopt(argc, argv, "hb:e:s:t:c")) != -1) {
+		switch (opt) {
+			case 'h':
+				help();
+				break;
+			case 'b':
+				start = atoi(optarg);
+				break;
+			case 'e':
+				stop = atoi(optarg);
+				break;
+			case 's':
+				step = atoi(optarg);
+				break;
+			case 't':
+				tests = atoi(optarg);
+				break;
+			case 'c':
+				check = true;
+				break;
+			default:
+				help();
+				return -1;
+		}
+	}
+    if (!start || !stop || !step || !tests || stop < start) help(); // If incorrect parameters
+    // Benchmark
     for (uint32_t n = start; n <= stop; n += step) {
         uint32_t t01 = 0, t02 = 0;
-        for (uint32_t i = 0; i < 5; i++) { // Loop 5 times
+        for (uint32_t i = 0; i < tests; i++) { // Loop 'tests' times
             auto r = system(("tree_gen/random " + to_string(n) + " > tree.txt").c_str()); // Generate random tree
             ifstream in("tree.txt"); in >> tree; in.close();
             try {
@@ -78,7 +118,7 @@ int main() { // Args: none
             t01 += nlognCD(t, check); // Perform O(n*log(n)) centroid decomposition
             t02 += nCD(t, check, A, B); // Perform O(n) centroid decomposition
         }
-        t01 /= 5; t02 /= 5; // Compute average of 5 decompositions (both)
+        t01 /= tests; t02 /= tests; // Compute average of 'tests' decompositions (both)
         cout << "O(n*log(n)) - " << n << " nodes - time: " << t01 << " -  formatted: " << printDuration(t01) << nl;
         cout << "O(n) - " << n << " nodes - time: " << t02 << " - formatted: " << printDuration(t02) << nl << nl;
         if (!check) cerr << "Done for " << n << " nodes." << nl;
