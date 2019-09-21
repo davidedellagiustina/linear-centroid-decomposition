@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
 		t = buildTree(tree);
 	} catch (const char* err) {
 		cout << err << nl;
-		return 0;
+		return -1;
 	}
 	cout << "Partial times:" << nl;
 	// Build T reference bitvector
@@ -72,7 +72,12 @@ int main(int argc, char* argv[]) {
 	cout << printTime(" - T reference bitvector building", t01, getTime()) << nl;
 	// Tree covering
 	chrono::high_resolution_clock::time_point t02 = getTime();
-	t2 = cover(t, id_ref, A);
+	try {
+		t2 = cover(t, id_ref, A);
+	} catch (const char* err) {
+		cout << err << nl;
+		return -1;
+	}
 	cout << printTime(" - Tree covering and partial sizes", t02, getTime()) << nl;
 	cout << printTime(" - Total structure building", t01, getTime()) << nl; // Total time
 	// Copy structures

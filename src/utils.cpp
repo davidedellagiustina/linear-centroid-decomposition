@@ -105,13 +105,14 @@ void computeSizes(vector<uint32_t> &t, const vector<bool> &id_ref) { // Complexi
 vector<uint32_t> cover(vector<uint32_t> &t, const vector<bool> &id_ref, uint32_t A = 0) { // Complexity: O(n)
     uint32_t n = (t.size() + 2) / 4; // Number of nodes of T
     A = ((!A)? ((n <= 1)? 1 : floor(log2(n))) : A); // If A is not given
+    if (A >= pow(2, 16)) throw "\"A\" parameter is too big: maximum is 65535.";
     uint32_t k = n/A + ((n%A == 0)? 0 : 1) + 1; // Upper-bound for number of nodes of T2
     vector<uint32_t> X = vector<uint32_t>(n);
     vector<tuple<uint32_t,uint32_t,uint32_t,uint32_t>> q = vector<tuple<uint32_t,uint32_t,uint32_t,uint32_t>>(k); // Fields: depth, pre_ord, size, t_node
     uint32_t q_ptr = q.size() - 1; // Pointer on 'q'
     // Step 1 - bottom-up visit [compute partial sizes on T and perform covering]: O(n)
     int64_t i = t.size() - 1, p = t.size(), nc = 0;
-    auto x = (uint8_t*)X.data(); // Here we use the first n bytes of 'X'
+    auto x = (uint16_t*)X.data(); // Here we use the first n bytes of 'X'
     uint32_t x1_ptr = 0, x2_ptr = 0; // 'x1_ptr' is at level L, 'x2_ptr' is at level L+1
     while (i >= 0) {
         if (id_ref[i]) {

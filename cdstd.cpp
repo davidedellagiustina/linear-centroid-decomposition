@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
 		t = buildTree(tree);
 	} catch (const char* err) {
 		cout << err << nl;
-		return 0;
+		return -1;
 	}
 	cout << "Partial times:" << nl;
 	// Build T reference bitvector
