@@ -57,6 +57,7 @@ void help() {
 	cout << "Usage: benchmark [options]" << nl <<
 	"Options:" << nl <<
 	" -h        Print this help." << nl <<
+    " -g <arg>  Tree generator. Options: random, path, binpath." << nl <<
     " -b <arg>  Number of nodes of smallest tree [REQUIRED]." << nl <<
     " -e <arg>  Number of nodes of biggest tree [REQUIRED]." << nl <<
     " -s <arg>  Increment step [REQUIRED]." << nl <<
@@ -66,6 +67,7 @@ void help() {
 }
 
 // General options
+string g = "random";
 uint32_t start = 0, stop = 0, step = 0, tests = 0;
 bool check = false; // Perform correctness check?
 uint32_t A = 0;
@@ -77,11 +79,15 @@ vector<uint32_t> t;
 int main(int argc, char* argv[]) {
     // Process command line options
 	int opt;
-	while ((opt = getopt(argc, argv, "hb:e:s:t:c")) != -1) {
+	while ((opt = getopt(argc, argv, "hg:b:e:s:t:c")) != -1) {
 		switch (opt) {
 			case 'h':
 				help();
 				break;
+            case 'g':
+                if (optarg == "random" || optarg == "path") g = optarg;
+                else if (optarg == "binpath") g = "binary_halfn";
+                break;
 			case 'b':
 				start = atoi(optarg);
 				break;
@@ -107,7 +113,7 @@ int main(int argc, char* argv[]) {
     for (uint32_t n = start; n <= stop; n += step) {
         uint32_t t01 = 0, t02 = 0;
         for (uint32_t i = 0; i < tests; i++) { // Loop 'tests' times
-            auto r = system(("tree_gen/random " + to_string(n) + " > tree.txt").c_str()); // Generate random tree
+            auto r = system(("tree_gen/" + g + " " + to_string(n) + " > tree.txt").c_str()); // Generate random tree
             ifstream in("tree.txt"); in >> tree; in.close();
             try {
                 t = buildTree(tree); // Build tree (minimal representation)
