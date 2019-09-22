@@ -322,14 +322,11 @@ inline vector<uint32_t> stdCentroidDecomposition(vector<uint32_t> &t, const uint
     stack<uint32_t> s; s.push(root); // Stack with roots of connected components yet to process
     while (!s.empty()) {
         uint32_t r = s.top(); s.pop();
+        uint32_t c = 0; for (uint32_t i = 0; i < (t[r]&num_c); i++) c+= t[r+2*i+3]; // Total size of future connected components [used for printing output]
         uint32_t centroid = stdFindCentroid(t, r);
-        uint32_t c = 0; for (uint32_t i = 0; i < (t[centroid]&num_c); i++) c += t[centroid+2*i+3]; // Total size of centroid subtrees [needed for printing centroid tree]
         rmNodeOnT(t, centroid);
         for(uint32_t i = (t[centroid]&num_c); i > 0; i--) s.push(t[centroid+2*i]); // Push children to stack in reverse order
-        if (centroid != r) { // If the root of the subtree is not its centroid
-            s.push(r);
-            c++; for (uint32_t i = 0; i < (t[r]&num_c); i++) c += t[r+2*i+3]; // Size of root subtree [needed for printing centroid tree]
-        }
+        if (centroid != r) s.push(r); // If the root of the subtree is not its centroid, then push it
         // Print the current node to the output vector
         while (out[ptr] == 1) ptr++;
         out[ptr] = 0; // Print "("
@@ -415,13 +412,13 @@ vector<uint32_t> centroidDecomposition(vector<uint32_t> &t, vector<uint32_t> &t2
     uint32_t n = (t.size() + 2) / 4;
     B = ((n <= 1)? 1 : ((!B)? pow(floor(log2(n)), 3) : B));
     vector<uint32_t> out = vector<uint32_t>(3*n, 0); uint32_t ptr = 0;
-    stack<uint32_t> s, noc; s.push(0); // Stack with roots of connected components yet to process
+    stack<uint32_t> s; s.push(0); // Stack with roots of connected components yet to process
     while (!s.empty()) {
-        uint32_t root = s.top(); s.pop();
-        uint32_t dimens = 1; for (uint32_t i = 0; i < (t[t2[root+3]]&num_c); i++) dimens += t[t2[root+3]+2*i+3]; // Size of connected component
-        if (dimens > B) { // If the connected component is bigger than threshold
-            computeDeltas(t, t2, root);
-            pair<uint32_t,uint32_t> centroid = findCentroid(t, t2, root); uint32_t t2c = centroid.first, tc = centroid.second;
+        uint32_t r = s.top(); s.pop();
+        uint32_t size = 1; for (uint32_t i = 0; i < (t[t2[r+3]]&num_c); i++) size += t[t2[r+3]+2*i+3]; // Size of connected component
+        if (size > B) { // If connected component is bigger than threshold 'B'
+            computeDeltas(t, t2, r);
+            pair<uint32_t,uint32_t> centroid = findCentroid(t, t2, r); uint32_t t2c = centroid.first, tc = centroid.second; // Centroid on T and T2
             rmNodeOnT(t, tc);
             vector<uint32_t> children = rmNodeOnT2(t2, t2c);
             // Build children reference vector
@@ -470,26 +467,24 @@ vector<uint32_t> centroidDecomposition(vector<uint32_t> &t, vector<uint32_t> &t2
                 t2[t2c+2] -= total_size;
                 uint32_t i = 0;
                 for (pair<uint32_t,uint32_t> node : c_ref) {
-                    if (t2[root+3] == node.first) { // If it was attached "before" than 'tc'
+                    if (t2[r+3] == node.first) { // If it was attached "before" than 'tc'
                         t2[t2c+3*i+4] = node.second; // Then add its ID among the updated 't2c''s children
                         t2[node.second+1] = t2c; // And set 't2c' as its parent
                         i++;
                     }
                 }
             }
-            if (t[tc+1] != tc) { s.push(root); nc++; } // If centroid on T has a parent
-            // Print node on 'out'
-            out[ptr] = 0; // Write "("
-            out[ptr+1] = tc + 2; // Write centroid ID
+            if (t[tc+1] != tc) { s.push(r); nc++; } // If centroid on T has a parent
+            // Print node to 'out'
+            out[ptr] = 0; // Print "("
+            out[ptr+1] = tc + 2; // Print centroid ID
             ptr += 2;
-            if (!noc.empty()) noc.top()--;
-            noc.push(nc);
-        } else { // When connected component is smaller than threshold (B)
-            vector<uint32_t> tmp = stdCentroidDecomposition(t, t2[root+3], dimens);
-            for (uint32_t el : tmp) { out[ptr] = el; ptr++; } // Copy resulting vector to 'out'
-            if (!noc.empty()) noc.top()--; // Fix 'noc'
+            out[ptr+3*(size-1)] = 1; // Print ")"
+        } else { // If connected component is smaller than threshold 'B'
+            vector<uint32_t> tmp = stdCentroidDecomposition(t, t2[r+3], size);
+            for (uint32_t el : tmp) { out[ptr] = el; ptr++; } // Print subtree to 'out'
         }
-        while (!noc.empty() && noc.top() == 0) { noc.pop(); out[ptr] = 1; ptr++; } // Close unclosed nodes
+        while (ptr < out.size() && out[ptr] == 1) ptr++; // Go past "closed" nodes
     }
     return out;
 }
