@@ -48,7 +48,7 @@ vector<uint32_t> buildTree(const string &tree) { // Complexity: O(n)
         t[R] = t[r]; // Number of children
     }
     // Set parent-children pointers
-    uint32_t i = 0, j = t[0]*2 + 2; // 'i' is at level L, 'j' is at level L+1
+    uint32_t i = 0, j = (2 * t[0]) + 2; // 'i' is at level L, 'j' is at level L+1
     t[1] = 0; // Parent of root = root
     while (j < N) {
         uint32_t x = i; // This node
@@ -64,45 +64,41 @@ vector<uint32_t> buildTree(const string &tree) { // Complexity: O(n)
     return t;
 }
 
-// Build a reference bitvector to identify the positions of the nodes in T
+// Build a reference vector to identify the positions of the nodes in T
 // @param t     minimal T representation
-// @return      nodes reference bitvector
-vector<bool> buildIdRef(const vector<uint32_t> &t) { // Complexity: O(n)
-    vector<bool> id_ref = vector<bool>(t.size(), 0);
-    uint32_t i = 0;
+// @return      nodes reference vector
+vector<uint32_t> buildIdRef(const vector<uint32_t> &t) { // Complexity: O(n)
+    vector<uint32_t> id_ref = vector<uint32_t>((t.size()+2)/4);
+    uint32_t i = 0, j = 0;
     while (i < t.size()) {
-        id_ref[i] = 1;
-        i += 2*(t[i]&num_c)+2; // Next node
+        id_ref[j] = i;
+        i += 2*(t[i]&num_c)+2; j++; // Next node
     }
     return id_ref;
 }
 
 // Compute the initial partial sizes on T
 // @param t         minimal T representation
-// @param id_ref    nodes reference bitvector
-void computeSizes(vector<uint32_t> &t, const vector<bool> &id_ref) { // Complexity: O(n)
-    uint32_t i = t.size() - 2; // ID of the last node
+// @param id_ref    nodes reference vector
+void computeSizes(vector<uint32_t> &t, const vector<uint32_t> &id_ref) { // Complexity: O(n)
     uint32_t p = t.size(); // Parent (invalid at beginning)
     uint32_t nc = 0; // 'i' is the 'nc'-th child of 'p'
-    while (i > 0) {
-        if (id_ref[i]) { // If there is a node with this ID on T
-            nc = ((t[i+1] != p)? (t[t[i+1]]&num_c)-1 : nc-1);
-            p = t[i+1];
-            uint32_t size = 1; // Size of subtree rooted at 'i'
-            for (uint32_t j = 0; j < (t[i]&num_c); j++) size += t[i+2*j+3];
-            t[p+2*nc+3] = size;
-        }
-        i--;
+    for (auto it = id_ref.rbegin(); it != id_ref.rend()-1; it++) {
+        uint32_t i = *it; // ID of node
+        nc = ((t[i+1] != p)? (t[t[i+1]]&num_c)-1 : nc-1);
+        p = t[i+1];
+        uint32_t size = 1; for (uint32_t j = 0; j < (t[i]&num_c); j++) size += t[i+2*j+3]; // Size of subtree rooted at 'i'
+        t[p+2*nc+3] = size;
     }
 }
 
 // Cover T and build T2, then compute partial sizes on T
 // Note: 'computeSizes()' shouldn't be called: this procedure already computes those sizes
 // @param t         minimal T representation
-// @param id_ref    nodes reference bitvector
+// @param id_ref    nodes reference vector
 // @param A         minimum size of cover elements - log(n) if not given
 // @return          T2 minimal representation (no weights)
-vector<uint32_t> cover(vector<uint32_t> &t, const vector<bool> &id_ref, uint32_t A = 0) { // Complexity: O(n)
+vector<uint32_t> cover(vector<uint32_t> &t, const vector<uint32_t> &id_ref, uint32_t A = 0) { // Complexity: O(n)
     uint32_t n = (t.size() + 2) / 4; // Number of nodes of T
     A = ((!A)? ((n <= 1)? 1 : floor(log2(n))) : A); // If A is not given
     if (A >= pow(2, 16)) throw "\"A\" parameter is too big: maximum is 65535.";
@@ -111,30 +107,27 @@ vector<uint32_t> cover(vector<uint32_t> &t, const vector<bool> &id_ref, uint32_t
     vector<tuple<uint32_t,uint32_t,uint32_t,uint32_t>> q = vector<tuple<uint32_t,uint32_t,uint32_t,uint32_t>>(k); // Fields: depth, pre_ord, size, t_node
     uint32_t q_ptr = q.size() - 1; // Pointer on 'q'
     // Step 1 - bottom-up visit [compute partial sizes on T and perform covering]: O(n)
-    int64_t i = t.size() - 1, p = t.size(), nc = 0;
+    int64_t i, p = t.size(), nc = 0;
     auto x = (uint16_t*)X.data(); // Here we use the first n bytes of 'X'
     uint32_t x1_ptr = 0, x2_ptr = 0; // 'x1_ptr' is at level L, 'x2_ptr' is at level L+1
-    while (i >= 0) {
-        if (id_ref[i]) {
-            nc = ((t[i+1] != p)? (t[t[i+1]]&num_c)-1 : nc-1); p = t[i+1];
-            // Compute partial and cover elements sizes
-            t[p+2*nc+3] = ((i != 0)? 1 : t[p+2*nc+3]);
-            uint32_t size = 1;
-            for (uint32_t j = (t[i]&num_c); j > 0; j--, x2_ptr++) {
-                t[p+2*nc+3] += ((i != 0)? t[i+2*j+1] : 0);
-                size += x[x2_ptr];
-            }
-            // Create cover element
-            if (size >= A || i == 0) {
-                t[i] |= cov_el; // Mark node on T as cover element
-                std::get<2>(q[q_ptr]) = size; // Write 'size' on 'q'
-                std::get<3>(q[q_ptr]) = i; // Write 't_node' on 'q'
-                q_ptr--;
-                x[x1_ptr] = 0;
-            } else x[x1_ptr] = size; // Save cover element size on 'x'
-            x1_ptr++;
+    for (auto it = id_ref.rbegin(); it != id_ref.rend(); it++) {
+        i = *it; nc = ((t[i+1] != p)? (t[t[i+1]]&num_c)-1 : nc-1); p = t[i+1];
+        // Compute partial and cover elements sizes
+        t[p+2*nc+3] = ((i != 0)? 1 : t[p+2*nc+3]);
+        uint32_t size = 1;
+        for (uint32_t j = (t[i]&num_c); j > 0; j--, x2_ptr++) {
+            t[p+2*nc+3] += ((i != 0)? t[i+2*j+1] : 0);
+            size += x[x2_ptr];
         }
-        i--;
+        // Create cover element
+        if (size >= A || i == 0) {
+            t[i] |= cov_el; // Mark node on T as cover element
+            std::get<2>(q[q_ptr]) = size; // Write 'size' on 'q'
+            std::get<3>(q[q_ptr]) = i; // Write 't_node' on 'q'
+            q_ptr--;
+            x[x1_ptr] = 0;
+        } else x[x1_ptr] = size; // Save cover element size on 'x'
+        x1_ptr++;
     }
     // Step 2 - top-down visit [compute 'depth' and 'pre-ord' fields for each node on T2]: O(n)
     i = 0; p = 0; q_ptr++; X[0] = 0;
@@ -314,7 +307,7 @@ inline uint32_t stdFindCentroid(const vector<uint32_t> &t, const uint32_t root) 
 // Standard centroid decomposition algorithm
 // @param t         T representation
 // @param root      root of the tree (or connected component, used as subprocedure for linear centroid decomposition)
-// @param N         number of nodes of the tree to elaborate (require ONLY when called as subprocedure of linear centroid decomposition)
+// @param N         number of nodes of the tree to elaborate (required ONLY when called as subprocedure of linear centroid decomposition)
 // @return          vector representation of the centroid tree
 inline vector<uint32_t> stdCentroidDecomposition(vector<uint32_t> &t, const uint32_t root = 0, uint32_t N = 0) { // Complexity: O(n*log(n))
     N = ((!N)? (t.size()+2)/4 : N);

@@ -8,8 +8,7 @@ using namespace std;
 // Global
 bool print_output = false, check = false;
 string input_path, tree;
-vector<uint32_t> t, t_cp, ct;
-vector<bool> id_ref;
+vector<uint32_t> t, t_cp, id_ref, ct;
 
 // Print help
 void help() {

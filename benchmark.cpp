@@ -23,7 +23,7 @@ inline string printDuration(const uint64_t duration) {
 inline uint32_t nlognCD(vector<uint32_t> t, const bool check) { // Complexity: O(n*log(n))
     chrono::high_resolution_clock::time_point t01 = getTime();
     uint32_t n = (t.size() + 2) / 4; // Number of nodes
-    vector<bool> id_ref = buildIdRef(t);
+    vector<uint32_t> id_ref = buildIdRef(t);
     computeSizes(t, id_ref);
     vector<uint32_t> t_cp;
     if (check) t_cp = t; // Copy tree for correctness check
@@ -42,7 +42,7 @@ inline uint32_t nlognCD(vector<uint32_t> t, const bool check) { // Complexity: O
 inline uint32_t nCD(vector<uint32_t> t, const bool check, const uint32_t A, const uint32_t B) { // Complexity: O(n)
     chrono::high_resolution_clock::time_point t01 = getTime();
     uint32_t n = (t.size() + 2) / 4; // Number of nodes
-    vector<bool> id_ref = buildIdRef(t);
+    vector<uint32_t> id_ref = buildIdRef(t);
     vector<uint32_t> t2 = cover(t, id_ref, A);
     vector<uint32_t> t_cp;
     if (check) t_cp = t; // Copy tree for correctness check
