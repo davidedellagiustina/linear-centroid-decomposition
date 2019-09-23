@@ -34,7 +34,7 @@ vector<uint32_t> buildTree(const string &tree) { // Complexity: O(n)
     h = 0;
     for (uint32_t i = 1; i < tree.length(); i++) {
         t[H+t[h]] += (tree[i] == '(');
-        if (t[H+t[h]] >= max_deg) throw "Tree is too big: out-degree overflow."; // Check for out-degree overflow
+        if (t[H+t[h]] > max_deg) throw "Tree is too big: out-degree overflow."; // Check for out-degree overflow
         t[h] += (tree[i] == ')');
         h += ((tree[i] == '(')? 1 : -1);
     }
@@ -100,8 +100,8 @@ void computeSizes(vector<uint32_t> &t, const vector<uint32_t> &id_ref) { // Comp
 // @return          T2 minimal representation (no weights)
 vector<uint32_t> cover(vector<uint32_t> &t, const vector<uint32_t> &id_ref, uint32_t A = 0) { // Complexity: O(n)
     uint32_t n = (t.size() + 2) / 4; // Number of nodes of T
-    A = ((!A)? ((n <= 1)? 1 : floor(log2(n))) : A); // If A is not given
-    if (A >= pow(2, 16)) throw "\"A\" parameter is too big: maximum is 65535.";
+    A = ((!A)? ((n <= 1)? 1 : log2(n)) : A); // If A is not given
+    if (A > max_A) throw "\"A\" parameter is too big: maximum is 65535.";
     uint32_t k = n/A + ((n%A == 0)? 0 : 1) + 1; // Upper-bound for number of nodes of T2
     vector<uint32_t> X = vector<uint32_t>(n);
     vector<tuple<uint32_t,uint32_t,uint32_t,uint32_t>> q = vector<tuple<uint32_t,uint32_t,uint32_t,uint32_t>>(k); // Fields: depth, pre_ord, size, t_node
@@ -403,7 +403,7 @@ inline pair<uint32_t,uint32_t> findCentroid(const vector<uint32_t> &t, const vec
 // @return          centroid tree vector representation
 vector<uint32_t> centroidDecomposition(vector<uint32_t> &t, vector<uint32_t> &t2, uint32_t B = 0) { // Complexity: O(n)
     uint32_t n = (t.size() + 2) / 4;
-    B = ((n <= 1)? 1 : ((!B)? pow(floor(log2(n)), 3) : B));
+    B = ((n <= 1)? 1 : ((!B)? (log2(n)*log2(n)*log2(n)) : B));
     vector<uint32_t> out = vector<uint32_t>(3*n, 0); uint32_t ptr = 0;
     stack<uint32_t> s; s.push(0); // Stack with roots of connected components yet to process
     while (!s.empty()) {
