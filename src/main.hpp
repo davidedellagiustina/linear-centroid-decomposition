@@ -18,4 +18,4 @@
 #define oss             ostringstream
 #define num_c           0x7fffffff // Bitmask to extract number of children
 #define cov_el          0x80000000 // Bitmask to extract 'cov_el' flag
-#define log2(n)         (31 - __builtin_clz(n))
+#define log2(n)         (31-__builtin_clz(n))
