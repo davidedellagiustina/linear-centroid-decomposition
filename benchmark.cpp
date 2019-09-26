@@ -27,7 +27,7 @@ inline uint32_t nlognCD(vector<uint32_t> t, const bool check) { // Complexity: O
     computeSizes(t, id_ref);
     vector<uint32_t> t_cp;
     if (check) t_cp = t; // Copy tree for correctness check
-    vector<uint32_t> ct = stdCentroidDecomposition(t);
+    pair<vector<uint8_t>,vector<uint32_t>> ct = stdCentroidDecomposition(t);
     uint32_t time = chrono::duration_cast<chrono::microseconds>(getTime()-t01).count();
     if (check) cerr << "O(n*log(n)) - " << n << " nodes - correct: " << ((checkCorrectness(t_cp, ct))? "true" : "false") << nl;
     return time;
@@ -46,7 +46,7 @@ inline uint32_t nCD(vector<uint32_t> t, const bool check, const uint32_t A, cons
     vector<uint32_t> t2 = cover(t, id_ref, A);
     vector<uint32_t> t_cp;
     if (check) t_cp = t; // Copy tree for correctness check
-    vector<uint32_t> ct = centroidDecomposition(t, t2, B);
+    pair<vector<uint8_t>,vector<uint32_t>> ct = centroidDecomposition(t, t2, B);
     uint32_t time = chrono::duration_cast<chrono::microseconds>(getTime()-t01).count();
     if (check) cerr << "O(n) - " << n << " nodes - correct: " << ((checkCorrectness(t_cp, ct))? "true" : "false") << nl;
     return time;
