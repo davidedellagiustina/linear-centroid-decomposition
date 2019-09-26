@@ -3,9 +3,13 @@
 CC = g++
 CFLAGS = -g -O3 -mtune=native -march=native
 
-install:
-	$(CC) $(CFLAGS) cdlin.cpp -o cdlin
+std:
 	$(CC) $(CFLAGS) cdstd.cpp -o cdstd
+
+lin:
+	$(CC) $(CFLAGS) cdlin.cpp -o cdlin
+
+install: std lin
 
 tools:
 	$(CC) $(CFLAGS) tree_gen/random.cpp -o tree_gen/random
