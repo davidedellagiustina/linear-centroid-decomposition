@@ -308,7 +308,7 @@ inline uint32_t stdFindCentroid(const vector<uint32_t> &t, const uint32_t root) 
 // @param t         T representation
 // @param root      root of the tree (or connected component, used as subprocedure for linear centroid decomposition)
 // @param N         number of nodes of the tree to elaborate (required ONLY when called as subprocedure of linear centroid decomposition)
-// @return          vector representation of the centroid tree (pair of topology and IDs)
+// @return          pair<shape,ids> representation of the centroid tree
 inline pair<vector<uint8_t>,vector<uint32_t>> stdCentroidDecomposition(vector<uint32_t> &t, const uint32_t root = 0, uint32_t N = 0) { // Complexity: O(n*log(n))
     N = ((!N)? (t.size()+2)/4 : N);
     vector<uint8_t> shape = vector<uint8_t>(2*N, 0);
@@ -481,7 +481,7 @@ pair<vector<uint8_t>,vector<uint32_t>> centroidDecomposition(vector<uint32_t> &t
             for (uint32_t i = nc; i > 0; i--) {
                 uint32_t new_node;
                 uint32_t child = t[tc+2*i];
-                if (!(t[child]&cov_el)) { // Il 'child' isn't a cover element
+                if (!(t[child]&cov_el)) { // If 'child' isn't a cover element
                     t[child] |= cov_el;
                     uint32_t size = t[tc+2*i+1]; total_size += size;
                     vector<uint32_t> c;
@@ -619,7 +619,7 @@ inline string print(const vector<uint32_t> &t) { // Complexity: O(n)
 }
 
 // Convert the representation of centroid tree from pair<shape,ids> to string
-// @param ct    centroid tree vector representation
+// @param ct    centroid tree pair<shape,ids> representation
 // @return      centroid tree string representation
 inline string ctToString(const pair<vector<uint8_t>,vector<uint32_t>> &ct) { // Complexity: O(n)
     oss os;
