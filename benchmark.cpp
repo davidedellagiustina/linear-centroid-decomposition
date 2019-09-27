@@ -85,8 +85,8 @@ int main(int argc, char* argv[]) {
 				help();
 				break;
             case 'g':
-                if (optarg == "random" || optarg == "path") g = optarg;
-                else if (optarg == "binpath") g = "binary_halfn";
+                if (strcmp("random", optarg) == 0 || strcmp("path", optarg) == 0) g = optarg;
+                else if (strcmp("binpath", optarg) == 0) g = "binary_halfn";
                 break;
 			case 'b':
 				start = atoi(optarg);
