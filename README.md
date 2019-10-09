@@ -28,4 +28,6 @@ In `T''`, the `i`-th node occupies the region `T[i], ..., T[k]`:
 
 # Performances
 
-_TODO: add graph of performaces_
+![Performances on random trees](imgs/graph_random.png)
+
+![Performances on path trees](imgs/graph_path.png)
