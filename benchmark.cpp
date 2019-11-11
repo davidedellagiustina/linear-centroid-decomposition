@@ -112,7 +112,7 @@ int main(int argc, char* argv[]) {
     // Benchmark
     for (uint32_t n = start; n <= stop; n += step) {
         uint32_t t01 = 0, t02 = 0;
-        for (uint32_t i = 0; i < tests; i++) { // Loop 'tests' times
+        for (uint32_t i = 0; i < tests; ++i) { // Loop 'tests' times
             auto r = system(("tree_gen/" + g + " " + to_string(n) + " > tree.txt").c_str()); // Generate random tree
             ifstream in("tree.txt"); in >> tree; in.close();
             try {
