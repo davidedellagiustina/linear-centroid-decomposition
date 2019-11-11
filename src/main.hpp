@@ -6,7 +6,6 @@
 #include <stack>
 #include <chrono>
 #include <algorithm>
-#include <cassert>
 #include <unistd.h>
 #include "utils.cpp"
 
