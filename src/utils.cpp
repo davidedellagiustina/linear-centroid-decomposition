@@ -308,11 +308,12 @@ inline uint32_t stdFindCentroid(const vector<uint32_t> &t, const uint32_t root) 
 // @param t         T representation
 // @param root      root of the tree (or connected component, used as subprocedure for linear centroid decomposition)
 // @param N         number of nodes of the tree to elaborate (required ONLY when called as subprocedure of linear centroid decomposition)
-// @return          pair<shape,ids> representation of the centroid tree
-inline pair<vector<uint8_t>,vector<uint32_t>> stdCentroidDecomposition(vector<uint32_t> &t, const uint32_t root = 0, uint32_t N = 0) { // Complexity: O(n*log(n))
+// @return          pair<shape,ids> (struct) representation of the centroid tree
+inline struct c_tree stdCentroidDecomposition(vector<uint32_t> &t, const uint32_t root = 0, uint32_t N = 0) { // Complexity: O(n*log(n))
     N = ((!N)? (t.size()+2)/4 : N);
-    vector<uint8_t> shape = vector<uint8_t>(2*N, 0);
-    vector<uint32_t> ids = vector<uint32_t>(N, 0);
+    struct c_tree ct;
+    ct.shape = vector<uint8_t>(2*N, 0);
+    ct.ids = vector<uint32_t>(N, 0);
     uint32_t ptr1 = 0, ptr2 = 0; // 'ptr1' for 'shape', 'ptr2' for 'ids'
     stack<uint32_t> s; s.push(root); // Stack with roots of connected components yet to process
     while (!s.empty()) {
@@ -322,14 +323,14 @@ inline pair<vector<uint8_t>,vector<uint32_t>> stdCentroidDecomposition(vector<ui
         rmNodeOnT(t, centroid);
         for(uint32_t i = (t[centroid]&num_c); i > 0; --i) s.push(t[centroid+2*i]); // Push children to stack in reverse order
         if (centroid != r) s.push(r); // If the root of the subtree is not its centroid, then push it
-        // Print the current node to the output vectors
-        while (shape[ptr1] == 1) ++ptr1;
-        shape[ptr1] = 0; // Print "("
-        ids[ptr2] = centroid; // Print centroid ID
+        // Print the current node to the output structure
+        while (ct.shape[ptr1] == 1) ++ptr1;
+        ct.shape[ptr1] = 0; // Print "("
+        ct.ids[ptr2] = centroid; // Print centroid ID
         ++ptr1; ++ptr2;
-        shape[ptr1+2*c] = 1; // Print ")"
+        ct.shape[ptr1+2*c] = 1; // Print ")"
     }
-    return make_pair(shape, ids);
+    return ct;
 }
 
 /*
@@ -401,7 +402,7 @@ inline void buildTable(const uint32_t n) { // Complexity: o(n)
                 vector<uint32_t> tree = buildTree(BP(t));
                 vector<uint32_t> id_ref = buildIdRef(tree);
                 computeSizes(tree, id_ref);
-                pair<vector<uint8_t>,vector<uint32_t>> ct = stdCentroidDecomposition(tree);
+                struct c_tree ct = stdCentroidDecomposition(tree);
                 // H[i][t] = bit(ct);
             }
         }
@@ -450,12 +451,13 @@ inline pair<uint32_t,uint32_t> findCentroid(const vector<uint32_t> &t, const vec
 // @param t         T representation
 // @param t2        T2 representation
 // @param B         threshold for standard centroid decomposition - (log(n))^3 if not given
-// @return          centroid tree pair<shape,ids> representation
-pair<vector<uint8_t>,vector<uint32_t>> centroidDecomposition(vector<uint32_t> &t, vector<uint32_t> &t2, uint32_t B = 0) { // Complexity: O(n)
+// @return          centroid tree pair<shape,ids> (struct) representation
+struct c_tree centroidDecomposition(vector<uint32_t> &t, vector<uint32_t> &t2, uint32_t B = 0) { // Complexity: O(n)
     uint32_t n = (t.size() + 2) / 4;
     B = ((n <= 1)? 1 : ((!B)? (log2(n)*log2(n)*log2(n)) : B));
-    vector<uint8_t> shape = vector<uint8_t>(2*n, 0);
-    vector<uint32_t> ids = vector<uint32_t>(n, 0);
+    struct c_tree ct;
+    ct.shape = vector<uint8_t>(2*n, 0);
+    ct.ids = vector<uint32_t>(n, 0);
     uint32_t ptr1 = 0, ptr2 = 0;
     stack<uint32_t> s; s.push(0); // Stack with roots of connected components yet to process
     while (!s.empty()) {
@@ -521,18 +523,18 @@ pair<vector<uint8_t>,vector<uint32_t>> centroidDecomposition(vector<uint32_t> &t
             }
             if (t[tc+1] != tc) { s.push(r); ++nc; } // If centroid on T has a parent
             // Print node to output vectors
-            shape[ptr1] = 0; // Print "("
-            ids[ptr2] = tc; // Print centroid ID
+            ct.shape[ptr1] = 0; // Print "("
+            ct.ids[ptr2] = tc; // Print centroid ID
             ++ptr1; ++ptr2;
-            shape[ptr1+2*(size-1)] = 1; // Print ")"
+            ct.shape[ptr1+2*(size-1)] = 1; // Print ")"
         } else { // If connected component is smaller than threshold 'B'
-            pair<vector<uint8_t>,vector<uint32_t>> tmp = stdCentroidDecomposition(t, t2[r+3], size);
-            for (uint8_t el : tmp.first) { shape[ptr1] = el; ++ptr1; } // Copy shape
-            for (uint32_t el : tmp.second) { ids[ptr2] = el; ++ptr2; } // Copy ids
+            struct c_tree tmp = stdCentroidDecomposition(t, t2[r+3], size);
+            for (uint8_t el : tmp.shape) { ct.shape[ptr1] = el; ++ptr1; } // Copy shape
+            for (uint32_t el : tmp.ids) { ct.ids[ptr2] = el; ++ptr2; } // Copy ids
         }
-        while (ptr1 < shape.size() && shape[ptr1] == 1) ++ptr1; // Go past "closed" nodes
+        while (ptr1 < ct.shape.size() && ct.shape[ptr1] == 1) ++ptr1; // Go past "closed" nodes
     }
-    return make_pair(shape, ids);
+    return ct;
 }
 
 /*
@@ -541,15 +543,15 @@ pair<vector<uint8_t>,vector<uint32_t>> centroidDecomposition(vector<uint32_t> &t
 
 // Check correctness of a centroid decomposition
 // @param t         T representation
-// @param ct        pair<shape,ids> representation of centroid tree
+// @param ct        pair<shape,ids> (struct) representation of centroid tree
 // @return          true if centroid tree is correct, false otherwise
-bool checkCorrectness(vector<uint32_t> &t, const pair<vector<uint8_t>,vector<uint32_t>> &ct) { // Complexity: unknown and not relevant
+bool checkCorrectness(vector<uint32_t> &t, const struct c_tree &ct) { // Complexity: unknown and not relevant
     vector<uint32_t> roots; roots.pb(0);
     stack<uint32_t> noc; noc.push(1);
     uint32_t i = 0, ptr = 0;
-    for (uint32_t el : ct.first) {
+    for (uint32_t el : ct.shape) {
         if (el == 0) { // If "("
-            uint32_t id = ct.second[ptr]; // ID of the node
+            uint32_t id = ct.ids[ptr]; // ID of the node
             ++ptr;
             // Check correctness
             bool found = false;
@@ -618,14 +620,14 @@ inline string print(const vector<uint32_t> &t) { // Complexity: O(n)
 }
 
 // Convert the representation of centroid tree from pair<shape,ids> to string
-// @param ct    centroid tree pair<shape,ids> representation
+// @param ct    centroid tree pair<shape,ids> (struct) representation
 // @return      centroid tree string representation
-inline string ctToString(const pair<vector<uint8_t>,vector<uint32_t>> &ct) { // Complexity: O(n)
+inline string ctToString(const struct c_tree &ct) { // Complexity: O(n)
     oss os;
     uint32_t ptr = 0;
-    for (uint32_t el : ct.first) {
+    for (uint32_t el : ct.shape) {
         switch (el) {
-            case 0: os << "(" << ct.second[ptr]; ++ptr; break;
+            case 0: os << "(" << ct.ids[ptr]; ++ptr; break;
             case 1: os << ")"; break;
         }
     }

@@ -9,7 +9,7 @@ using namespace std;
 bool print_output = false, check = false;
 string input_path, tree;
 vector<uint32_t> t, t_cp, id_ref;
-pair<vector<uint8_t>,vector<uint32_t>> ct;
+struct c_tree ct;
 
 // Print help
 void help() {
