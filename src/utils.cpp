@@ -361,6 +361,62 @@ inline void computeDeltas(const vector<uint32_t> &t, vector<uint32_t> &t2, const
     }
 }
 
+// Get a uint32_t representing the topology of a small (under 16 nodes!) tree
+// @parm t          T representation
+// @param size      size of small tree
+// @param root      root of small tree
+// @return          uint32_t representation in balanced parenthesis [1 = "(", 0 = ")"]
+inline uint32_t getShape(const vector<uint32_t> &t, const uint32_t size, const uint32_t root) { // Complexity: O(n)
+    struct node { uint32_t id, bitmask; };
+    uint32_t shape = (1<<(2*size-1)), bitmask = (1<<(2*size-1));
+    stack<struct node> s; s.push({root, bitmask}); // Stack with nodes yet to visit
+    while (!s.empty()) {
+        struct node node = s.top(); s.pop();
+        node.bitmask = node.bitmask >> 1;
+        stack<struct node> tmp;
+        for (uint32_t i = 0; i < (t[node.id]&num_c); ++i) {
+            if (t[t[node.id+2*i+2]]&num_c) tmp.push({t[node.id+2*i+2], node.bitmask});
+            shape |= node.bitmask; // Add node
+            node.bitmask = node.bitmask >> 2*t[node.id+2*i+3];
+        }
+        while (!tmp.empty()) {
+            s.push(tmp.top());
+            tmp.pop();
+        }
+    }
+    return shape;
+}
+
+// Build a map from the IDs on T to the interval [1..n] (following a pre-order DFS visit)
+// @param t         T representation
+// @param root      treelet root on T
+// @return          map of the IDs to [1..n] (ordered in DFS pre-order)
+inline unordered_map<uint32_t,uint32_t> buildMap(const vector<uint32_t> &t, const uint32_t root) { // Complexity: O(n)
+    stack<uint32_t> s; s.push(root);
+    unordered_map<uint32_t,uint32_t> m;
+    uint32_t k = 0;
+    while (!s.empty()) {
+        uint32_t node = s.top(); s.pop();
+        m.insert({node, k});
+        ++k;
+        for (uint32_t i = 0; i < (t[node]&num_c); ++i) s.push(t[node+2*i+2]);
+    }
+    return m;
+}
+
+// Compute the inverse permutation of a direct one
+// @param m         map of the IDs to [1..n] (ordered in DFS pre-order)
+// @param p         direct permutation
+// @return          inverse permutation
+inline vector<uint32_t> computeInversePermutation(const unordered_map<uint32_t,uint32_t> m, vector<uint32_t> &p) { // Complexity: O(n)
+    for (uint32_t &el : p) el = m.at(el);
+    vector<uint32_t> inv_p = vector<uint32_t>(p.size());
+    for (uint32_t i = 0; i < p.size(); ++i) inv_p[p[i]] = i;
+    return inv_p;
+}
+
+/* NOT USED - BUT WAIT BEFORE DELETION
+
 // Check if a certain tree (represented in balanced parenthesis as an integer) is valid [1 = "(", 0 = ")"]
 // @param t     integer [32bit] representation of possible tree
 // @return      true if tree is valid, false otherwise
@@ -391,23 +447,7 @@ inline string BP(uint32_t t) { // Complexity: O(1)
     return tree;
 }
 
-// Build table with precomputed centroid decomposition of some trees
-// @param n     Maximum tree size
-// @return      Table
-inline void buildTable(const uint32_t n) { // Complexity: o(n)
-    vector<vector<pair<uint32_t,vector<uint32_t>>>> H = vector<vector<pair<uint32_t,vector<uint32_t>>>>(n+1, vector<pair<uint32_t,vector<uint32_t>>>(1<<(2*n-1)));
-    for (uint32_t i = n; i > 0; --i) {
-        for (uint32_t t = 1<<(2*i-1); t < 1<<(2*i); t += 2) {
-            if (isValidTree(t)) {
-                vector<uint32_t> tree = buildTree(BP(t));
-                vector<uint32_t> id_ref = buildIdRef(tree);
-                computeSizes(tree, id_ref);
-                struct c_tree ct = stdCentroidDecomposition(tree);
-                // H[i][t] = bit(ct);
-            }
-        }
-    }
-}
+*/
 
 // New centroid search algorithm
 // @param t         T representation
@@ -451,10 +491,15 @@ inline pair<uint32_t,uint32_t> findCentroid(const vector<uint32_t> &t, const vec
 // @param t         T representation
 // @param t2        T2 representation
 // @param B         threshold for standard centroid decomposition - (log(n))^3 if not given
+// @param C         we apply tabulation for B<=C - 10 if not given (BE CAREFUL: VALUES OVER 12 ARE STRONGLY ADVISED AGAINST, VALUES OVER 16 ARE FORBIDDEN)
 // @return          centroid tree pair<shape,ids> (struct) representation
-struct c_tree centroidDecomposition(vector<uint32_t> &t, vector<uint32_t> &t2, uint32_t B = 0) { // Complexity: O(n)
+struct c_tree centroidDecomposition(vector<uint32_t> &t, vector<uint32_t> &t2, uint32_t B = 0, const uint32_t C = 10) { // Complexity: O(n)
+    if (C > max_C) throw "Error: 'C' parameter is too big."; // If 'C' is too big
     uint32_t n = (t.size() + 2) / 4;
     B = ((n <= 1)? 1 : ((!B)? (log2(n)*log2(n)*log2(n)) : B));
+    bool tabulation = (B <= C);
+    vector<vector<struct c_tree>> H;
+    if (tabulation) H = vector<vector<struct c_tree>>(B+1, vector<struct c_tree>(pow2(2*B)));
     struct c_tree ct;
     ct.shape = vector<uint8_t>(2*n, 0);
     ct.ids = vector<uint32_t>(n, 0);
@@ -528,9 +573,36 @@ struct c_tree centroidDecomposition(vector<uint32_t> &t, vector<uint32_t> &t2, u
             ++ptr1; ++ptr2;
             ct.shape[ptr1+2*(size-1)] = 1; // Print ")"
         } else { // If connected component is smaller than threshold 'B'
-            struct c_tree tmp = stdCentroidDecomposition(t, t2[r+3], size);
-            for (uint8_t el : tmp.shape) { ct.shape[ptr1] = el; ++ptr1; } // Copy shape
-            for (uint32_t el : tmp.ids) { ct.ids[ptr2] = el; ++ptr2; } // Copy ids
+            if (tabulation) { // If B is small enough we can perform tabulation (i.e. dynamic programming)
+                uint32_t shape = getShape(t, size, t2[r+3]);
+                if (H[size][shape].shape.size() == 0) { // If centroid decomposition of this tree needs to be computed
+                    unordered_map<uint32_t,uint32_t> map = buildMap(t, t2[r+3]);
+                    struct c_tree tmp = stdCentroidDecomposition(t, t2[r+3], size);
+                    for (uint8_t el : tmp.shape) { ct.shape[ptr1] = el; ++ptr1; }
+                    for (uint32_t el : tmp.ids) { ct.ids[ptr2] = el; ++ptr2; }
+                    H[size][shape].shape = tmp.shape;
+                    H[size][shape].ids = computeInversePermutation(map, tmp.ids);
+                    // cout << "S: " << shape << " - CS: "; for (uint8_t el : H[size][shape].shape) cout << (int)el; cout << nl;
+                    // cout << "P: ( "; for (uint32_t el : tmp.ids) cout << el << " "; cout << ") - ";
+                    // cout << "IP: ( "; for (uint32_t el : H[size][shape].ids) cout << el << " "; cout << ")" << nl;
+                } else { // If centroid decomposition of this tree was already computed: apply permutation and return
+                    for (uint8_t el : H[size][shape].shape) { ct.shape[ptr1] = el; ++ptr1; }
+                    stack<uint32_t> tmp_s; tmp_s.push(t2[r+3]);
+                    uint32_t tmp_ptr = 0;
+                    // cout << "( "; for (uint32_t el : H[size][shape].ids) cout << el << " "; cout << ")" << nl;
+                    while (!tmp_s.empty()) {
+                        uint32_t tmp_node = tmp_s.top(); tmp_s.pop();
+                        ct.ids[ptr2+H[size][shape].ids[tmp_ptr]] = tmp_node;
+                        ++tmp_ptr;
+                        for (uint32_t i = (t[tmp_node]&num_c); i > 0; --i) tmp_s.push(t[tmp_node+2*i]);
+                    }
+                    ptr2 += size;
+                }
+            } else { // If B is too large, we must proceed with the standard centroid decomposition algorithm
+                struct c_tree tmp = stdCentroidDecomposition(t, t2[r+3], size);
+                for (uint8_t el : tmp.shape) { ct.shape[ptr1] = el; ++ptr1; } // Copy shape
+                for (uint32_t el : tmp.ids) { ct.ids[ptr2] = el; ++ptr2; } // Copy ids
+            }
         }
         while (ptr1 < ct.shape.size() && ct.shape[ptr1] == 1) ++ptr1; // Go past "closed" nodes
     }
