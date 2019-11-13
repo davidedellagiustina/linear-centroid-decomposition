@@ -399,7 +399,7 @@ inline unordered_map<uint32_t,uint32_t> buildMap(const vector<uint32_t> &t, cons
         uint32_t node = s.top(); s.pop();
         m.insert({node, k});
         ++k;
-        for (uint32_t i = 0; i < (t[node]&num_c); ++i) s.push(t[node+2*i+2]);
+        for (uint32_t i = (t[node]&num_c); i > 0; --i) s.push(t[node+2*i]);
     }
     return m;
 }
