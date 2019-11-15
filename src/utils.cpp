@@ -390,26 +390,24 @@ inline uint32_t getShape(const vector<uint32_t> &t, const uint32_t size, const u
 // Build a map from the IDs on T to the interval [1..n] (following a pre-order DFS visit)
 // @param t         T representation
 // @param root      treelet root on T
-// @return          map of the IDs to [1..n] (ordered in DFS pre-order)
-inline unordered_map<uint32_t,uint32_t> buildMap(const vector<uint32_t> &t, const uint32_t root) { // Complexity: O(n)
+// @param map       address of the map
+inline void buildMap(const vector<uint32_t> &t, const uint32_t root, vector<uint32_t> &map) { // Complexity: O(n)
     stack<uint32_t> s; s.push(root);
-    unordered_map<uint32_t,uint32_t> m;
     uint32_t k = 0;
     while (!s.empty()) {
         uint32_t node = s.top(); s.pop();
-        m.insert({node, k});
+        map[node] = k;
         ++k;
         for (uint32_t i = (t[node]&num_c); i > 0; --i) s.push(t[node+2*i]);
     }
-    return m;
 }
 
 // Compute the inverse permutation of a direct one
 // @param m         map of the IDs to [1..n] (ordered in DFS pre-order)
 // @param p         direct permutation
 // @return          inverse permutation
-inline vector<uint32_t> computeInversePermutation(const unordered_map<uint32_t,uint32_t> m, vector<uint32_t> &p) { // Complexity: O(n)
-    for (uint32_t &el : p) el = m.at(el);
+inline vector<uint32_t> computeInversePermutation(const vector<uint32_t> &map, vector<uint32_t> &p) { // Complexity: O(n)
+    for (uint32_t &el : p) el = map[el];
     vector<uint32_t> inv_p = vector<uint32_t>(p.size());
     for (uint32_t i = 0; i < p.size(); ++i) inv_p[p[i]] = i;
     return inv_p;
@@ -499,6 +497,7 @@ struct c_tree centroidDecomposition(vector<uint32_t> &t, vector<uint32_t> &t2, u
     B = ((n <= 1)? 1 : ((!B)? (log2(n)*log2(n)*log2(n)) : B));
     bool tabulation = (B <= C);
     vector<vector<struct c_tree>> H;
+    vector<uint32_t> map = vector<uint32_t>(t.size());
     if (tabulation) H = vector<vector<struct c_tree>>(B+1, vector<struct c_tree>(pow2(2*B)));
     struct c_tree ct;
     ct.shape = vector<uint8_t>(2*n, 0);
@@ -576,7 +575,7 @@ struct c_tree centroidDecomposition(vector<uint32_t> &t, vector<uint32_t> &t2, u
             if (tabulation) { // If B is small enough we can perform tabulation (i.e. dynamic programming)
                 uint32_t shape = getShape(t, size, t2[r+3]);
                 if (H[size][shape].shape.size() == 0) { // If centroid decomposition of this tree needs to be computed
-                    unordered_map<uint32_t,uint32_t> map = buildMap(t, t2[r+3]);
+                    buildMap(t, t2[r+3], map);
                     struct c_tree tmp = stdCentroidDecomposition(t, t2[r+3], size);
                     for (uint8_t el : tmp.shape) { ct.shape[ptr1] = el; ++ptr1; }
                     for (uint32_t el : tmp.ids) { ct.ids[ptr2] = el; ++ptr2; }
