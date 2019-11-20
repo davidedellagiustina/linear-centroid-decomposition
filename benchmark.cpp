@@ -73,7 +73,7 @@ uint32_t start = 0, stop = 0, step = 0, tests = 0;
 bool check = false; // Perform correctness check?
 uint32_t A = 0;
 uint32_t B = 0;
-uint32_t C = 10;
+uint32_t C = 0;
 
 string tree;
 vector<uint32_t> t;
