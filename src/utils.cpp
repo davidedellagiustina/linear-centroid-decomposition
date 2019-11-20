@@ -333,6 +333,36 @@ inline struct c_tree stdCentroidDecomposition(vector<uint32_t> &t, const uint32_
     return ct;
 }
 
+// Standard centroid decomposition algorithm (with global stack)
+// @param s         global custom stack (in order to avoid reallocations of memory)
+// @param t         T representation
+// @param root      root of the tree (or connected component, used as subprocedure for linear centroid decomposition)
+// @param N         number of nodes of the tree to elaborate (required ONLY when called as subprocedure of linear centroid decomposition)
+// @return          pair<shape,ids> (struct) representation of the centroid tree
+inline struct c_tree stdCentroidDecomposition(struct stk &s, vector<uint32_t> &t, const uint32_t root = 0, uint32_t N = 0) { // Complexity: O(n*log(n))
+    N = ((!N)? (t.size()+2)/4 : N);
+    struct c_tree ct;
+    ct.shape = vector<uint8_t>(2*N, 0);
+    ct.ids = vector<uint32_t>(N, 0);
+    uint32_t ptr1 = 0, ptr2 = 0; // 'ptr1' for 'shape', 'ptr2' for 'ids'
+    s.push(root);
+    while (!s.empty()) {
+        uint32_t r = s.top(); s.pop();
+        uint32_t c = 0; for (uint32_t i = 0; i < (t[r]&num_c); ++i) c+= t[r+2*i+3]; // Total size of future connected components [used for printing output]
+        uint32_t centroid = stdFindCentroid(t, r);
+        rmNodeOnT(t, centroid);
+        for(uint32_t i = (t[centroid]&num_c); i > 0; --i) s.push(t[centroid+2*i]);
+        if (centroid != r) s.push(r);
+        // Print the current node to the output structure
+        while (ct.shape[ptr1] == 1) ++ptr1;
+        ct.shape[ptr1] = 0; // Print "("
+        ct.ids[ptr2] = centroid; // Print centroid ID
+        ++ptr1; ++ptr2;
+        ct.shape[ptr1+2*c] = 1; // Print ")"
+    }
+    return ct;
+}
+
 /*
  * NEW O(n) CENTROID DECOMPOSITION IMPLEMENTATION
  */
@@ -504,6 +534,7 @@ struct c_tree centroidDecomposition(vector<uint32_t> &t, vector<uint32_t> &t2, u
     ct.ids = vector<uint32_t>(n, 0);
     uint32_t ptr1 = 0, ptr2 = 0;
     stack<uint32_t> s; s.push(0); // Stack with roots of connected components yet to process
+    struct stk aux_s; aux_s.init(B); // Global auxiliary stack for standard centroid decomposition
     while (!s.empty()) {
         uint32_t r = s.top(); s.pop();
         uint32_t size = 1; for (uint32_t i = 0; i < (t[t2[r+3]]&num_c); ++i) size += t[t2[r+3]+2*i+3]; // Size of connected component
@@ -576,7 +607,7 @@ struct c_tree centroidDecomposition(vector<uint32_t> &t, vector<uint32_t> &t2, u
                 uint32_t shape = getShape(t, size, t2[r+3]);
                 if (H[size][shape].shape.size() == 0) { // If centroid decomposition of this tree needs to be computed
                     buildMap(t, t2[r+3], map);
-                    struct c_tree tmp = stdCentroidDecomposition(t, t2[r+3], size);
+                    struct c_tree tmp = stdCentroidDecomposition(aux_s, t, t2[r+3], size);
                     for (uint8_t el : tmp.shape) { ct.shape[ptr1] = el; ++ptr1; }
                     for (uint32_t el : tmp.ids) { ct.ids[ptr2] = el; ++ptr2; }
                     H[size][shape].shape = tmp.shape;
@@ -598,7 +629,7 @@ struct c_tree centroidDecomposition(vector<uint32_t> &t, vector<uint32_t> &t2, u
                     ptr2 += size;
                 }
             } else { // If B is too large, we must proceed with the standard centroid decomposition algorithm
-                struct c_tree tmp = stdCentroidDecomposition(t, t2[r+3], size);
+                struct c_tree tmp = stdCentroidDecomposition(aux_s, t, t2[r+3], size);
                 for (uint8_t el : tmp.shape) { ct.shape[ptr1] = el; ++ptr1; } // Copy shape
                 for (uint32_t el : tmp.ids) { ct.ids[ptr2] = el; ++ptr2; } // Copy ids
             }

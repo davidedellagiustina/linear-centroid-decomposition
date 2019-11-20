@@ -8,7 +8,7 @@ using namespace std;
 // Global
 bool print_output = false, check = false;
 string input_path, tree;
-uint32_t n, A = 0, B = 10, C = 10;
+uint32_t n, A = 0, B = 0, C = 0;
 vector<uint32_t> t, t_cp, id_ref, t2;
 struct c_tree ct;
 

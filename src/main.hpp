@@ -34,4 +34,49 @@ struct c_tree {
     std::vector<uint32_t> ids;
 };
 
+// Custom stack 
+struct stk {
+
+    std::vector<uint32_t> s; // Stack container
+    std::uint32_t i; // First free position in the stack (e.g. size of the stack)
+
+    // Initialize the container
+    // @param max_size      maximum size the stack will be
+    void init(std::size_t max_size) {
+        s = std::vector<std::uint32_t>(max_size);
+        i = 0;
+    }
+
+    // Get the size of the stack
+    // @return              size of the stack
+    std::size_t size() {
+        return i;
+    }
+
+    // Check if the stack is empty
+    // @return              true if stack is empty, false otherwise
+    bool empty() {
+        return (size() == 0);
+    }
+
+    // Push an element to the stack
+    // @param n             element to push
+    void push(std::uint32_t n) {
+        s[i] = n;
+        ++i;
+    }
+
+    // Get the top element of the stack
+    // @return              top element in the stack
+    std::uint32_t top() {
+        return s[i-1];
+    }
+
+    // Remove an element from the top of the stack
+    void pop() {
+        --i;
+    }
+    
+};
+
 #endif
