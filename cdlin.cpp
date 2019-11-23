@@ -8,7 +8,7 @@ using namespace std;
 // Global
 bool print_output = false, check = false;
 string input_path, tree;
-uint32_t n, A = 0, B = 0, C = 0;
+uint32_t n, A = 0, B = 1000;
 vector<uint32_t> t, t_cp, id_ref, t2;
 struct c_tree ct;
 
@@ -84,7 +84,7 @@ int main(int argc, char* argv[]) {
 	if (check) t_cp = t;
 	// Perform centroid decomposition: O(n)
 	t01 = getTime();
-	ct = centroidDecomposition(t, t2, B, C);
+	ct = centroidDecomposition(t, t2, B);
 	cout << printTime(" - Linear centroid decomposition", t01, getTime()) << nl;
 	if(check) cout << "Correct: " << ((checkCorrectness(t_cp, ct))? "true" : "false") << nl; // Correctness check
 	if (print_output) cout << "Output: " << ctToString(ct) << nl; // Print output

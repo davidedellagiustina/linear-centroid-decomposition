@@ -22,7 +22,7 @@ inline string printDuration(const uint64_t duration) {
 // @return          execution time
 inline uint32_t nlognCD(vector<uint32_t> t, const bool check) { // Complexity: O(n*log(n))
     chrono::high_resolution_clock::time_point t01 = getTime();
-    uint32_t n = (t.size() + 2) / 4; // Number of nodes
+    uint32_t n = sizeOfT(t); // Number of nodes
     vector<uint32_t> id_ref = buildIdRef(t);
     computeSizes(t, id_ref);
     vector<uint32_t> t_cp;
@@ -38,16 +38,15 @@ inline uint32_t nlognCD(vector<uint32_t> t, const bool check) { // Complexity: O
 // @param check     perform correctness check?
 // @param A         size of subtrees [log(n) if not given]
 // @param B         linear centroid decomposition threshold [log^3(n) if not given]
-// @param C         max threshold for DP
 // @return          execution time
-inline uint32_t nCD(vector<uint32_t> t, const bool check, const uint32_t A, const uint32_t B, const uint32_t C) { // Complexity: O(n)
+inline uint32_t nCD(vector<uint32_t> t, const bool check, const uint32_t A, const uint32_t B) { // Complexity: O(n)
     chrono::high_resolution_clock::time_point t01 = getTime();
-    uint32_t n = (t.size() + 2) / 4; // Number of nodes
+    uint32_t n = sizeOfT(t); // Number of nodes
     vector<uint32_t> id_ref = buildIdRef(t);
     vector<uint32_t> t2 = cover(t, id_ref, A);
     vector<uint32_t> t_cp;
     if (check) t_cp = t; // Copy tree for correctness check
-    struct c_tree ct = centroidDecomposition(t, t2, B, C);
+    struct c_tree ct = centroidDecomposition(t, t2, B);
     uint32_t time = chrono::duration_cast<chrono::microseconds>(getTime()-t01).count();
     if (check) cerr << "O(n) - " << n << " nodes - correct: " << ((checkCorrectness(t_cp, ct))? "true" : "false") << nl;
     return time;
@@ -72,8 +71,7 @@ string g = "random";
 uint32_t start = 0, stop = 0, step = 0, tests = 0;
 bool check = false; // Perform correctness check?
 uint32_t A = 0;
-uint32_t B = 0;
-uint32_t C = 0;
+uint32_t B = 1000;
 
 string tree;
 vector<uint32_t> t;
@@ -124,7 +122,7 @@ int main(int argc, char* argv[]) {
                 return 0;
             }
             t01 += nlognCD(t, check); // Perform O(n*log(n)) centroid decomposition
-            t02 += nCD(t, check, A, B, C); // Perform O(n) centroid decomposition
+            t02 += nCD(t, check, A, B); // Perform O(n) centroid decomposition
         }
         t01 /= tests; t02 /= tests; // Compute average of 'tests' decompositions (both)
         cout << "O(n*log(n)) - " << n << " nodes - time: " << t01 << " -  formatted: " << printDuration(t01) << nl;
