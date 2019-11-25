@@ -14,6 +14,7 @@ install: std lin
 tools:
 	$(CC) $(CFLAGS) tree_gen/random.cpp -o tree_gen/random
 	$(CC) $(CFLAGS) tree_gen/path.cpp -o tree_gen/path
+	$(CC) $(CFLAGS) tree_gen/chains.cpp -o tree_gen/chains
 	$(CC) $(CFLAGS) tree_gen/binary_halfn.cpp -o tree_gen/binary_halfn
 	$(CC) $(CFLAGS) benchmark.cpp -o benchmark
 
@@ -24,5 +25,6 @@ clean:
 	rm -rf cdstd
 	rm -rf tree_gen/random
 	rm -rf tree_gen/path
+	rm -rf tree_gen/chains
 	rm -rf tree_gen/binary_halfn
 	rm -rf benchmark

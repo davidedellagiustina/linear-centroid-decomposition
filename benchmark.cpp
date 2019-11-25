@@ -57,7 +57,8 @@ void help() {
 	cout << "Usage: benchmark [options]" << nl <<
 	"Options:" << nl <<
 	" -h        Print this help." << nl <<
-    " -g <arg>  Tree generator. Options: random, path, binpath." << nl <<
+    " -g <arg>  Tree generator. Options: random, path, chains." << nl <<
+    " -k <arg>  Additional parameter for tree generator. [OPTIONAL]" << nl <<
     " -b <arg>  Number of nodes of smallest tree [REQUIRED]." << nl <<
     " -e <arg>  Number of nodes of biggest tree [REQUIRED]." << nl <<
     " -s <arg>  Increment step [REQUIRED]." << nl <<
@@ -72,21 +73,23 @@ uint32_t start = 0, stop = 0, step = 0, tests = 0;
 bool check = false; // Perform correctness check?
 uint32_t A = 0;
 uint32_t B = 1000;
-
+uint32_t k = 1; // Additional parameter for some tree generators
 string tree;
 vector<uint32_t> t;
 
 int main(int argc, char* argv[]) {
     // Process command line options
 	int opt;
-	while ((opt = getopt(argc, argv, "hg:b:e:s:t:c")) != -1) {
+	while ((opt = getopt(argc, argv, "hg:k:b:e:s:t:c")) != -1) {
 		switch (opt) {
 			case 'h':
 				help();
 				break;
             case 'g':
-                if (strcmp("random", optarg) == 0 || strcmp("path", optarg) == 0) g = optarg;
-                else if (strcmp("binpath", optarg) == 0) g = "binary_halfn";
+                if (strcmp("random", optarg) == 0 || strcmp("path", optarg) == 0 || strcmp("chains", optarg) == 0) g = optarg;
+                break;
+            case 'k':
+                k = atoi(optarg);
                 break;
 			case 'b':
 				start = atoi(optarg);
@@ -113,7 +116,10 @@ int main(int argc, char* argv[]) {
     for (uint32_t n = start; n <= stop; n += step) {
         uint32_t t01 = 0, t02 = 0;
         for (uint32_t i = 0; i < tests; ++i) { // Loop 'tests' times
-            auto r = system(("tree_gen/" + g + " " + to_string(n) + " > tree.txt").c_str()); // Generate random tree
+            if (g.compare("random") == 0)
+                auto r = system(("tree_gen/" + g + " " + to_string(n) + " > tree.txt").c_str()); // Generate ree
+            else
+                auto r = system(("tree_gen/" + g + " " + to_string(n) + " " + to_string(k) + " > tree.txt").c_str()); // Generate ree
             ifstream in("tree.txt"); in >> tree; in.close();
             try {
                 t = buildTree(tree); // Build tree (minimal representation)
