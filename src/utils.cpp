@@ -315,7 +315,8 @@ inline struct c_tree stdCentroidDecomposition(vector<uint32_t> &t, const uint32_
     ct.shape = vector<uint8_t>(2*N, 0);
     ct.ids = vector<uint32_t>(N, 0);
     uint32_t ptr1 = 0, ptr2 = 0; // 'ptr1' for 'shape', 'ptr2' for 'ids'
-    struct stk s; s.init(N); s.push(root); // Stack with roots of connected components yet to process
+    // struct stk s; s.init(N); s.push(root); // Stack with roots of connected components yet to process
+    stack<int> s; s.push(root);
     while (!s.empty()) {
         uint32_t r = s.top(); s.pop();
         uint32_t c = 0; for (uint32_t i = 0; i < (t[r]&num_c); ++i) c+= t[sizeOfChildOnT(r, i)]; // Total size of future connected components [used for printing output]
@@ -375,8 +376,10 @@ inline void computeDeltas(const vector<uint32_t> &t, vector<uint32_t> &t2, const
     // Compute total size of treelet
     uint32_t size = 1; for (uint32_t i = 0; i < (t[t2[alpha(root)]]&num_c); ++i) size += t[sizeOfChildOnT(t2[alpha(root)], i)];
     // Build stack for DFS
-    struct stk s; s.init(size); s.push(root);
-    struct stk dfs; dfs.init(size);
+    // struct stk s; s.init(size); s.push(root);
+    stack<int> s; s.push(root);
+    // struct stk dfs; dfs.init(size);
+    stack<int> dfs;
     while (!s.empty()) {
         uint32_t node = s.top(); s.pop();
         dfs.push(node);
@@ -442,7 +445,8 @@ struct c_tree centroidDecomposition(vector<uint32_t> &t, vector<uint32_t> &t2, u
     ct.shape = vector<uint8_t>(2*n, 0);
     ct.ids = vector<uint32_t>(n, 0);
     uint32_t ptr1 = 0, ptr2 = 0;
-    struct stk s; s.init(n); s.push(0); // Stack with roots of connected components yet to process
+    // struct stk s; s.init(n); s.push(0); // Stack with roots of connected components yet to process
+    stack<int> s; s.push(0);
     struct stk aux_s; aux_s.init(B); // Global auxiliary stack for standard centroid decomposition
     while (!s.empty()) {
         uint32_t r = s.top(); s.pop();
@@ -532,7 +536,8 @@ struct c_tree centroidDecomposition(vector<uint32_t> &t, vector<uint32_t> &t2, u
 bool checkCorrectness(vector<uint32_t> &t, const struct c_tree &ct) { // Complexity: unknown and not relevant
     vector<uint32_t> roots; roots.pb(0);
     uint32_t N = sizeOfT(t);
-    struct stk noc; noc.init(N); noc.push(1);
+    // struct stk noc; noc.init(N); noc.push(1);
+    stack<int> noc; noc.push(1);
     uint32_t i = 0, ptr = 0;
     for (uint32_t el : ct.shape) {
         if (el == 0) { // If "("
