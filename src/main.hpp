@@ -16,18 +16,6 @@
 #define iss             istringstream
 #define oss             ostringstream
 
-// #define max_deg         0x7fffffff
-// #define max_A           0xffff
-// #define nl              "\n"
-// #define num_c           0x7fffffff
-// #define cov_el          0x80000000
-// #define pow2(n)         (1<<n)
-// #define log2(n)         (31-__builtin_clz(n))
-// #define parnt(i)        (i+1)
-// #define childOnT(b, i)  (b+(2*i)+2)
-// #define sizeOfChildOnT(b, i) (b+(2*i)+3)
-// #define alpha(i)        (i+3)
-
 constexpr uint32_t max_deg = 0x7fffffff; // Max out-degree of the tree
 constexpr uint32_t max_A = 0xffff; // Max "A"
 constexpr char nl = '\n';
