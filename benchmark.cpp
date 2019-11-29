@@ -71,7 +71,7 @@ void help() {
 string g = "random";
 uint32_t start = 0, stop = 0, step = 0, tests = 0;
 bool check = false; // Perform correctness check?
-uint32_t A = 0;
+uint32_t A = 1000;
 uint32_t B = 1000;
 uint32_t k = 1; // Additional parameter for some tree generators
 string tree;
