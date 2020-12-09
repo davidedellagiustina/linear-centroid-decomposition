@@ -31,3 +31,11 @@ In `T''`, the `i`-th node occupies the region `T[i], ..., T[k]`:
 ![Performances on random trees](imgs/graph_random.png)
 
 ![Performances on path trees](imgs/graph_path.png)
+
+# Datasets
+
+All datasets have been generated using the code in folder "tree_gen".
+
+# Funding
+
+Nicola Prezza has been supported by the project Italian MIUR-SIR CMACBioSeq ("Combinatorial methods for analysis and compression of biological sequences") grant n.~RBSI146R5L, PI: Giovanna Rosone. Link: http://pages.di.unipi.it/rosone/CMACBioSeq.html
